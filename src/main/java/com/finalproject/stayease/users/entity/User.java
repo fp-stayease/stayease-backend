@@ -2,6 +2,8 @@ package com.finalproject.stayease.users.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -53,10 +55,10 @@ public class User {
   @Column(name = "avatar")
   private String avatar;
 
-  @Size(max = 10)
+  @Enumerated(EnumType.STRING)
   @NotNull
-  @Column(name = "user_type", nullable = false, length = 10)
-  private String userType;
+  @Column(name = "user_type", nullable = false)
+  private UserType userType;
 
   @ColumnDefault("false")
   @Column(name = "is_verified")
@@ -73,4 +75,8 @@ public class User {
   @Column(name = "deleted_at")
   private OffsetDateTime deletedAt;
 
+  public enum UserType {
+    USER,
+    TENANT
+  }
 }

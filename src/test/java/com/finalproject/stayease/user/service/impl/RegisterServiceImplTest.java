@@ -2,6 +2,7 @@ package com.finalproject.stayease.user.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -9,10 +10,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
+import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.User;
+import com.finalproject.stayease.users.entity.User.UserType;
+import com.finalproject.stayease.users.entity.dto.InitialRegistrationRequestDTO;
 import com.finalproject.stayease.users.entity.dto.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
 import com.finalproject.stayease.users.repository.UserRepository;
-import com.finalproject.stayease.users.service.impl.UserServiceImpl;
+import com.finalproject.stayease.users.service.impl.RegisterServiceImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,43 +27,48 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 @SpringBootTest
-public class UserServiceImplTest {
+public class RegisterServiceImplTest {
 
   @MockBean
   private UserRepository userRepository;
+  @MockBean
+  private PendingRegistrationRepository registrationRepository;
 
   @InjectMocks
-  private UserServiceImpl userService = new UserServiceImpl(userRepository);
+  private RegisterServiceImpl userService = new RegisterServiceImpl(userRepository, registrationRepository);
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    userService = new UserServiceImpl(userRepository);
+    userService = new RegisterServiceImpl(userRepository, registrationRepository);
   }
 
   @Test
   void initialRegistrationTest() {
     // Arrange
     String email = "email@email.com";
-    String role = "USER";
+    UserType userType = UserType.USER;
 
-    User newUser = new User();
-    newUser.setId(1L);
-    newUser.setEmail(email);
-    newUser.setUserType(role);
-    newUser.setIsVerified(false);
+    InitialRegistrationRequestDTO requestDTO = new InitialRegistrationRequestDTO();
+    requestDTO.setEmail(email);
+
+    PendingRegistration pendingUser = new PendingRegistration();
+    pendingUser.setId(1L);
+    pendingUser.setEmail(email);
+    pendingUser.setUserType(userType);
 
     // Act
     when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-    when(userRepository.save(any(User.class))).thenReturn(newUser);
-    InitialRegistrationResponseDTO responseDTO = userService.initialRegistration(email, role);
+    when(registrationRepository.findByEmail(email)).thenReturn(Optional.empty());
+    when(registrationRepository.save(any())).thenReturn(pendingUser);
+    InitialRegistrationResponseDTO responseDTO = userService.initialRegistration(requestDTO, userType);
 
     //Assert
     assertNotNull(responseDTO);
     verify(userRepository, times(1)).findByEmail(any(String.class));
-    verify(userRepository, times(1)).save(any(User.class));
-    assertFalse(newUser.getIsVerified());
-    assert(newUser.getUserType()).equals("USER");
+    verify(registrationRepository, times(1)).save(any(PendingRegistration.class));
+    assertNull(pendingUser.getVerifiedAt());
+    assert(pendingUser.getUserType()).equals(UserType.USER);
     assert(responseDTO.getMessage()).startsWith("Verification link has been sent to ");
   }
 
@@ -66,7 +76,10 @@ public class UserServiceImplTest {
   void initialRegistrationTest_duplicateEmail() {
     // Arrange
     String email = "email@email.com";
-    String role = "USER";
+    UserType userType = UserType.USER;
+
+    InitialRegistrationRequestDTO requestDTO  = new InitialRegistrationRequestDTO();
+    requestDTO.setEmail(email);
 
     User existingUser = new User();
     existingUser.setId(1L);
@@ -76,6 +89,6 @@ public class UserServiceImplTest {
     when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
     // Act & Assert
-    assertThrows(DuplicateEntryException.class, () -> userService.initialRegistration(email, role));
+    assertThrows(DuplicateEntryException.class, () -> userService.initialRegistration(requestDTO, userType));
   }
 }
