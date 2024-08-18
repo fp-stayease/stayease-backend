@@ -4,13 +4,16 @@ import com.finalproject.stayease.auth.service.RegisterRedisService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.users.entity.PendingRegistration;
+import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.User;
 import com.finalproject.stayease.users.entity.User.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyTenantResponseDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
+import com.finalproject.stayease.users.repository.TenantInfoRepository;
 import com.finalproject.stayease.users.repository.UserRepository;
 import com.finalproject.stayease.users.service.RegisterService;
 import jakarta.transaction.Transactional;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 public class RegisterServiceImpl implements RegisterService {
 
   private final UserRepository userRepository;
+  private final TenantInfoRepository tenantInfoRepository;
   private final PendingRegistrationRepository registrationRepository;
   private final RegisterRedisService registerRedisService;
 
@@ -46,7 +50,8 @@ public class RegisterServiceImpl implements RegisterService {
   @Override
   public VerifyUserResponseDTO verifyRegistration(VerifyRegistrationDTO verifyRegistrationDTO, String token) {
     String email = registerRedisService.getEmail(token);
-    return null;
+    PendingRegistration pendingRegistration = getPendingRegistration(email);
+    return createNewUser(pendingRegistration, verifyRegistrationDTO);
   }
 
   // helpers
@@ -99,5 +104,39 @@ public class RegisterServiceImpl implements RegisterService {
       return pendingRegistrationOptional.get();
     } else throw new DataNotFoundException(email + " is not found as a pending registration or it may have expired. "
                                            + "Please submit a new registration request.");
+  }
+
+  public VerifyUserResponseDTO createNewUser(PendingRegistration pendingRegistration, VerifyRegistrationDTO verifyRegistrationDTO) {
+    checkPassword(verifyRegistrationDTO.getPassword(), verifyRegistrationDTO.getConfirmPassword());
+    User user = new User();
+    user.setEmail(pendingRegistration.getEmail());
+    user.setUserType(pendingRegistration.getUserType());
+    user.setPasswordHash(verifyRegistrationDTO.getPassword());
+    user.setFirstName(verifyRegistrationDTO.getFirstName());
+    user.setLastName(verifyRegistrationDTO.getLastName());
+    user.setPhoneNumber(verifyRegistrationDTO.getPhoneNumber());
+    user.setIsVerified(true);
+    userRepository.save(user);
+    if (pendingRegistration.getUserType() == UserType.TENANT) {
+      TenantInfo newLandlord = createNewLandlord(verifyRegistrationDTO, user);
+      return new VerifyTenantResponseDTO(user, newLandlord);
+    } else return new VerifyUserResponseDTO(user);
+  }
+
+  public TenantInfo createNewLandlord(VerifyRegistrationDTO verifyRegistrationDTO, User user) {
+    TenantInfo newLandlord = new TenantInfo();
+    newLandlord.setUser(user);
+    newLandlord.setBusinessName(verifyRegistrationDTO.getBusinessName());
+    newLandlord.setTaxId(verifyRegistrationDTO.getTaxId());
+    tenantInfoRepository.save(newLandlord);
+    return newLandlord;
+  }
+
+  public void checkPassword(String password, String confirmPassword) {
+    if (!password.equals(confirmPassword)) {
+      // TODO : make exception
+//      throw new PasswordDoesNotMatchException("confirmPassword field must be the same as password");
+      throw new RuntimeException();
+    }
   }
 }

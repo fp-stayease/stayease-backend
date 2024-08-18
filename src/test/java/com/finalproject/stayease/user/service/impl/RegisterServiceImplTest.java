@@ -1,5 +1,6 @@
 package com.finalproject.stayease.user.service.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,6 +19,7 @@ import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrat
 import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
+import com.finalproject.stayease.users.repository.TenantInfoRepository;
 import com.finalproject.stayease.users.repository.UserRepository;
 import com.finalproject.stayease.users.service.impl.RegisterServiceImpl;
 import java.util.Optional;
@@ -35,19 +37,24 @@ public class RegisterServiceImplTest {
   @MockBean
   private UserRepository userRepository;
   @MockBean
+  private TenantInfoRepository tenantInfoRepository;
+  @MockBean
   private PendingRegistrationRepository registrationRepository;
   @MockBean
   private RegisterRedisService registerRedisService;
 
   @InjectMocks
-  private RegisterServiceImpl registerService = new RegisterServiceImpl(userRepository, registrationRepository, registerRedisService);
+  private RegisterServiceImpl registerService = new RegisterServiceImpl(userRepository, tenantInfoRepository,
+      registrationRepository,
+      registerRedisService);
   @Autowired
   private PendingRegistrationRepository pendingRegistrationRepository;
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    registerService = new RegisterServiceImpl(userRepository, registrationRepository, registerRedisService);
+    registerService = new RegisterServiceImpl(userRepository, tenantInfoRepository, registrationRepository,
+        registerRedisService);
   }
 
   @Test
@@ -119,13 +126,13 @@ public class RegisterServiceImplTest {
 
     User newUser = new User();
     newUser.setId(1L);
-//    newUser.setEmail(email);
+    newUser.setEmail(email);
 //    newUser.setUserType(UserType.USER);
 //    newUser.setPasswordHash("password");
 //    newUser.setFirstName("John");
 //    newUser.setLastName("Doe");
 //    newUser.setPhoneNumber("123456789");
-//    newUser.setIsVerified(true);
+    newUser.setIsVerified(true);
 
     // Act
     when(registerRedisService.getEmail(token)).thenReturn(email);
@@ -136,6 +143,6 @@ public class RegisterServiceImplTest {
     assertNotNull(responseDTO);
     verify(pendingRegistrationRepository, times(1)).findByEmail(email);
     verify(userRepository, times(1)).save(any(User.class));
-    verify(newUser.getEmail()).equals(email);
+    assertEquals(newUser.getEmail(), email);
   }
 }

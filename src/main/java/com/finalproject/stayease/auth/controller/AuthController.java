@@ -4,6 +4,8 @@ import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.User.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
 import jakarta.validation.Valid;
 import lombok.Data;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Data
@@ -33,6 +36,12 @@ public class AuthController {
     UserType userType = UserType.TENANT;
     return Response.successfulResponse(HttpStatus.OK.value(), "Initial 'Tenant' registration successful!",
         registerService.initialRegistration(requestDTO, userType));
+  }
+
+  @PostMapping("/register/verify")
+  public ResponseEntity<Response<VerifyUserResponseDTO>> verifyRegistration(@RequestParam String token,
+      @Valid @RequestBody VerifyRegistrationDTO verifyRegistrationDTO) {
+    return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Verification successful, welcome to StayEase!", registerService.verifyRegistration(verifyRegistrationDTO, token));
   }
 
 }
