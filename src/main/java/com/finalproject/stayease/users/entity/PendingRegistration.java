@@ -8,10 +8,12 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,13 +43,19 @@ public class PendingRegistration {
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "created_at")
-  private OffsetDateTime createdAt;
+  private Instant createdAt;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "last_verification_attempt")
-  private OffsetDateTime lastVerificationAttempt;
+  private Instant lastVerificationAttempt;
 
   @Column(name = "verified_at")
-  private OffsetDateTime verifiedAt;
+  private Instant verifiedAt;
+
+  @PrePersist
+  private void onCreate() {
+    createdAt = Instant.now();
+    lastVerificationAttempt = Instant.now();
+  }
 
 }

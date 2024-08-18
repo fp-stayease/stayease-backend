@@ -7,10 +7,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +37,7 @@ public class User {
   private String email;
 
   @Size(max = 255)
+  @NotNull
   @Column(name = "password_hash")
   private String passwordHash;
 
@@ -66,17 +70,28 @@ public class User {
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "created_at")
-  private OffsetDateTime createdAt;
+  private Instant createdAt;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "updated_at")
-  private OffsetDateTime updatedAt;
+  private Instant updatedAt;
 
   @Column(name = "deleted_at")
-  private OffsetDateTime deletedAt;
+  private Instant deletedAt;
 
   public enum UserType {
     USER,
     TENANT
+  }
+
+  @PrePersist
+  protected void onCreate() {
+    createdAt = Instant.now();
+    updatedAt = Instant.now();
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    updatedAt = Instant.now();
   }
 }

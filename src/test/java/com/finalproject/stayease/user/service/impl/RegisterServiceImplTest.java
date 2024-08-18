@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.finalproject.stayease.auth.service.RegisterRedisService;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.User;
@@ -33,14 +34,16 @@ public class RegisterServiceImplTest {
   private UserRepository userRepository;
   @MockBean
   private PendingRegistrationRepository registrationRepository;
+  @MockBean
+  private RegisterRedisService registerRedisService;
 
   @InjectMocks
-  private RegisterServiceImpl userService = new RegisterServiceImpl(userRepository, registrationRepository);
+  private RegisterServiceImpl userService = new RegisterServiceImpl(userRepository, registrationRepository, registerRedisService);
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    userService = new RegisterServiceImpl(userRepository, registrationRepository);
+    userService = new RegisterServiceImpl(userRepository, registrationRepository, registerRedisService);
   }
 
   @Test
@@ -67,6 +70,7 @@ public class RegisterServiceImplTest {
     assertNotNull(responseDTO);
     verify(userRepository, times(1)).findByEmail(any(String.class));
     verify(registrationRepository, times(1)).save(any(PendingRegistration.class));
+    verify(registerRedisService, times(1)).saveVericationToken(any(), any());
     assertNull(pendingUser.getVerifiedAt());
     assert(pendingUser.getUserType()).equals(UserType.USER);
     assert(responseDTO.getMessage()).startsWith("Verification link has been sent to ");

@@ -61,7 +61,19 @@ public class RegisterServiceImpl implements RegisterService {
     registerRedisService.saveVericationToken(registration.getEmail(), token);
 
     // TODO : implement email verification send
+    // * sendVerificationEmail()
   }
+
+//  TODO: public void sendVerificationEmail()
+  // change token generation to be here
+  // create registerResponse here instead()
+
+//  public void sendVerificationEmail(PendingRegistration pendingRegistration) {
+//    String token = generateVerificationToken();
+//    String verificationUrl = ""
+//  }
+
+  // TODO: resend email verification
 
   public InitialRegistrationResponseDTO registerResponse(String email, UserType userType, String token) {
     InitialRegistrationResponseDTO responseDTO = new InitialRegistrationResponseDTO();
