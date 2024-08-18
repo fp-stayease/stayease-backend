@@ -1,12 +1,15 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.auth.service.RegisterRedisService;
+import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.User;
 import com.finalproject.stayease.users.entity.User.UserType;
-import com.finalproject.stayease.users.entity.dto.InitialRegistrationRequestDTO;
-import com.finalproject.stayease.users.entity.dto.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
+import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
 import com.finalproject.stayease.users.repository.UserRepository;
 import com.finalproject.stayease.users.service.RegisterService;
@@ -38,6 +41,12 @@ public class RegisterServiceImpl implements RegisterService {
     submitRegistration(requestDTO, userType, token);
 
     return registerResponse(email, userType, token);
+  }
+
+  @Override
+  public VerifyUserResponseDTO verifyRegistration(VerifyRegistrationDTO verifyRegistrationDTO, String token) {
+    String email = registerRedisService.getEmail(token);
+    return null;
   }
 
   // helpers
@@ -81,5 +90,14 @@ public class RegisterServiceImpl implements RegisterService {
     responseDTO.setMessage("Verification link has been sent to " + email + " for registration request as a " +  userType +
                            ". Please check your e-mail and follow the next steps to verify your account!");
     return responseDTO;
+  }
+
+  // Region - helpers for verification
+  PendingRegistration getPendingRegistration(String email) {
+    Optional<PendingRegistration> pendingRegistrationOptional = registrationRepository.findByEmail(email);
+    if (pendingRegistrationOptional.isPresent()) {
+      return pendingRegistrationOptional.get();
+    } else throw new DataNotFoundException(email + " is not found as a pending registration or it may have expired. "
+                                           + "Please submit a new registration request.");
   }
 }

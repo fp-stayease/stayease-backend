@@ -18,6 +18,7 @@ public class GlobalExceptionHandler {
 
   static {
     EXCEPTION_STATUS_MAP.put(DuplicateEntryException.class, HttpStatus.BAD_REQUEST);
+    EXCEPTION_STATUS_MAP.put(DataNotFoundException.class, HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(Exception.class)

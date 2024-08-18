@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 public class RegisterRedisRepository {
 
   public static final String VERIFICATION_TOKEN_PREFIX = "stayease:verification:strings:";
+  public static final String TOKEN_TO_EMAIL_PREFIX = "stayease:token:email:";
   public static final String VERIFIED_SUFFIX = ":verified";
 
   private final ValueOperations<String, String> valueOperations;
@@ -22,11 +23,13 @@ public class RegisterRedisRepository {
   // * save verification token
   public void saveVerificationToken(String email, String verificationToken) {
     valueOperations.set(VERIFICATION_TOKEN_PREFIX + email, verificationToken, 1, TimeUnit.HOURS);
+    valueOperations.set(TOKEN_TO_EMAIL_PREFIX + verificationToken, email, 1, TimeUnit.HOURS);
   }
 
   // * verified
-  public void verifiedEmail(String email) {
+  public void verifiedEmail(String email, String verificationToken) {
       valueOperations.set(VERIFICATION_TOKEN_PREFIX + email + VERIFIED_SUFFIX, "true", 1, TimeUnit.HOURS);
+      valueOperations.set(TOKEN_TO_EMAIL_PREFIX + verificationToken + VERIFIED_SUFFIX, "true", 1, TimeUnit.HOURS);
   }
 
   // helpers
@@ -34,10 +37,16 @@ public class RegisterRedisRepository {
     return valueOperations.get(VERIFICATION_TOKEN_PREFIX + email);
   }
 
+  public String getEmail(String token) {
+    return valueOperations.get(TOKEN_TO_EMAIL_PREFIX + token);
+  }
+
   public boolean isValid (String email, String verificationToken) {
     String token = getToken(email);
+    String storedEmail = getEmail(verificationToken);
     String verified = valueOperations.get(VERIFICATION_TOKEN_PREFIX + email + VERIFIED_SUFFIX);
-    return token != null && verified == null && token.equals(verificationToken);
+    String verifiedToken = valueOperations.get(TOKEN_TO_EMAIL_PREFIX + verificationToken + VERIFIED_SUFFIX);
+    return token != null && storedEmail != null && verified == null && verifiedToken == null && token.equals(verificationToken) && storedEmail.equals(email);
   }
 
 }

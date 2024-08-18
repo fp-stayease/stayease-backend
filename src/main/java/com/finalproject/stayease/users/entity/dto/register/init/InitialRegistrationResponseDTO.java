@@ -1,4 +1,4 @@
-package com.finalproject.stayease.users.entity.dto;
+package com.finalproject.stayease.users.entity.dto.register.init;
 
 import lombok.Data;
 

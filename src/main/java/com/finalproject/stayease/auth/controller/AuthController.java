@@ -2,8 +2,8 @@ package com.finalproject.stayease.auth.controller;
 
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.User.UserType;
-import com.finalproject.stayease.users.entity.dto.InitialRegistrationRequestDTO;
-import com.finalproject.stayease.users.entity.dto.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
+import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
 import jakarta.validation.Valid;
 import lombok.Data;
