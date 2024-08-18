@@ -17,6 +17,7 @@ import com.finalproject.stayease.users.repository.TenantInfoRepository;
 import com.finalproject.stayease.users.repository.UserRepository;
 import com.finalproject.stayease.users.service.RegisterService;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.Data;
@@ -31,6 +32,7 @@ public class RegisterServiceImpl implements RegisterService {
   private final TenantInfoRepository tenantInfoRepository;
   private final PendingRegistrationRepository registrationRepository;
   private final RegisterRedisService registerRedisService;
+  private final PendingRegistrationRepository pendingRegistrationRepository;
 
 
   @Override
@@ -51,6 +53,7 @@ public class RegisterServiceImpl implements RegisterService {
   public VerifyUserResponseDTO verifyRegistration(VerifyRegistrationDTO verifyRegistrationDTO, String token) {
     String email = registerRedisService.getEmail(token);
     PendingRegistration pendingRegistration = getPendingRegistration(email);
+    registerRedisService.verifiedEmail(email, token);
     return createNewUser(pendingRegistration, verifyRegistrationDTO);
   }
 
@@ -117,6 +120,10 @@ public class RegisterServiceImpl implements RegisterService {
     user.setPhoneNumber(verifyRegistrationDTO.getPhoneNumber());
     user.setIsVerified(true);
     userRepository.save(user);
+
+    pendingRegistration.setVerifiedAt(Instant.now());
+    pendingRegistrationRepository.save(pendingRegistration);
+
     if (pendingRegistration.getUserType() == UserType.TENANT) {
       TenantInfo newLandlord = createNewLandlord(verifyRegistrationDTO, user);
       return new VerifyTenantResponseDTO(user, newLandlord);
