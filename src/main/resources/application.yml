@@ -38,3 +38,6 @@ spring:
           auth: true
           starttls:
             enable: true
+pending:
+  cleanup:
+    cron: 0 0 */12 * * ?
