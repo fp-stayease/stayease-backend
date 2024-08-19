@@ -17,7 +17,7 @@ public class RegisterRedisServiceImpl implements RegisterRedisService {
   }
 
   @Override
-  public void verifiedEmail(String email, String verificationToken) {
+  public void verifyEmail(String email, String verificationToken) {
     registerRedisRepository.verifiedEmail(email, verificationToken);
   }
 

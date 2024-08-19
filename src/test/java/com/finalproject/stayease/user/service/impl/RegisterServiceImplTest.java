@@ -30,6 +30,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootTest
 public class RegisterServiceImplTest {
@@ -42,11 +43,13 @@ public class RegisterServiceImplTest {
   private PendingRegistrationRepository registrationRepository;
   @MockBean
   private RegisterRedisService registerRedisService;
+  @MockBean
+  private PasswordEncoder passwordEncoder;
 
   @InjectMocks
   private RegisterServiceImpl registerService = new RegisterServiceImpl(userRepository, tenantInfoRepository,
       registrationRepository,
-      registerRedisService);
+      registerRedisService, passwordEncoder);
   @Autowired
   private PendingRegistrationRepository pendingRegistrationRepository;
 
@@ -54,7 +57,7 @@ public class RegisterServiceImplTest {
   public void setUp() {
     MockitoAnnotations.openMocks(this);
     registerService = new RegisterServiceImpl(userRepository, tenantInfoRepository, registrationRepository,
-        registerRedisService);
+        registerRedisService, passwordEncoder);
   }
 
   @Test
@@ -83,8 +86,8 @@ public class RegisterServiceImplTest {
     verify(registrationRepository, times(1)).save(any(PendingRegistration.class));
     verify(registerRedisService, times(1)).saveVericationToken(any(), any());
     assertNull(pendingUser.getVerifiedAt());
-    assert(pendingUser.getUserType()).equals(UserType.USER);
-    assert(responseDTO.getMessage()).startsWith("Verification link has been sent to ");
+    assert (pendingUser.getUserType()).equals(UserType.USER);
+    assert (responseDTO.getMessage()).startsWith("Verification link has been sent to ");
   }
 
   @Test
@@ -93,7 +96,7 @@ public class RegisterServiceImplTest {
     String email = "email@email.com";
     UserType userType = UserType.USER;
 
-    InitialRegistrationRequestDTO requestDTO  = new InitialRegistrationRequestDTO();
+    InitialRegistrationRequestDTO requestDTO = new InitialRegistrationRequestDTO();
     requestDTO.setEmail(email);
 
     User existingUser = new User();
