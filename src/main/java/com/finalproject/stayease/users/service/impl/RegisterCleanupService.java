@@ -17,6 +17,6 @@ public class RegisterCleanupService {
   public void cleanupExpiredPendingRegistrations() {
     Instant now = Instant.now();
     Instant expirationThreshold = now.minus(1, ChronoUnit.DAYS);
-    registrationRepository.deleteByCreatedAtBefore(expirationThreshold);
+    registrationRepository.deleteExpired(expirationThreshold);
   }
 }

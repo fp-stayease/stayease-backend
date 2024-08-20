@@ -66,7 +66,8 @@ public class RegisterServiceImpl implements RegisterService {
     }
   }
 
-  private InitialRegistrationResponseDTO handleExistingRegistration(PendingRegistration pendingRegistration) {
+  @Transactional
+  public InitialRegistrationResponseDTO handleExistingRegistration(PendingRegistration pendingRegistration) {
     Instant now = Instant.now();
 
     String email = pendingRegistration.getEmail();
@@ -74,7 +75,7 @@ public class RegisterServiceImpl implements RegisterService {
 
     // last pending registration is more than a day old
     if (now.minusSeconds(24 * 60 * 60).getEpochSecond() > pendingRegistration.getCreatedAt().getEpochSecond()) {
-      registrationRepository.delete(pendingRegistration);
+      registrationRepository.deleteById(pendingRegistration.getId());
       return submitRegistration(email, userType);
     }
 

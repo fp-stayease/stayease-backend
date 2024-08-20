@@ -38,7 +38,7 @@ public class RegisterCleanupServiceTest {
     registerCleanupService.cleanupExpiredPendingRegistrations();
 
     // Assert
-    verify(registrationRepository, times(1)).deleteByCreatedAtBefore(expirationThreshold);
+    verify(registrationRepository, times(1)).deleteExpired(expirationThreshold);
   }
 
 }
