@@ -14,7 +14,7 @@ public class CorsConfigurationSourceImpl implements CorsConfigurationSource {
   public CorsConfiguration getCorsConfiguration(@NonNull HttpServletRequest request) {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
     corsConfiguration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-    corsConfiguration.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+    corsConfiguration.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:3001"));
     corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     corsConfiguration.setAllowCredentials(true);
     corsConfiguration.setExposedHeaders(
