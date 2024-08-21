@@ -20,7 +20,6 @@ import lombok.Data;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -35,9 +34,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -69,7 +65,11 @@ public class SecurityConfig {
     var publicKey = rsaKeyConfigProperties.publicKey();
     var privateKey = rsaKeyConfigProperties.privateKey();
     if (envConfigProperties.toString().equals("production")) {
-      handleProd(publicKey, privateKey);
+      String publicKeyString = System.getenv("PUBLIC_KEY");
+      String privateKeyString = System.getenv("PRIVATE_KEY");
+
+      publicKey = (RSAPublicKey) parsePublicKey(publicKeyString);
+      privateKey = (RSAPrivateKey) parsePrivateKey(privateKeyString);
     }
 
     JWK rsaJwk =
@@ -78,14 +78,6 @@ public class SecurityConfig {
 
     JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
     return new NimbusJwtEncoder(jwkSource);
-  }
-
-  private void handleProd(RSAPublicKey publicKey, RSAPrivateKey privateKey) throws Exception {
-    String publicKeyString = System.getenv("PUBLIC_KEY");
-    String privateKeyString = System.getenv("PRIVATE_KEY");
-
-    publicKey = (RSAPublicKey) parsePublicKey(publicKeyString);
-    privateKey = (RSAPrivateKey) parsePrivateKey(privateKeyString);
   }
 
   private PublicKey parsePublicKey(String key) throws Exception {
