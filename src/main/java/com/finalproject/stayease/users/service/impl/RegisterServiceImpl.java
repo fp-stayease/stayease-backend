@@ -22,12 +22,14 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @Data
 @Transactional
+@Slf4j
 public class RegisterServiceImpl implements RegisterService {
 
   private final UserRepository userRepository;
@@ -45,7 +47,7 @@ public class RegisterServiceImpl implements RegisterService {
     checkExistingUser(email);
     Optional<PendingRegistration> registration = registrationRepository.findByEmail(email);
     if (registration.isPresent()) {
-      return handleExistingRegistration(registration.get());
+      return handleExistingRegistration(registration.get(), userType);
     } else return submitRegistration(email, userType);
   }
 
@@ -67,21 +69,35 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   @Transactional
-  public InitialRegistrationResponseDTO handleExistingRegistration(PendingRegistration pendingRegistration) {
+  public InitialRegistrationResponseDTO handleExistingRegistration(PendingRegistration pendingRegistration,
+      UserType requestedUserType) {
     Instant now = Instant.now();
 
     String email = pendingRegistration.getEmail();
     UserType userType = pendingRegistration.getUserType();
 
+    // if user changed user type
+    if (!userType.equals(requestedUserType)) {
+      pendingRegistration.setUserType(requestedUserType);
+      log.info("User has requested to change user type to {}", requestedUserType);
+      String message = "You have requested to change your user type to " + requestedUserType +
+                       ". Please verify your email to complete the registration.";
+      return resendVerificationEmail(pendingRegistration, message);
+    }
+
     // last pending registration is more than a day old
     if (now.minusSeconds(24 * 60 * 60).getEpochSecond() > pendingRegistration.getCreatedAt().getEpochSecond()) {
       registrationRepository.deleteById(pendingRegistration.getId());
+      log.info("User {} has requested to register more than a day ago. The request has been deleted. Registration "
+               + "will be resubmitted.", email);
       return submitRegistration(email, userType);
     }
 
     // last verification email was sent less than an hour before
     if (now.minusSeconds(60 * 60).getEpochSecond() < pendingRegistration.getLastVerificationAttempt().getEpochSecond()) {
-      return resendVerificationEmail(pendingRegistration);
+      log.info("User {} has requested to register less than an hour ago, resending verification email.", email);
+      String message = "Your last verification is still valid, we have resent it to your email at " + email;
+      return resendVerificationEmail(pendingRegistration, message);
     }
     return updateAndResendVerificationEmail(pendingRegistration);
   }
@@ -105,13 +121,12 @@ public class RegisterServiceImpl implements RegisterService {
     return sendVerificationEmail(registration, token, message);
   }
 
-  public InitialRegistrationResponseDTO resendVerificationEmail(PendingRegistration pendingRegistration) {
+  public InitialRegistrationResponseDTO resendVerificationEmail(PendingRegistration pendingRegistration, String message) {
     String email = pendingRegistration.getEmail();
     String token = registerRedisService.getToken(email);
 
     // TODO : resend email func here
 
-    String message = "Your last verification is still valid, we have resent it to your email at " + email;
     return registerResponse(message, token);
   }
 
@@ -133,7 +148,6 @@ public class RegisterServiceImpl implements RegisterService {
     // TODO: implement sending email here
     // emailService.sendVerificationEmail(pendingRegistration.getEmail(), token/URL)
 
-
     return registerResponse(message, token);
   }
 
@@ -147,6 +161,7 @@ public class RegisterServiceImpl implements RegisterService {
     InitialRegistrationResponseDTO responseDTO = new InitialRegistrationResponseDTO();
     responseDTO.setToken(token);
     responseDTO.setMessage(message);
+    log.info("Request to register successful.");
     return responseDTO;
   }
 
