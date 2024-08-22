@@ -54,6 +54,11 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     return new SocialLoginResponse(newUser, null); // Add JWT token generation here
   }
 
+  @Override
+  public Optional<SocialLogin> findByKey(String provider, String providerUserId) {
+    return socialLoginRepository.findByProviderAndProviderUserId(provider, providerUserId);
+  }
+
   private User createNewUser(SocialLoginRequest request, UserType userType) {
     User user = new User();
     user.setEmail(request.getEmail());
