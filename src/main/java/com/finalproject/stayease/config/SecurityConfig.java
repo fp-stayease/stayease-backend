@@ -4,13 +4,12 @@ package com.finalproject.stayease.config;
 import com.finalproject.stayease.auth.filter.JwtAuthenticationFilter;
 import com.finalproject.stayease.auth.service.impl.CustomAuthenticationSuccessHandler;
 import com.finalproject.stayease.auth.service.impl.CustomOAuth2UserService;
-import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,8 +17,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -30,25 +32,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Data
 public class SecurityConfig {
 
-  private final UserDetailsServiceImpl userDetailsService;
   private final CorsConfigurationSourceImpl corsConfigurationSource;
   private final CustomOAuth2UserService customOAuth2UserService;
   private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
   private final JwtDecoder jwtDecoder;
 
+  @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+  private String googleClientSecret;
+  @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
+  private String googleRedirectUri;
 
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
-
-  @Bean
-  public AuthenticationManager authenticationManager() {
-    var authProvider = new DaoAuthenticationProvider();
-    authProvider.setUserDetailsService(userDetailsService);
-    authProvider.setPasswordEncoder(passwordEncoder());
-    return new ProviderManager(authProvider);
-  }
 
   // TODO : configure later, only here for starter
   @Bean
@@ -71,7 +64,30 @@ public class SecurityConfig {
 
   private void configureOAuth2Login(OAuth2LoginConfigurer<HttpSecurity> oauth2) {
     oauth2
+        .clientRegistrationRepository(clientRegistrationRepository())
         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
         .successHandler(customAuthenticationSuccessHandler);
+  }
+
+  @Bean
+  public ClientRegistrationRepository clientRegistrationRepository() {
+    List<ClientRegistration> registrations = new ArrayList<>();
+    registrations.add(googleClientRegistration());
+    return new InMemoryClientRegistrationRepository(registrations);
+  }
+
+  private ClientRegistration googleClientRegistration() {
+    return ClientRegistration.withRegistrationId("google")
+        .clientId("317413251269-p05rur3ishg106cqv3ma9qie48mvr6n1.apps.googleusercontent.com")
+        .clientSecret(googleClientSecret)
+        .scope("email", "profile")
+        .authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
+        .tokenUri("https://oauth2.googleapis.com/token")
+        .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
+        .userNameAttributeName(IdTokenClaimNames.SUB)
+        .clientName("Google")
+        .redirectUri(googleRedirectUri)
+        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+        .build();
   }
 }

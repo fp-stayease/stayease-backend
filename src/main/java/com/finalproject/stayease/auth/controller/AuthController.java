@@ -1,7 +1,5 @@
 package com.finalproject.stayease.auth.controller;
 
-import com.finalproject.stayease.auth.dto.SocialLoginRequest;
-import com.finalproject.stayease.auth.dto.SocialLoginResponse;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.User.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
@@ -9,7 +7,6 @@ import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrat
 import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
-import com.finalproject.stayease.users.service.SocialLoginService;
 import jakarta.validation.Valid;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -29,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final RegisterService registerService;
-  private final SocialLoginService socialLoginService;
 
   @GetMapping("")
   public String getLoggedInUser() {
@@ -58,16 +54,16 @@ public class AuthController {
 
   // Region - quarantine methods
 
-  @PostMapping("/social-login/user")
-  public ResponseEntity<Response<SocialLoginResponse>> socialLoginUser(@RequestBody SocialLoginRequest request) {
-    SocialLoginResponse response = socialLoginService.socialLogin(request, UserType.USER);
-    return Response.successfulResponse(HttpStatus.OK.value(), "User social login successful!", response);
-  }
-
-  @PostMapping("/social-login/tenant")
-  public ResponseEntity<Response<SocialLoginResponse>> socialLoginTenant(@RequestBody SocialLoginRequest request) {
-    SocialLoginResponse response = socialLoginService.socialLogin(request, UserType.TENANT);
-    return Response.successfulResponse(HttpStatus.OK.value(), "Tenant social login successful!", response);
-  }
+//  @PostMapping("/social-login/user")
+//  public ResponseEntity<Response<SocialLoginResponse>> socialLoginUser(@RequestBody SocialLoginRequest request) {
+//    SocialLoginResponse response = socialLoginService.socialLogin(request, UserType.USER);
+//    return Response.successfulResponse(HttpStatus.OK.value(), "User social login successful!", response);
+//  }
+//
+//  @PostMapping("/social-login/tenant")
+//  public ResponseEntity<Response<SocialLoginResponse>> socialLoginTenant(@RequestBody SocialLoginRequest request) {
+//    SocialLoginResponse response = socialLoginService.socialLogin(request, UserType.TENANT);
+//    return Response.successfulResponse(HttpStatus.OK.value(), "Tenant social login successful!", response);
+//  }
 
 }

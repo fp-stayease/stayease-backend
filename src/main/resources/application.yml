@@ -12,18 +12,20 @@ spring:
           google:
             client-id: 317413251269-p05rur3ishg106cqv3ma9qie48mvr6n1.apps.googleusercontent.com
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${BASE_URL}/login/oauth2/code/google
             scope:
               - email
               - profile
           github:
             client-id: Ov23li10Aa5czyF3eFoa
             client-secret: ${GITHUB_CLIENT_SECRET}
+            redirect-uri: ${BASE_URL}/auth/login/oauth2/code/github
             scope:
               - user:email
               - read:user
         provider:
           google:
-            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
@@ -73,9 +75,3 @@ pending:
 rsa:
   private-key: ${PRIVATE_KEY}
   public-key: ${PUBLIC_KEY}
-#okta:
-#  oauth2:
-#    issuer: https://strwbry.us.auth0.com/
-#    client-id: NjOIipXd8PoJpN0dRGv0kPIn1anXqlhX
-#    client-secret: ${OKTA_CLIENT_SECRET}
-#    redirect-uri: ${OKTA_REDIRECT_URI}
