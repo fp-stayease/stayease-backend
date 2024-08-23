@@ -3,7 +3,6 @@ package com.finalproject.stayease.auth.service.impl;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.users.entity.User;
 import com.finalproject.stayease.users.service.UserService;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -23,7 +22,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-      Authentication authentication) throws IOException, ServletException {
+      Authentication authentication) throws IOException {
     OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
     String email = oAuth2User.getAttribute("email");
 
@@ -32,8 +31,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
       String token = jwtService.generateToken(existingUser.get());
       sendTokenResponse(response, token);
     } else {
-      // Redirect to FE page for user type selection
-      response.sendRedirect("/select-user-type?email=" + email);
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.getWriter().write("User not found");
     }
 
   }
@@ -42,5 +41,39 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     response.setContentType("application/json");
     response.getWriter().write("{\"token\":\"" + token + "\"}");
   }
+
+//  private UserInfo fetchGoogleUserInfo(String accessToken) {
+//    RestTemplate restTemplate = new RestTemplate();
+//    HttpHeaders headers = new HttpHeaders();
+//    headers.setBearerAuth(accessToken);
+//
+//    HttpEntity<String> entity = new HttpEntity<>(headers);
+//
+//    ResponseEntity<UserInfo> response = restTemplate.exchange(
+//        "https://www.googleapis.com/oauth2/v3/userinfo",
+//        HttpMethod.GET, entity, UserInfo.class);
+//
+//    return response.getBody();
+//  }
+
+//  private User registerAndLinkNewUser(UserInfo userInfo) {
+//    User newUser = new User();
+//    newUser.setEmail(userInfo.getEmailAddress());
+//    newUser.setFirstName(userInfo.getGivenName());
+//    newUser.setLastName(userInfo.getFamilyName());
+//    newUser.setAvatar(userInfo.getPicture());
+//    newUser.setUserType("USER"); // or retrieve this based on selection
+//    newUser.setVerified(true); // Assuming OAuth2 verifies email
+//    userService.save(newUser);
+//
+//    // Save Social Login info
+//    SocialLogin socialLogin = new SocialLogin();
+//    socialLogin.setUser(newUser);
+//    socialLogin.setProvider(userInfo.getProvider());
+//    socialLogin.setProviderUserId(userInfo.getProviderUserId());
+//    socialLoginService.save(socialLogin);
+//
+//    return newUser;
+//  }
 
 }

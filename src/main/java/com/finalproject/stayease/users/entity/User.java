@@ -14,7 +14,6 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -37,7 +36,6 @@ public class User {
   private String email;
 
   @Size(max = 255)
-  @NotNull
   @Column(name = "password_hash")
   private String passwordHash;
 
@@ -62,7 +60,7 @@ public class User {
   @Enumerated(EnumType.STRING)
   @NotNull
   @Column(name = "user_type", nullable = false)
-  private UserType userType;
+  private UserType userType = UserType.USER;
 
   @ColumnDefault("false")
   @Column(name = "is_verified")

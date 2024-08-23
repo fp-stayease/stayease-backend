@@ -1,7 +1,7 @@
 package com.finalproject.stayease.auth.service.impl;
 
+import com.finalproject.stayease.auth.dto.SocialLoginRequest;
 import com.finalproject.stayease.auth.entity.UserAuth;
-import com.finalproject.stayease.users.entity.SocialLogin;
 import com.finalproject.stayease.users.entity.User;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UserService;
@@ -26,8 +26,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
   private final SocialLoginService socialLoginService;
   private final UserService userService;
 
-  // TODO this is only for USER, configure how to do tenant
-
   @Override
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
     OAuth2User oAuth2User = super.loadUser(userRequest);
@@ -35,20 +33,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     String provider = userRequest.getClientRegistration().getRegistrationId();
     String providerUserId = extractProviderId(oAuth2User, provider);
     String email = oAuth2User.getAttribute("email");
-//    String firstName = oAuth2User.getAttribute("given_name");
-//    String lastName = oAuth2User.getAttribute("family_name");
+    String firstName = oAuth2User.getAttribute("given_name");
+    String lastName = oAuth2User.getAttribute("family_name");
+    String pictureUrl = oAuth2User.getAttribute("picture");
 
-//    SocialLoginRequest request = new SocialLoginRequest(provider, providerUserId, email, firstName, lastName);
-//    SocialLoginResponse response = socialLoginService.socialLogin(request, UserType.USER);
+    Optional<User> userOptional = userService.findByEmail(email);
+    User user;
 
-    Optional<SocialLogin> existingSocialLogin = socialLoginService.findByKey(provider, providerUserId);
-    if (existingSocialLogin.isPresent()) {
-      return new DefaultOAuth2User(extractAuthorities(existingSocialLogin.get().getUser()),
-          oAuth2User.getAttributes(), "email");
+    if (userOptional.isPresent()) {
+      user = userOptional.get();
+    } else {
+      // !! TODO : User is by default a 'USER' don't forget to implement change userType from front end
+      SocialLoginRequest request = new SocialLoginRequest(provider, providerUserId, email, firstName, lastName, pictureUrl);
+      user = socialLoginService.registerOAuth2User(request);
     }
 
-    // if user doesn't exist, return as is, continue to redirection for user type
-    return oAuth2User;
+    return new DefaultOAuth2User(extractAuthorities(user), oAuth2User.getAttributes(), "email");
   }
 
   private String extractProviderId(OAuth2User oauth2User, String provider) {

@@ -41,8 +41,6 @@ public class SocialLoginResponse {
     this.userType = user.getUserType();
     this.isNewUser = user.getCreatedAt().equals(user.getUpdatedAt());
     this.tenantInfo = tenantInfo;
-
-    // TODO!!
     this.token = token;
   }
 }

@@ -31,8 +31,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   private final UserDetailsServiceImpl userDetailsService;
-//  private final RsaKeyConfigProperties rsaKeyConfigProperties;
-//  private final EnvConfigProperties envConfigProperties;
   private final CorsConfigurationSourceImpl corsConfigurationSource;
   private final CustomOAuth2UserService customOAuth2UserService;
   private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
@@ -51,53 +49,6 @@ public class SecurityConfig {
     authProvider.setPasswordEncoder(passwordEncoder());
     return new ProviderManager(authProvider);
   }
-
-//  @Bean
-//  public JwtEncoder jwtEncoder() throws Exception {
-//    var publicKey = rsaKeyConfigProperties.publicKey();
-//    var privateKey = rsaKeyConfigProperties.privateKey();
-//    if (envConfigProperties.toString().equals("production")) {
-//      String publicKeyString = System.getenv("PUBLIC_KEY");
-//      String privateKeyString = System.getenv("PRIVATE_KEY");
-//
-//      publicKey = (RSAPublicKey) parsePublicKey(publicKeyString);
-//      privateKey = (RSAPrivateKey) parsePrivateKey(privateKeyString);
-//    }
-//
-//    JWK rsaJwk =
-//        new RSAKey.Builder(publicKey).privateKey(privateKey).build();
-//    JWKSet jwkSet = new JWKSet(rsaJwk);
-//
-//    JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
-//    return new NimbusJwtEncoder(jwkSource);
-//  }
-//
-//  private PublicKey parsePublicKey(String key) throws Exception {
-//    String publicKeyPEM = key
-//        .replace("-----BEGIN PUBLIC KEY-----", "")
-//        .replace("-----END PUBLIC KEY-----", "")
-//        .replaceAll("\\s+", "");
-//    byte[] encoded = Base64.getDecoder().decode(publicKeyPEM);
-//    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-//    X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
-//    return keyFactory.generatePublic(keySpec);
-//  }
-//
-//  private PrivateKey parsePrivateKey(String key) throws Exception {
-//    String privateKeyPEM = key
-//        .replace("-----BEGIN PRIVATE KEY-----", "")
-//        .replace("-----END PRIVATE KEY-----", "")
-//        .replaceAll("\\s+", "");
-//    byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
-//    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-//    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-//    return keyFactory.generatePrivate(keySpec);
-//  }
-//
-//  @Bean
-//  public JwtDecoder jwtDecoder() throws Exception {
-//    return NimbusJwtDecoder.withPublicKey(rsaKeyConfigProperties.publicKey()).build();
-//  }
 
   // TODO : configure later, only here for starter
   @Bean
@@ -120,7 +71,7 @@ public class SecurityConfig {
 
   private void configureOAuth2Login(OAuth2LoginConfigurer<HttpSecurity> oauth2) {
     oauth2
-        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)) // TODO
+        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
         .successHandler(customAuthenticationSuccessHandler);
   }
 }

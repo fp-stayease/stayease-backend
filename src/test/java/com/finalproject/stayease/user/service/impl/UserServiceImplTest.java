@@ -5,6 +5,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.finalproject.stayease.users.entity.User;
+import com.finalproject.stayease.users.repository.SocialLoginRepository;
+import com.finalproject.stayease.users.repository.TenantInfoRepository;
 import com.finalproject.stayease.users.repository.UserRepository;
 import com.finalproject.stayease.users.service.impl.UserServiceImpl;
 import java.util.Optional;
@@ -20,14 +22,18 @@ public class UserServiceImplTest {
 
   @MockBean
   private UserRepository userRepository;
+  @MockBean
+  private SocialLoginRepository socialLoginRepository;
+  @MockBean
+  private TenantInfoRepository tenantInfoRepository;
 
   @InjectMocks
-  private UserServiceImpl userService = new UserServiceImpl(userRepository);
+  private UserServiceImpl userService = new UserServiceImpl(userRepository, socialLoginRepository, tenantInfoRepository);
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    userService = new UserServiceImpl(userRepository);
+    userService = new UserServiceImpl(userRepository, socialLoginRepository, tenantInfoRepository);
   }
 
   @Test

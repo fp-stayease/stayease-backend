@@ -23,6 +23,24 @@ public class SocialLoginServiceImpl implements SocialLoginService {
   private final TenantInfoRepository tenantInfoRepository;
 
   @Override
+  public User registerOAuth2User(SocialLoginRequest request) {
+    User user = new User();
+    user.setEmail(request.getEmail());
+    user.setFirstName(request.getFirstName());
+    user.setLastName(request.getLastName());
+    user.setAvatar(request.getPictureUrl());
+    user.setIsVerified(true);
+    user = userRepository.save(user);
+
+    SocialLogin socialLogin = new SocialLogin();
+    socialLogin.setUser(user);
+    socialLogin.setProvider(request.getProvider());
+    socialLogin.setProviderUserId(request.getProviderUserId());
+    socialLoginRepository.save(socialLogin);
+    return user;
+  }
+
+  @Override
   public SocialLoginResponse socialLogin(SocialLoginRequest request, UserType userType) {
     String provider = request.getProvider();
     String providerUserId = request.getProviderUserId();

@@ -14,6 +14,9 @@ import jakarta.validation.Valid;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,17 +31,21 @@ public class AuthController {
   private final RegisterService registerService;
   private final SocialLoginService socialLoginService;
 
-  @PostMapping("/register/user")
-  public ResponseEntity<Response<InitialRegistrationResponseDTO>> initiateUserRegistration(@Valid @RequestBody InitialRegistrationRequestDTO requestDTO) {
-    UserType userType = UserType.USER;
-    return Response.successfulResponse(HttpStatus.OK.value(), "Initial 'User' registration successful!",
-        registerService.initialRegistration(requestDTO, userType));
+  @GetMapping("")
+  public String getLoggedInUser() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    String username = auth.getName();
+    String role = auth.getAuthorities().iterator().next().getAuthority();
+    if (username.equals("anonymousUser")) {
+      return "Not logged in";
+    }
+    return "Logged in user: " + username + " with role: " + role;
   }
 
-  @PostMapping("/register/tenant")
-  public ResponseEntity<Response<InitialRegistrationResponseDTO>> initiateTenantRegistration(@Valid @RequestBody InitialRegistrationRequestDTO requestDTO) {
-    UserType userType = UserType.TENANT;
-    return Response.successfulResponse(HttpStatus.OK.value(), "Initial 'Tenant' registration successful!",
+  @PostMapping("/register")
+  public ResponseEntity<Response<InitialRegistrationResponseDTO>> initiateUserRegistration(@RequestParam("userType") String type, @Valid @RequestBody InitialRegistrationRequestDTO requestDTO) {
+    UserType userType = UserType.valueOf(type.toUpperCase());
+    return Response.successfulResponse(HttpStatus.OK.value(), "Initial 'User' registration successful!",
         registerService.initialRegistration(requestDTO, userType));
   }
 
@@ -47,6 +54,9 @@ public class AuthController {
       @Valid @RequestBody VerifyRegistrationDTO verifyRegistrationDTO) {
     return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Verification successful, welcome to StayEase!", registerService.verifyRegistration(verifyRegistrationDTO, token));
   }
+
+
+  // Region - quarantine methods
 
   @PostMapping("/social-login/user")
   public ResponseEntity<Response<SocialLoginResponse>> socialLoginUser(@RequestBody SocialLoginRequest request) {

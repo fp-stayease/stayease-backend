@@ -16,20 +16,21 @@ public class SocialLoginRequest {
   private String providerUserId;
   @Email(message = "Please enter a valid e-mail.")
   private String email;
-  @NotEmpty
   private String firstName;
-  @NotEmpty
   private String lastName;
+  private String pictureUrl;
 
   // Optional fields for tenant registration
   private String businessName;
   private String taxId;
 
-  public SocialLoginRequest(String provider, String providerUserId, String email, String firstName, String lastName) {
+  public SocialLoginRequest(String provider, String providerUserId, String email, String firstName, String lastName,
+      String pictureUrl) {
     this.provider = provider;
     this.providerUserId = providerUserId;
     this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
+    this.pictureUrl = pictureUrl;
   }
 }

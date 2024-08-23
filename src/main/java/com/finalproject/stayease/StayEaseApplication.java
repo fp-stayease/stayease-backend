@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @EnableConfigurationProperties({RsaKeyConfigProperties.class, EnvConfigProperties.class})
 public class StayEaseApplication {
-
   public static void main(String[] args) {
     SpringApplication.run(StayEaseApplication.class, args);
   }
