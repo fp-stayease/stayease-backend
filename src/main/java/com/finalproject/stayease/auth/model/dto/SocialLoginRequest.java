@@ -1,4 +1,4 @@
-package com.finalproject.stayease.auth.dto;
+package com.finalproject.stayease.auth.model.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;

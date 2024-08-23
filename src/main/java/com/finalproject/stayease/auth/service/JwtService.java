@@ -6,7 +6,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 public interface JwtService {
 
-  String generateToken(User user);
+  String generateAccessToken(User user);
+  String generateRefreshToken(User user);
   void invalidateToken(String email);
   boolean isTokenValid(String token, String email);
   Jwt decodeToken(String token);

@@ -1,4 +1,4 @@
-package com.finalproject.stayease.auth.entity;
+package com.finalproject.stayease.auth.model.entity;
 
 import com.finalproject.stayease.users.entity.User;
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package com.finalproject.stayease.auth.service.impl;
 
-import com.finalproject.stayease.auth.dto.SocialLoginRequest;
-import com.finalproject.stayease.auth.entity.UserAuth;
+import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
+import com.finalproject.stayease.auth.model.entity.UserAuth;
 import com.finalproject.stayease.users.entity.User;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UserService;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 @EqualsAndHashCode(callSuper = true)
 @Service
 @Data
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
 
   private final SocialLoginService socialLoginService;
   private final UserService userService;

@@ -8,17 +8,19 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class AuthRedisRepository {
 
-  private final static String STRING_KEY_PREFIX = "stayease:jwt:strings:";
+  private final static String STRING_KEY_PREFIX = "stayease:jwt:strings:refresh:";
   private final static String BLACKLIST_KEY_SUFFIX = ":blacklist";
 
   private final ValueOperations<String, String> valueOperations;
+  private final RedisTemplate<String, String> redisTemplate;
 
   public AuthRedisRepository(RedisTemplate<String, String> redisTemplate) {
     this.valueOperations = redisTemplate.opsForValue();
+    this.redisTemplate = redisTemplate;
   }
 
   public void saveJwtKey(String email, String jwtKey) {
-    valueOperations.set(STRING_KEY_PREFIX + email, jwtKey, 12, TimeUnit.HOURS);
+    valueOperations.set(STRING_KEY_PREFIX + email, jwtKey, 7, TimeUnit.DAYS);
   }
 
   public void blacklistKey(String email) {

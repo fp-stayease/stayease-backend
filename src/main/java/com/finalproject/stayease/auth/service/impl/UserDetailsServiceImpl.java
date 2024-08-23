@@ -1,7 +1,6 @@
 package com.finalproject.stayease.auth.service.impl;
 
-import com.finalproject.stayease.auth.entity.UserAuth;
-import com.finalproject.stayease.users.repository.UserRepository;
+import com.finalproject.stayease.auth.model.entity.UserAuth;
 import com.finalproject.stayease.users.service.UserService;
 import lombok.Data;
 import org.springframework.security.core.userdetails.UserDetails;

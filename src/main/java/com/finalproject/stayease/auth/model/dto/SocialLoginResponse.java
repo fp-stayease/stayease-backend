@@ -1,4 +1,4 @@
-package com.finalproject.stayease.auth.dto;
+package com.finalproject.stayease.auth.model.dto;
 
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.User;

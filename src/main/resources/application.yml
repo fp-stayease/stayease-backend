@@ -19,7 +19,7 @@ spring:
           github:
             client-id: Ov23li10Aa5czyF3eFoa
             client-secret: ${GITHUB_CLIENT_SECRET}
-            redirect-uri: ${BASE_URL}/auth/login/oauth2/code/github
+            redirect-uri: ${BASE_URL}/login/oauth2/code/github
             scope:
               - user:email
               - read:user

@@ -1,6 +1,6 @@
 package com.finalproject.stayease.auth.service.impl;
 
-import com.finalproject.stayease.auth.entity.UserAuth;
+import com.finalproject.stayease.auth.model.entity.UserAuth;
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.users.entity.User;
@@ -35,7 +35,7 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public String generateToken(User user) {
+  public String generateAccessToken(User user) {
     Instant now = Instant.now();
 
     UserAuth userAuth = new UserAuth(user);
@@ -48,7 +48,7 @@ public class JwtServiceImpl implements JwtService {
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
-        .expiresAt(now.plus(12, ChronoUnit.HOURS))
+        .expiresAt(now.plus(1, ChronoUnit.HOURS))
         .subject(user.getEmail())
         .claim("userId", user.getId())
         .claim("userType", user.getUserType())
@@ -57,9 +57,27 @@ public class JwtServiceImpl implements JwtService {
 
     String jwt = jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
 
-    authRedisRepository.saveJwtKey(user.getEmail(), jwt);
-
     return jwt;
+  }
+
+  @Override
+  public String generateRefreshToken(User user) {
+    Instant now = Instant.now();
+
+    JwtClaimsSet claimsSet = JwtClaimsSet.builder()
+        .issuer("self")
+        .issuedAt(now)
+        .expiresAt(now.plus(7, ChronoUnit.DAYS))
+        .subject(user.getEmail())
+        .claim("userId", user.getId())
+        .build();
+
+    String refreshToken = jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
+
+    // Store the refresh token in Redis
+    authRedisRepository.saveJwtKey(user.getEmail(), refreshToken);
+
+    return refreshToken;
   }
 
   @Override

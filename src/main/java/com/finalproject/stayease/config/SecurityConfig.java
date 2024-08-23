@@ -37,10 +37,13 @@ public class SecurityConfig {
   private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
   private final JwtDecoder jwtDecoder;
 
+  @Value("${spring.security.oauth2.client.registration.google.client-id}")
+  private String googleClientId;
   @Value("${spring.security.oauth2.client.registration.google.client-secret}")
   private String googleClientSecret;
   @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
   private String googleRedirectUri;
+
 
 
   // TODO : configure later, only here for starter
@@ -78,7 +81,7 @@ public class SecurityConfig {
 
   private ClientRegistration googleClientRegistration() {
     return ClientRegistration.withRegistrationId("google")
-        .clientId("317413251269-p05rur3ishg106cqv3ma9qie48mvr6n1.apps.googleusercontent.com")
+        .clientId(googleClientId)
         .clientSecret(googleClientSecret)
         .scope("email", "profile")
         .authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
