@@ -2,10 +2,8 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
-import com.finalproject.stayease.auth.model.entity.UserAuth;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
-import com.finalproject.stayease.users.entity.User;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,18 +34,26 @@ public class AuthServiceImpl implements AuthService {
   public ResponseEntity<?> login(LoginRequestDTO loginRequestDTO) {
     try {
       // * 1: get user details from authentication and security context
-      UserAuth userDetails = getUserDetails(loginRequestDTO);
+      Authentication authentication = authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(loginRequestDTO.getEmail(), loginRequestDTO.getPassword())
+      );
+
+      if (authentication == null) {
+        log.error("User object is null after authentication");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Authentication failed: user object is null");
+      }
 
       // ! 2: generate token
-      String accessToken = jwtService.generateAccessToken(userDetails);
-      String refreshToken = jwtService.generateRefreshToken(userDetails);
+      String accessToken = jwtService.generateAccessToken(authentication);
+      String refreshToken = jwtService.generateRefreshToken(authentication);
 
       // * 3: generate response, set headers(cookie)
       return buildResponse(accessToken, refreshToken);
 
     } catch (BadCredentialsException ex) {
       // Handle bad credentials
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed. Invalid username or password.");
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body("Authentication failed. Invalid username or password.");
     } catch (LockedException ex) {
       // Handle locked account
       return ResponseEntity.status(HttpStatus.LOCKED).body("Account is locked.");
@@ -57,23 +63,6 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
-  private UserAuth getUserDetails(LoginRequestDTO request) {
-    // * 1.1 authenticate user
-    Authentication authentication = authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-    );
-
-    // * 1.2 store in context
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-
-    // * 1.3 get user
-    User user = (User) authentication.getPrincipal();
-
-    // * 1.4 get userAuth
-    UserAuth userDetails = (UserAuth) user;
-    log.info("User: {}, UserDetails: {}", user, userDetails);
-    return userDetails;
-  }
 
   private ResponseEntity<?> buildResponse(String accessToken, String refreshToken) {
     // * response body
@@ -110,9 +99,13 @@ public class AuthServiceImpl implements AuthService {
   // Region
 
   @Override
-  public void logout(HttpServletRequest request, HttpServletResponse response) {
+  public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
     // * Get logged in user
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication is null, no user is currently logged"
+                                                                 + " in");
+    }
     String email = authentication.getName();
     String token = jwtService.getToken(email);
 
@@ -122,6 +115,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     invalidateSessionAndCookie(request, response);
+    return ResponseEntity.ok().body("Logged out successfully!");
   }
 
   private void invalidateSessionAndCookie(HttpServletRequest request, HttpServletResponse response) {

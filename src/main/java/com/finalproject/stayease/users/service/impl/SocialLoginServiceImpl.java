@@ -24,21 +24,38 @@ public class SocialLoginServiceImpl implements SocialLoginService {
 
   @Override
   public User registerOAuth2User(SocialLoginRequest request) {
+    User user = createNewUser(request);
+    linkSocialLogin(user, request.getProvider(), request.getProviderUserId());
+    return user;
+  }
+
+// Helpers
+  private User createNewUser(SocialLoginRequest request) {
     User user = new User();
     user.setEmail(request.getEmail());
     user.setFirstName(request.getFirstName());
     user.setLastName(request.getLastName());
-    user.setAvatar(request.getPictureUrl());
     user.setIsVerified(true);
-    user = userRepository.save(user);
+    return userRepository.save(user);
+  }
 
+  private void linkSocialLogin(User user, String provider, String providerUserId) {
     SocialLogin socialLogin = new SocialLogin();
     socialLogin.setUser(user);
-    socialLogin.setProvider(request.getProvider());
-    socialLogin.setProviderUserId(request.getProviderUserId());
+    socialLogin.setProvider(provider);
+    socialLogin.setProviderUserId(providerUserId);
     socialLoginRepository.save(socialLogin);
-    return user;
   }
+
+  private TenantInfo createTenantInfo(User user, SocialLoginRequest request) {
+    TenantInfo tenantInfo = new TenantInfo();
+    tenantInfo.setUser(user);
+    tenantInfo.setBusinessName(request.getBusinessName());
+    tenantInfo.setTaxId(request.getTaxId());
+    return tenantInfoRepository.save(tenantInfo);
+  }
+
+  // Region - Quarantine
 
   @Override
   public SocialLoginResponse socialLogin(SocialLoginRequest request, UserType userType) {
@@ -61,7 +78,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
       return new SocialLoginResponse(user, null); // Add JWT token generation here
     }
 
-    User newUser = createNewUser(request, userType);
+    User newUser = createNewUser(request);
     linkSocialLogin(newUser, provider, providerUserId);
 
     if (userType == UserType.TENANT) {
@@ -75,32 +92,6 @@ public class SocialLoginServiceImpl implements SocialLoginService {
   @Override
   public Optional<SocialLogin> findByKey(String provider, String providerUserId) {
     return socialLoginRepository.findByProviderAndProviderUserId(provider, providerUserId);
-  }
-
-  private User createNewUser(SocialLoginRequest request, UserType userType) {
-    User user = new User();
-    user.setEmail(request.getEmail());
-    user.setFirstName(request.getFirstName());
-    user.setLastName(request.getLastName());
-    user.setUserType(userType);
-    user.setIsVerified(true);
-    return userRepository.save(user);
-  }
-
-  private void linkSocialLogin(User user, String provider, String providerUserId) {
-    SocialLogin socialLogin = new SocialLogin();
-    socialLogin.setUser(user);
-    socialLogin.setProvider(provider);
-    socialLogin.setProviderUserId(providerUserId);
-    socialLoginRepository.save(socialLogin);
-  }
-
-  private TenantInfo createTenantInfo(User user, SocialLoginRequest request) {
-    TenantInfo tenantInfo = new TenantInfo();
-    tenantInfo.setUser(user);
-    tenantInfo.setBusinessName(request.getBusinessName());
-    tenantInfo.setTaxId(request.getTaxId());
-    return tenantInfoRepository.save(tenantInfo);
   }
 
 }

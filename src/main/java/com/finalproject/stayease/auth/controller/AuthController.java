@@ -1,5 +1,7 @@
 package com.finalproject.stayease.auth.controller;
 
+import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
+import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.User.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
@@ -7,6 +9,8 @@ import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrat
 import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final RegisterService registerService;
+  private final AuthService authService;
 
   @GetMapping("")
   public String getLoggedInUser() {
@@ -49,6 +54,16 @@ public class AuthController {
   public ResponseEntity<Response<VerifyUserResponseDTO>> verifyRegistration(@RequestParam String token,
       @Valid @RequestBody VerifyRegistrationDTO verifyRegistrationDTO) {
     return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Verification successful, welcome to StayEase!", registerService.verifyRegistration(verifyRegistrationDTO, token));
+  }
+
+  @PostMapping("/login")
+  public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+    return authService.login(loginRequestDTO);
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    return authService.logout(request, response);
   }
 
 

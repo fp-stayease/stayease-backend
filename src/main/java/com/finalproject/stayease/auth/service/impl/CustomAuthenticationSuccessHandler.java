@@ -33,8 +33,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     String email = oAuth2User.getAttribute("email");
 
     Optional<User> existingUser = userService.findByEmail(email);
+
     if (existingUser.isPresent()) {
-      generateTokensAndResponse(response, existingUser.get());
+      generateTokensAndResponse(response, authentication);
     } else {
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       response.getWriter().write("User not found");
@@ -42,15 +43,15 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
   }
 
-  private void generateTokensAndResponse(HttpServletResponse response, User user) throws IOException {
-    String accessToken = jwtService.generateAccessToken(user);
-    String refreshToken = jwtService.generateRefreshToken(user);
+  private void generateTokensAndResponse(HttpServletResponse response, Authentication authentication) throws IOException {
+    String accessToken = jwtService.generateAccessToken(authentication);
+    String refreshToken = jwtService.generateRefreshToken(authentication);
 
     ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", refreshToken)
         .path("/")
         .httpOnly(true)
-        .secure(true) // Ensure it’s sent over HTTPS
-        .maxAge(7 * 24 * 60 * 60) // 30 days
+        .secure(true)
+        .maxAge(7 * 24 * 60 * 60)
         .build();
     response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 

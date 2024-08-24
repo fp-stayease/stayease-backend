@@ -190,7 +190,7 @@ public class RegisterServiceImpl implements RegisterService {
     userRepository.save(user);
 
     // ? delete or marked as verified?
-    registrationRepository.delete(pendingRegistration);
+    registrationRepository.deleteById(pendingRegistration.getId());
 
     if (pendingRegistration.getUserType() == UserType.TENANT) {
       TenantInfo newLandlord = createNewLandlord(verifyRegistrationDTO, user);

@@ -1,10 +1,10 @@
 package com.finalproject.stayease.auth.service.impl;
 
-import com.finalproject.stayease.auth.model.entity.UserAuth;
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.users.entity.User;
 import com.finalproject.stayease.users.entity.User.UserType;
+import com.finalproject.stayease.users.service.UserService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -27,29 +28,32 @@ public class JwtServiceImpl implements JwtService {
   private final JwtEncoder jwtEncoder;
   private final JwtDecoder jwtDecoder;
   private final AuthRedisRepository authRedisRepository;
+  private final UserService userService;
 
-  public JwtServiceImpl(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, AuthRedisRepository authRedisRepository) {
+  public JwtServiceImpl(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, AuthRedisRepository authRedisRepository, UserService userService) {
     this.jwtEncoder = jwtEncoder;
     this.jwtDecoder = jwtDecoder;
     this.authRedisRepository = authRedisRepository;
+    this.userService = userService;
   }
 
   @Override
-  public String generateAccessToken(User user) {
+  public String generateAccessToken(Authentication authentication) {
     Instant now = Instant.now();
 
-    UserAuth userAuth = new UserAuth(user);
-
-    List<String> authorities = userAuth.getAuthorities()
+    List<String> authorities = authentication.getAuthorities()
         .stream()
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
+
+    User user = userService.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException(
+        "User not found"));
 
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
         .expiresAt(now.plus(1, ChronoUnit.HOURS))
-        .subject(user.getEmail())
+        .subject(authentication.getName())
         .claim("userId", user.getId())
         .claim("userType", user.getUserType())
         .claim("authorities", authorities)
@@ -59,14 +63,17 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public String generateRefreshToken(User user) {
+  public String generateRefreshToken(Authentication authentication) {
     Instant now = Instant.now();
+
+    User user = userService.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException(
+        "User not found"));
 
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
         .expiresAt(now.plus(7, ChronoUnit.DAYS))
-        .subject(user.getEmail())
+        .subject(authentication.getName())
         .claim("userId", user.getId())
         .build();
 
