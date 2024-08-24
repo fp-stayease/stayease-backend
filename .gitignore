@@ -35,3 +35,4 @@ build/
 src/main/resources/.env.properties
 
 .env
+*.pem
