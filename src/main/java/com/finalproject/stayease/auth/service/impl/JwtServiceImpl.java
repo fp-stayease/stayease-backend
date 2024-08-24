@@ -55,9 +55,7 @@ public class JwtServiceImpl implements JwtService {
         .claim("authorities", authorities)
         .build();
 
-    String jwt = jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
-
-    return jwt;
+    return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
   }
 
   @Override
@@ -78,6 +76,11 @@ public class JwtServiceImpl implements JwtService {
     authRedisRepository.saveJwtKey(user.getEmail(), refreshToken);
 
     return refreshToken;
+  }
+
+  @Override
+  public String getToken(String email) {
+    return authRedisRepository.getJwtKey(email);
   }
 
   @Override

@@ -33,7 +33,7 @@ public class AuthRedisRepository {
     valueOperations.set(STRING_KEY_PREFIX + email + BLACKLIST_KEY_SUFFIX, "true", remainingTTL, TimeUnit.SECONDS);
   }
 
-  String getJwtKey(String email) {
+  public String getJwtKey(String email) {
     return valueOperations.get(STRING_KEY_PREFIX + email);
   }
 
