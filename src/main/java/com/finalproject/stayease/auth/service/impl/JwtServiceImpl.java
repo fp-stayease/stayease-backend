@@ -9,12 +9,13 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -25,18 +26,22 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class JwtServiceImpl implements JwtService {
 
   private final JwtEncoder jwtEncoder;
   private final JwtDecoder jwtDecoder;
   private final AuthRedisRepository authRedisRepository;
   private final UserService userService;
+  private final UserDetailsServiceImpl userDetailsService;
 
-  public JwtServiceImpl(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, AuthRedisRepository authRedisRepository, UserService userService) {
+  public JwtServiceImpl(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, AuthRedisRepository authRedisRepository,
+      UserService userService, UserDetailsServiceImpl userDetailsService) {
     this.jwtEncoder = jwtEncoder;
     this.jwtDecoder = jwtDecoder;
     this.authRedisRepository = authRedisRepository;
     this.userService = userService;
+    this.userDetailsService = userDetailsService;
   }
 
   @Override
@@ -65,17 +70,44 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public String generateRefreshToken(Authentication authentication) {
+  public String generateAccessTokenFromEmail(String email) {
     Instant now = Instant.now();
 
-    User user = userService.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException(
+    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+    List<String> authorities = userDetails.getAuthorities()
+        .stream()
+        .map(GrantedAuthority::getAuthority)
+        .collect(Collectors.toList());
+
+    User user = userService.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
+        "User not found"));
+
+    JwtClaimsSet claimsSet = JwtClaimsSet.builder()
+        .issuer("self")
+        .issuedAt(now)
+        .expiresAt(now.plus(1, ChronoUnit.HOURS))
+        .subject(userDetails.getUsername())
+        .claim("userId", user.getId())
+        .claim("userType", user.getUserType())
+        .claim("authorities", authorities)
+        .build();
+
+    return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
+  }
+
+  @Override
+  public String generateRefreshToken(String email) {
+    Instant now = Instant.now();
+
+    User user = userService.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
         "User not found"));
 
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
         .expiresAt(now.plus(7, ChronoUnit.DAYS))
-        .subject(authentication.getName())
+        .subject(email)
         .claim("userId", user.getId())
         .build();
 
@@ -94,12 +126,13 @@ public class JwtServiceImpl implements JwtService {
 
   @Override
   public String extractUsername(String token) {
-    return extractClaim(token, Jwt::getSubject);
-  }
-
-  public <T> T extractClaim(String token, Function<Jwt, T> claimsResolver) {
-    final Jwt jwt = decodeToken(token);
-    return claimsResolver.apply(jwt);
+    try {
+      Jwt jwt = decodeToken(token);
+      return jwt.getSubject();
+    } catch (Exception e) {
+      log.error("(JwtServiceImp.extractUsername) Error extracting username from token", e);
+      return null;
+    }
   }
 
   @Override
@@ -108,8 +141,8 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public boolean isRefreshTokenValid(String token, String email) {
-    return authRedisRepository.isValid(token, email);
+  public boolean isRefreshTokenValid(String email, String refreshToken) {
+    return authRedisRepository.isValid(email, refreshToken);
   }
 
   @Override

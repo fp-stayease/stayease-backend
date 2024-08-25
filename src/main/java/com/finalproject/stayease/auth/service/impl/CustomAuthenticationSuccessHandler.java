@@ -45,7 +45,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
   private void generateTokensAndResponse(HttpServletResponse response, Authentication authentication) throws IOException {
     String accessToken = jwtService.generateAccessToken(authentication);
-    String refreshToken = jwtService.generateRefreshToken(authentication);
+    String refreshToken = jwtService.generateRefreshToken(authentication.getName());
 
     ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", refreshToken)
         .path("/")

@@ -1,5 +1,6 @@
 package com.finalproject.stayease.auth.filter;
 
+import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
@@ -7,17 +8,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -30,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
+  private final AuthService authService;
   private final UserDetailsServiceImpl userDetailsService;
 
   @Override
@@ -49,7 +46,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       // * 2. extract info from authorization HEADER (this is supposed to be access token)
       accessToken = authHeader.substring(7);
-      email = jwtService.extractUsername(accessToken);
+      try {
+        email = jwtService.extractUsername(accessToken);
+      } catch (Exception e) {
+        log.info("Invalid JWT token");
+        accessToken =  authService.refreshToken(request);
+        email = jwtService.extractUsername(accessToken);
+      }
 
       // * 3. email is extracted = refresh token w/ email exists
       // * no ctx = not currently logged in with access token
@@ -82,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     } catch (Exception e) {
       log.error("(JwtAuthenticationFilter:83) Authentication failed: " + e.getClass() + ": " + e.getLocalizedMessage());
     }
-  // Otherwise, continue the filter chain
+    // Otherwise, continue the filter chain
     filterChain.doFilter(request, response);
   }
 }

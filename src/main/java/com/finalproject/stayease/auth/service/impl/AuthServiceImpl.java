@@ -48,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
 
       // ! 2: generate token
       String accessToken = jwtService.generateAccessToken(authentication);
-      String refreshToken = jwtService.generateRefreshToken(authentication);
+      String refreshToken = jwtService.generateRefreshToken(authentication.getName());
 
       // * 3: generate response, set headers(cookie)
       return buildLoginResponse(accessToken, refreshToken);
@@ -104,33 +104,35 @@ public class AuthServiceImpl implements AuthService {
   // Region - refresh token
 
   @Override
-  public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+  public String refreshToken(HttpServletRequest request) {
     String refreshToken = extractRefreshToken(request);
 
     if (refreshToken == null) {
       log.warn("(AuthServiceImpl.refreshToken) refreshToken is null");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token not found");
+//      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token not found");
+      return "Refresh token is null";
     }
+
 
     try {
-      Authentication authentication = jwtService.getAuthenticationFromToken(refreshToken);
-      String email = authentication.getName();
+      String email = jwtService.decodeToken(refreshToken).getSubject();
 
-      if (jwtService.isRefreshTokenValid(refreshToken, email)) {
-        String newAccessToken = jwtService.generateAccessToken(authentication);
-        String newRefreshToken = jwtService.generateRefreshToken(authentication);
+      if (jwtService.isRefreshTokenValid(email, refreshToken)) {
+        String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
         jwtService.invalidateToken(email);
+        String newRefreshToken = jwtService.generateRefreshToken(email);
         log.info("(AuthServiceImpl.refreshToken) Tokens refreshed successfully for user: {}", email);
-        return buildRefreshTokenResponse(newAccessToken, newRefreshToken);
+        return newAccessToken;
       } else {
         log.warn("(AuthServiceImpl.refreshToken) Invalid refresh token for user: {}", email);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
+        return "Invalid refresh token";
       }
     } catch (Exception e) {
-      log.error("(AuthServiceImpl.refreshToken) Error processing refresh token: " + e.getLocalizedMessage());
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error processing refresh token");
+      log.error("(AuthServiceImpl.refreshToken) Error processing refresh token: " + e.getClass() + ": " + e.getLocalizedMessage());
+//      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error processing refresh token");
+      return "Error processing refresh token: " + e.getClass() + ": " + e.getLocalizedMessage();
     }
-
   }
 
   private String extractRefreshToken(HttpServletRequest request) {
