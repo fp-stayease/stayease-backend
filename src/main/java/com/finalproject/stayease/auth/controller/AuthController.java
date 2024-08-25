@@ -61,6 +61,11 @@ public class AuthController {
     return authService.login(loginRequestDTO);
   }
 
+  @PostMapping("/refresh")
+  public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+    return authService.refreshToken(request);
+  }
+
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
     return authService.logout(request, response);

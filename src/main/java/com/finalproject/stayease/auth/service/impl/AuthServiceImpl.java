@@ -4,6 +4,7 @@ import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
+import com.finalproject.stayease.users.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +30,7 @@ public class AuthServiceImpl implements AuthService {
 
   private final AuthenticationManager authenticationManager;
   private final JwtService jwtService;
+  private final UserService userService;
 
   @Override
   public ResponseEntity<?> login(LoginRequestDTO loginRequestDTO) {
@@ -40,7 +42,8 @@ public class AuthServiceImpl implements AuthService {
 
       if (authentication == null) {
         log.error("User object is null after authentication");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Authentication failed: user object is null");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Authentication failed: user object is null");
       }
 
       // ! 2: generate token
@@ -48,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
       String refreshToken = jwtService.generateRefreshToken(authentication);
 
       // * 3: generate response, set headers(cookie)
-      return buildResponse(accessToken, refreshToken);
+      return buildLoginResponse(accessToken, refreshToken);
 
     } catch (BadCredentialsException ex) {
       // Handle bad credentials
@@ -64,9 +67,10 @@ public class AuthServiceImpl implements AuthService {
   }
 
 
-  private ResponseEntity<?> buildResponse(String accessToken, String refreshToken) {
+  private ResponseEntity<?> buildLoginResponse(String accessToken, String refreshToken) {
     // * response body
-    LoginResponseDTO responseBody = responseBody(accessToken, refreshToken);
+    String message = "Login successful, welcome to StayEase!";
+    LoginResponseDTO responseBody = responseBody(message, accessToken, refreshToken);
 
     // * set cookie / headers
     HttpHeaders responseHeaders = setHeadersCookie(refreshToken);
@@ -74,9 +78,9 @@ public class AuthServiceImpl implements AuthService {
     return ResponseEntity.ok().headers(responseHeaders).body(responseBody);
   }
 
-  private LoginResponseDTO responseBody(String accessToken, String refreshToken) {
+  private LoginResponseDTO responseBody(String message, String accessToken, String refreshToken) {
     LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
-    loginResponseDTO.setMessage("Welcome to StayEase!");
+    loginResponseDTO.setMessage(message);
     loginResponseDTO.setAccessToken(accessToken);
     loginResponseDTO.setRefreshToken(refreshToken);
     return loginResponseDTO;
@@ -87,6 +91,7 @@ public class AuthServiceImpl implements AuthService {
     ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
         .path("/")
         .httpOnly(true)
+        .secure(true)
         .maxAge(7 * 24 * 60 * 60)
         .build();
 
@@ -94,6 +99,56 @@ public class AuthServiceImpl implements AuthService {
     HttpHeaders headers = new HttpHeaders();
     headers.add("Set-Cookie", cookie.toString());
     return headers;
+  }
+
+  // Region - refresh token
+
+  @Override
+  public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+    String refreshToken = extractRefreshToken(request);
+
+    if (refreshToken == null) {
+      log.warn("(AuthServiceImpl.refreshToken) refreshToken is null");
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token not found");
+    }
+
+    try {
+      Authentication authentication = jwtService.getAuthenticationFromToken(refreshToken);
+      String email = authentication.getName();
+
+      if (jwtService.isRefreshTokenValid(refreshToken, email)) {
+        String newAccessToken = jwtService.generateAccessToken(authentication);
+        String newRefreshToken = jwtService.generateRefreshToken(authentication);
+        jwtService.invalidateToken(email);
+        log.info("(AuthServiceImpl.refreshToken) Tokens refreshed successfully for user: {}", email);
+        return buildRefreshTokenResponse(newAccessToken, newRefreshToken);
+      } else {
+        log.warn("(AuthServiceImpl.refreshToken) Invalid refresh token for user: {}", email);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
+      }
+    } catch (Exception e) {
+      log.error("(AuthServiceImpl.refreshToken) Error processing refresh token: " + e.getLocalizedMessage());
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error processing refresh token");
+    }
+
+  }
+
+  private String extractRefreshToken(HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if (cookie.getName().equals("refresh_token")) {
+          return cookie.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+  private ResponseEntity<?> buildRefreshTokenResponse(String newAccessToken, String refreshToken) {
+    String message = "Refresh token successful, here is your new access token!";
+    LoginResponseDTO responseBody = responseBody(message, newAccessToken, refreshToken);
+    return ResponseEntity.ok(responseBody);
   }
 
   // Region

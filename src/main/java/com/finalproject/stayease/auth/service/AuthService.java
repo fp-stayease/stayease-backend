@@ -9,5 +9,9 @@ public interface AuthService {
 
   ResponseEntity<?> login(LoginRequestDTO loginRequestDTO);
 
+  ResponseEntity<?> refreshToken(HttpServletRequest request);
+
   ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response);
+
+
 }

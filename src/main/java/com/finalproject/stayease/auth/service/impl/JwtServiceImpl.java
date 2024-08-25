@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,6 +21,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -91,22 +93,53 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
+  public String extractUsername(String token) {
+    return extractClaim(token, Jwt::getSubject);
+  }
+
+  public <T> T extractClaim(String token, Function<Jwt, T> claimsResolver) {
+    final Jwt jwt = decodeToken(token);
+    return claimsResolver.apply(jwt);
+  }
+
+  @Override
   public void invalidateToken(String email) {
     authRedisRepository.blacklistKey(email);
   }
 
   @Override
-  public boolean isTokenValid(String token, String email) {
+  public boolean isRefreshTokenValid(String token, String email) {
     return authRedisRepository.isValid(token, email);
   }
 
   @Override
-  public Jwt decodeToken(String token) {
-    return jwtDecoder.decode(token);
+  public boolean isAccessTokenValid(String accessToken, String email) {
+    try {
+      Jwt jwt = decodeToken(accessToken);
+      String tokenEmail = jwt.getSubject();
+      return (tokenEmail != null && tokenEmail.equals(email) && !isTokenExpired(jwt));
+    } catch (JwtException e) {
+      // Token is invalid or expired
+      return false;
+    }
+  }
+
+  private boolean isTokenExpired(Jwt jwt) {
+    return jwt.getExpiresAt().isBefore(Instant.now());
   }
 
   @Override
-  public Authentication getAuthentication(String token) {
+  public Jwt decodeToken(String token) {
+    try {
+      return jwtDecoder.decode(token);
+    } catch (JwtException e) {
+      // Handle invalid token
+      throw new RuntimeException("Invalid JWT token: " + e.getLocalizedMessage());
+    }
+  }
+
+  @Override
+  public Authentication getAuthenticationFromToken(String token) {
     Jwt jwt = decodeToken(token);
 
     Collection<GrantedAuthority> authorities = jwt.getClaimAsStringList("authorities")
