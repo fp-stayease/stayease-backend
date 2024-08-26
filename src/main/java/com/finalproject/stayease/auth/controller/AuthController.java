@@ -1,6 +1,7 @@
 package com.finalproject.stayease.auth.controller;
 
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
+import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.User.UserType;
@@ -62,8 +63,8 @@ public class AuthController {
   }
 
   @PostMapping("/refresh")
-  public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-    return ResponseEntity.ok().body(authService.refreshToken(request, response));
+  public ResponseEntity<Response<LoginResponseDTO>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    return Response.successfulResponse(HttpStatus.OK.value(), authService.refreshToken(request, response));
   }
 
   @PostMapping("/logout")
