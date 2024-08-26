@@ -4,7 +4,7 @@ import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
-import com.finalproject.stayease.users.service.UserService;
+import com.finalproject.stayease.users.service.UsersService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
 
   private final AuthenticationManager authenticationManager;
   private final JwtService jwtService;
-  private final UserService userService;
+  private final UsersService usersService;
 
   @Override
   public ResponseEntity<?> login(LoginRequestDTO loginRequestDTO) {

@@ -2,8 +2,8 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finalproject.stayease.auth.service.JwtService;
-import com.finalproject.stayease.users.entity.User;
-import com.finalproject.stayease.users.service.UserService;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.service.UsersService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
   public final JwtService jwtService;
-  public final UserService userService;
+  public final UsersService usersService;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -32,7 +32,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
     String email = oAuth2User.getAttribute("email");
 
-    Optional<User> existingUser = userService.findByEmail(email);
+    Optional<Users> existingUser = usersService.findByEmail(email);
 
     if (existingUser.isPresent()) {
       generateTokensAndResponse(response, authentication);
@@ -60,7 +60,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
   private void sendTokenResponse(HttpServletResponse response, String accessToken, String refreshToken) throws IOException {
     Map<String, String> tokens = new HashMap<>();
-    tokens.put("message:", "successful");
+    tokens.put("message:", "Successfully registered using socials login!");
     tokens.put("access_token", accessToken);
     tokens.put("refresh_token", refreshToken);
 

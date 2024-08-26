@@ -4,6 +4,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
+import com.finalproject.stayease.users.service.PendingRegistrationService;
 import com.finalproject.stayease.users.service.impl.RegisterCleanupService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -17,15 +18,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 @SpringBootTest
 public class RegisterCleanupServiceTest {
   @MockBean
-  private PendingRegistrationRepository registrationRepository;
+  private PendingRegistrationService pendingRegistrationService;
 
   @InjectMocks
-  private RegisterCleanupService registerCleanupService = new RegisterCleanupService(registrationRepository);
+  private RegisterCleanupService registerCleanupService = new RegisterCleanupService(pendingRegistrationService);
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    registerCleanupService = new RegisterCleanupService(registrationRepository);
+    registerCleanupService = new RegisterCleanupService(pendingRegistrationService);
   }
 
   @Test
@@ -38,7 +39,7 @@ public class RegisterCleanupServiceTest {
     registerCleanupService.cleanupExpiredPendingRegistrations();
 
     // Assert
-    verify(registrationRepository, times(1)).deleteExpired(expirationThreshold);
+    verify(pendingRegistrationService, times(1)).deleteExpired(expirationThreshold);
   }
 
 }

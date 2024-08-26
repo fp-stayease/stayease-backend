@@ -1,6 +1,6 @@
 package com.finalproject.stayease.users.entity;
 
-import com.finalproject.stayease.users.entity.User.UserType;
+import com.finalproject.stayease.users.entity.Users.UserType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,7 +14,6 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;

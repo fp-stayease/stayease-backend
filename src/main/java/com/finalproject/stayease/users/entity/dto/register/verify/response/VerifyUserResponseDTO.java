@@ -1,7 +1,7 @@
 package com.finalproject.stayease.users.entity.dto.register.verify.response;
 
-import com.finalproject.stayease.users.entity.User;
-import com.finalproject.stayease.users.entity.User.UserType;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.Users.UserType;
 import java.time.Instant;
 import lombok.Data;
 
@@ -15,7 +15,7 @@ public class VerifyUserResponseDTO {
   private UserType userType;
   private Instant registeredAt;
 
-  public VerifyUserResponseDTO(User user) {
+  public VerifyUserResponseDTO(Users user) {
     this.userId = user.getId();
     this.email = user.getEmail();
     this.firstName = user.getFirstName();
@@ -24,7 +24,7 @@ public class VerifyUserResponseDTO {
     this.registeredAt = user.getCreatedAt();
   }
 
-  public VerifyUserResponseDTO toDTO(User user) {
+  public VerifyUserResponseDTO toDTO(Users user) {
     return new VerifyUserResponseDTO(user);
   }
 

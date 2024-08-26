@@ -4,11 +4,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.finalproject.stayease.users.entity.User;
+import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.repository.SocialLoginRepository;
 import com.finalproject.stayease.users.repository.TenantInfoRepository;
-import com.finalproject.stayease.users.repository.UserRepository;
-import com.finalproject.stayease.users.service.impl.UserServiceImpl;
+import com.finalproject.stayease.users.repository.UsersRepository;
+import com.finalproject.stayease.users.service.SocialLoginService;
+import com.finalproject.stayease.users.service.TenantInfoService;
+import com.finalproject.stayease.users.service.impl.UsersServiceImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,34 +20,30 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 @SpringBootTest
-public class UserServiceImplTest {
+public class UsersServiceImplTest {
 
   @MockBean
-  private UserRepository userRepository;
-  @MockBean
-  private SocialLoginRepository socialLoginRepository;
-  @MockBean
-  private TenantInfoRepository tenantInfoRepository;
+  private UsersRepository usersRepository;
 
   @InjectMocks
-  private UserServiceImpl userService = new UserServiceImpl(userRepository, socialLoginRepository, tenantInfoRepository);
+  private UsersServiceImpl userService = new UsersServiceImpl(usersRepository);
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    userService = new UserServiceImpl(userRepository, socialLoginRepository, tenantInfoRepository);
+    userService = new UsersServiceImpl(usersRepository);
   }
 
   @Test
   public void findByEmailTest() {
     // Arrange
-    User user = new User();
+    Users user = new Users();
     user.setEmail("test@test.com");
 
     // Act
-    Optional<User> userOptional = userService.findByEmail("test@test.com");
+    Optional<Users> userOptional = userService.findByEmail("test@test.com");
 
     // Assert
-    verify(userRepository, times(1)).findByEmail(any());
+    verify(usersRepository, times(1)).findByEmail(any());
   }
 }

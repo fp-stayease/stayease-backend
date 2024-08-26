@@ -1,6 +1,6 @@
 package com.finalproject.stayease.auth.model.entity;
 
-import com.finalproject.stayease.users.entity.User;
+import com.finalproject.stayease.users.entity.Users;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -12,9 +12,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 @Data
 @EqualsAndHashCode(callSuper=true)
-public class UserAuth extends User implements UserDetails {
+public class UserAuth extends Users implements UserDetails {
 
-  private final User user;
+  private final Users user;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {

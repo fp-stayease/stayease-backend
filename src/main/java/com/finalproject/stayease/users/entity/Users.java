@@ -22,7 +22,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Setter
 @Entity
 @Table(name = "users")
-public class User {
+public class Users {
 
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_id_gen")

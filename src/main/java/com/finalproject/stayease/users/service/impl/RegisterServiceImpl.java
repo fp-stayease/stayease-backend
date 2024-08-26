@@ -6,17 +6,17 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.PasswordDoesNotMatchException;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.TenantInfo;
-import com.finalproject.stayease.users.entity.User;
-import com.finalproject.stayease.users.entity.User.UserType;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyTenantResponseDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
-import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
-import com.finalproject.stayease.users.repository.TenantInfoRepository;
-import com.finalproject.stayease.users.repository.UserRepository;
+import com.finalproject.stayease.users.service.PendingRegistrationService;
 import com.finalproject.stayease.users.service.RegisterService;
+import com.finalproject.stayease.users.service.TenantInfoService;
+import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.Optional;
@@ -32,9 +32,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class RegisterServiceImpl implements RegisterService {
 
-  private final UserRepository userRepository;
-  private final TenantInfoRepository tenantInfoRepository;
-  private final PendingRegistrationRepository registrationRepository;
+  private final UsersService usersService;
+  private final TenantInfoService tenantInfoService;
+  private final PendingRegistrationService pendingRegistrationService;
   private final RegisterRedisService registerRedisService;
   private final PasswordEncoder passwordEncoder;
 
@@ -45,7 +45,7 @@ public class RegisterServiceImpl implements RegisterService {
       throws RuntimeException {
     String email = requestDTO.getEmail();
     checkExistingUser(email);
-    Optional<PendingRegistration> registration = registrationRepository.findByEmail(email);
+    Optional<PendingRegistration> registration = pendingRegistrationService.findByEmail(email);
     if (registration.isPresent()) {
       return handleExistingRegistration(registration.get(), userType);
     } else return submitRegistration(email, userType);
@@ -61,8 +61,8 @@ public class RegisterServiceImpl implements RegisterService {
 
   // helpers
   private void checkExistingUser(String email) throws DuplicateEntryException {
-    Optional<User> user = userRepository.findByEmail(email);
-    Optional<PendingRegistration> pendingUserOptional = registrationRepository.findByEmail(email);
+    Optional<Users> user = usersService.findByEmail(email);
+    Optional<PendingRegistration> pendingUserOptional = pendingRegistrationService.findByEmail(email);
     if (user.isPresent()) {
       throw new DuplicateEntryException("E-mail already existed! Enter a new e-mail or login");
     }
@@ -87,7 +87,7 @@ public class RegisterServiceImpl implements RegisterService {
 
     // last pending registration is more than a day old
     if (now.minusSeconds(24 * 60 * 60).getEpochSecond() > pendingRegistration.getCreatedAt().getEpochSecond()) {
-      registrationRepository.deleteById(pendingRegistration.getId());
+      pendingRegistrationService.deleteById(pendingRegistration.getId());
       log.info("User {} has requested to register more than a day ago. The request has been deleted. Registration "
                + "will be resubmitted.", email);
       return submitRegistration(email, userType);
@@ -111,7 +111,7 @@ public class RegisterServiceImpl implements RegisterService {
     PendingRegistration registration = new PendingRegistration();
     registration.setEmail(email);
     registration.setUserType(userType);
-    registrationRepository.save(registration);
+    pendingRegistrationService.save(registration);
 
     String token = generateAndSaveRedisToken(email);
 
@@ -132,7 +132,7 @@ public class RegisterServiceImpl implements RegisterService {
 
   public InitialRegistrationResponseDTO updateAndResendVerificationEmail(PendingRegistration pendingRegistration) {
     pendingRegistration.setLastVerificationAttempt(Instant.now());
-    registrationRepository.save(pendingRegistration);
+    pendingRegistrationService.save(pendingRegistration);
     String email = pendingRegistration.getEmail();
     String token = generateAndSaveRedisToken(email);
     String message =
@@ -167,7 +167,7 @@ public class RegisterServiceImpl implements RegisterService {
 
   // Region - helpers for verification
   PendingRegistration getPendingRegistration(String email) throws RuntimeException {
-    Optional<PendingRegistration> pendingRegistrationOptional = registrationRepository.findByEmail(email);
+    Optional<PendingRegistration> pendingRegistrationOptional = pendingRegistrationService.findByEmail(email);
     if (pendingRegistrationOptional.isPresent()) {
       return pendingRegistrationOptional.get();
     } else {
@@ -179,7 +179,7 @@ public class RegisterServiceImpl implements RegisterService {
   public VerifyUserResponseDTO createNewUser(PendingRegistration pendingRegistration,
       VerifyRegistrationDTO verifyRegistrationDTO) {
     checkPassword(verifyRegistrationDTO.getPassword(), verifyRegistrationDTO.getConfirmPassword());
-    User user = new User();
+    Users user = new Users();
     user.setEmail(pendingRegistration.getEmail());
     user.setUserType(pendingRegistration.getUserType());
     user.setPasswordHash(passwordEncoder.encode(verifyRegistrationDTO.getPassword()));
@@ -187,10 +187,10 @@ public class RegisterServiceImpl implements RegisterService {
     user.setLastName(verifyRegistrationDTO.getLastName());
     user.setPhoneNumber(verifyRegistrationDTO.getPhoneNumber());
     user.setIsVerified(true);
-    userRepository.save(user);
+    usersService.save(user);
 
     // ? delete or marked as verified?
-    registrationRepository.deleteById(pendingRegistration.getId());
+    pendingRegistrationService.deleteById(pendingRegistration.getId());
 
     if (pendingRegistration.getUserType() == UserType.TENANT) {
       TenantInfo newLandlord = createNewLandlord(verifyRegistrationDTO, user);
@@ -200,12 +200,12 @@ public class RegisterServiceImpl implements RegisterService {
     }
   }
 
-  public TenantInfo createNewLandlord(VerifyRegistrationDTO verifyRegistrationDTO, User user) {
+  public TenantInfo createNewLandlord(VerifyRegistrationDTO verifyRegistrationDTO, Users user) {
     TenantInfo newLandlord = new TenantInfo();
     newLandlord.setUser(user);
     newLandlord.setBusinessName(verifyRegistrationDTO.getBusinessName());
     newLandlord.setTaxId(verifyRegistrationDTO.getTaxId());
-    tenantInfoRepository.save(newLandlord);
+    tenantInfoService.save(newLandlord);
     return newLandlord;
   }
 

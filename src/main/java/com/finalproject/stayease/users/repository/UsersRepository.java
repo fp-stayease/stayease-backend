@@ -1,11 +1,11 @@
 package com.finalproject.stayease.users.repository;
 
-import com.finalproject.stayease.users.entity.User;
+import com.finalproject.stayease.users.entity.Users;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
+public interface UsersRepository extends JpaRepository<Users, Long> {
+    Optional<Users> findByEmail(String email);
 }

@@ -2,9 +2,9 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
 import com.finalproject.stayease.auth.model.entity.UserAuth;
-import com.finalproject.stayease.users.entity.User;
+import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.SocialLoginService;
-import com.finalproject.stayease.users.service.UserService;
+import com.finalproject.stayease.users.service.UsersService;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
 
   private final SocialLoginService socialLoginService;
-  private final UserService userService;
+  private final UsersService usersService;
 
   @Override
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -37,8 +37,8 @@ public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
     String lastName = oAuth2User.getAttribute("family_name");
     String pictureUrl = oAuth2User.getAttribute("picture");
 
-    Optional<User> userOptional = userService.findByEmail(email);
-    User user;
+    Optional<Users> userOptional = usersService.findByEmail(email);
+    Users user;
 
     if (userOptional.isPresent()) {
       user = userOptional.get();
@@ -60,7 +60,7 @@ public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
     throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
   }
 
-  private Collection<? extends GrantedAuthority> extractAuthorities(User user) {
+  private Collection<? extends GrantedAuthority> extractAuthorities(Users user) {
     UserAuth userAuth = new UserAuth(user);
     return userAuth.getAuthorities();
   }

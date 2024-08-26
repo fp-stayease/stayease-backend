@@ -2,9 +2,9 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
 import com.finalproject.stayease.auth.service.JwtService;
-import com.finalproject.stayease.users.entity.User;
-import com.finalproject.stayease.users.entity.User.UserType;
-import com.finalproject.stayease.users.service.UserService;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.Users.UserType;
+import com.finalproject.stayease.users.service.UsersService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -37,15 +37,15 @@ public class JwtServiceImpl implements JwtService {
   private final JwtEncoder jwtEncoder;
   private final JwtDecoder jwtDecoder;
   private final AuthRedisRepository authRedisRepository;
-  private final UserService userService;
+  private final UsersService usersService;
   private final UserDetailsServiceImpl userDetailsService;
 
   public JwtServiceImpl(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, AuthRedisRepository authRedisRepository,
-      UserService userService, UserDetailsServiceImpl userDetailsService) {
+      UsersService usersService, UserDetailsServiceImpl userDetailsService) {
     this.jwtEncoder = jwtEncoder;
     this.jwtDecoder = jwtDecoder;
     this.authRedisRepository = authRedisRepository;
-    this.userService = userService;
+    this.usersService = usersService;
     this.userDetailsService = userDetailsService;
   }
 
@@ -60,7 +60,7 @@ public class JwtServiceImpl implements JwtService {
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
 
-    User user = userService.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException(
+    Users user = usersService.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException(
         "User not found"));
 
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
@@ -87,7 +87,7 @@ public class JwtServiceImpl implements JwtService {
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
 
-    User user = userService.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
+    Users user = usersService.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
         "User not found"));
 
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
@@ -107,7 +107,7 @@ public class JwtServiceImpl implements JwtService {
   public String generateRefreshToken(String email) {
     Instant now = Instant.now();
 
-    User user = userService.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
+    Users user = usersService.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
         "User not found"));
 
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
@@ -227,7 +227,7 @@ public class JwtServiceImpl implements JwtService {
         .map(SimpleGrantedAuthority::new)
         .collect(Collectors.toList());
 
-    User principal = new User();
+    Users principal = new Users();
     principal.setId(jwt.getClaim("userId"));
     principal.setEmail(jwt.getSubject());
     principal.setUserType(UserType.valueOf(jwt.getClaim("userType")));

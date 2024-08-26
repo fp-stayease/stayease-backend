@@ -1,6 +1,6 @@
 package com.finalproject.stayease.users.service.impl;
 
-import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
+import com.finalproject.stayease.users.service.PendingRegistrationService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import lombok.Data;
@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class RegisterCleanupService {
 
-  private final PendingRegistrationRepository registrationRepository;
+  private final PendingRegistrationService pendingRegistrationService;
 
   @Scheduled(cron = "${pending.cleanup.cron:0 0 */12 * * ?}")
   public void cleanupExpiredPendingRegistrations() {
     Instant now = Instant.now();
     Instant expirationThreshold = now.minus(1, ChronoUnit.DAYS);
-    registrationRepository.deleteExpired(expirationThreshold);
+    pendingRegistrationService.deleteExpired(expirationThreshold);
   }
 }

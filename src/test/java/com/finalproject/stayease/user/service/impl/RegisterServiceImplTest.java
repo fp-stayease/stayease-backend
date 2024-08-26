@@ -12,15 +12,18 @@ import static org.mockito.Mockito.when;
 import com.finalproject.stayease.auth.service.RegisterRedisService;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.users.entity.PendingRegistration;
-import com.finalproject.stayease.users.entity.User;
-import com.finalproject.stayease.users.entity.User.UserType;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
 import com.finalproject.stayease.users.repository.TenantInfoRepository;
-import com.finalproject.stayease.users.repository.UserRepository;
+import com.finalproject.stayease.users.repository.UsersRepository;
+import com.finalproject.stayease.users.service.PendingRegistrationService;
+import com.finalproject.stayease.users.service.TenantInfoService;
+import com.finalproject.stayease.users.service.UsersService;
 import com.finalproject.stayease.users.service.impl.RegisterServiceImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,27 +39,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class RegisterServiceImplTest {
 
   @MockBean
-  private UserRepository userRepository;
+  private UsersService usersService;
   @MockBean
-  private TenantInfoRepository tenantInfoRepository;
+  private TenantInfoService tenantInfoService;
   @MockBean
-  private PendingRegistrationRepository registrationRepository;
+  private PendingRegistrationService pendingRegistrationService;
   @MockBean
   private RegisterRedisService registerRedisService;
   @MockBean
   private PasswordEncoder passwordEncoder;
 
   @InjectMocks
-  private RegisterServiceImpl registerService = new RegisterServiceImpl(userRepository, tenantInfoRepository,
-      registrationRepository,
+  private RegisterServiceImpl registerService = new RegisterServiceImpl(usersService, tenantInfoService,
+      pendingRegistrationService,
       registerRedisService, passwordEncoder);
-  @Autowired
-  private PendingRegistrationRepository pendingRegistrationRepository;
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    registerService = new RegisterServiceImpl(userRepository, tenantInfoRepository, registrationRepository,
+    registerService = new RegisterServiceImpl(usersService, tenantInfoService,
+        pendingRegistrationService,
         registerRedisService, passwordEncoder);
   }
 
@@ -75,15 +77,14 @@ public class RegisterServiceImplTest {
     pendingUser.setUserType(userType);
 
     // Act
-    when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-    when(registrationRepository.findByEmail(email)).thenReturn(Optional.empty());
-    when(registrationRepository.save(any())).thenReturn(pendingUser);
+    when(usersService.findByEmail(email)).thenReturn(Optional.empty());
+    when(pendingRegistrationService.findByEmail(email)).thenReturn(Optional.empty());
     InitialRegistrationResponseDTO responseDTO = registerService.initialRegistration(requestDTO, userType);
 
     //Assert
     assertNotNull(responseDTO);
-    verify(userRepository, times(1)).findByEmail(any(String.class));
-    verify(registrationRepository, times(1)).save(any(PendingRegistration.class));
+    verify(usersService, times(1)).findByEmail(any(String.class));
+    verify(pendingRegistrationService, times(1)).save(any(PendingRegistration.class));
     verify(registerRedisService, times(1)).saveVericationToken(any(), any());
     assertNull(pendingUser.getVerifiedAt());
     assert (pendingUser.getUserType()).equals(UserType.USER);
@@ -99,12 +100,12 @@ public class RegisterServiceImplTest {
     InitialRegistrationRequestDTO requestDTO = new InitialRegistrationRequestDTO();
     requestDTO.setEmail(email);
 
-    User existingUser = new User();
+    Users existingUser = new Users();
     existingUser.setId(1L);
     existingUser.setEmail(email);
 
     // Act
-    when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
+    when(usersService.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
     // Act & Assert
     assertThrows(DuplicateEntryException.class, () -> registerService.initialRegistration(requestDTO, userType));
@@ -127,7 +128,7 @@ public class RegisterServiceImplTest {
     pendingUser.setEmail(email);
     pendingUser.setUserType(UserType.USER);
 
-    User newUser = new User();
+    Users newUser = new Users();
     newUser.setId(1L);
     newUser.setEmail(email);
 //    newUser.setUserType(UserType.USER);
@@ -139,13 +140,13 @@ public class RegisterServiceImplTest {
 
     // Act
     when(registerRedisService.getEmail(token)).thenReturn(email);
-    when(pendingRegistrationRepository.findByEmail(email)).thenReturn(Optional.of(pendingUser));
+    when(pendingRegistrationService.findByEmail(email)).thenReturn(Optional.of(pendingUser));
     VerifyUserResponseDTO responseDTO = registerService.verifyRegistration(verifyDTO, token);
 
     // Assert
     assertNotNull(responseDTO);
-    verify(pendingRegistrationRepository, times(1)).findByEmail(email);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(pendingRegistrationService, times(1)).findByEmail(email);
+    verify(usersService, times(1)).save(any(Users.class));
     assertEquals(newUser.getEmail(), email);
   }
 }

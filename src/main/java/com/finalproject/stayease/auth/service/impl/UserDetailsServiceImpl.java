@@ -1,8 +1,8 @@
 package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.model.entity.UserAuth;
-import com.finalproject.stayease.users.entity.User;
-import com.finalproject.stayease.users.service.UserService;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.service.UsersService;
 import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -16,16 +16,16 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-  public final UserService userService;
+  public final UsersService usersService;
 
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-    Optional<User> userOpt = userService.findByEmail(email);
+    Optional<Users> userOpt = usersService.findByEmail(email);
     if (userOpt.isEmpty()) {
       throw new UsernameNotFoundException("User not found with email: " + email);
     }
-    User user = userOpt.get();
+    Users user = userOpt.get();
     log.info("Found user: {}", user.getEmail());
 
     return new UserAuth(user);
