@@ -5,11 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.finalproject.stayease.users.entity.Users;
-import com.finalproject.stayease.users.repository.SocialLoginRepository;
-import com.finalproject.stayease.users.repository.TenantInfoRepository;
 import com.finalproject.stayease.users.repository.UsersRepository;
-import com.finalproject.stayease.users.service.SocialLoginService;
-import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.impl.UsersServiceImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;

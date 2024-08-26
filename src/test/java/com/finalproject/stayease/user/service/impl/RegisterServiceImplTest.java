@@ -18,9 +18,6 @@ import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrat
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
-import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
-import com.finalproject.stayease.users.repository.TenantInfoRepository;
-import com.finalproject.stayease.users.repository.UsersRepository;
 import com.finalproject.stayease.users.service.PendingRegistrationService;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
@@ -30,7 +27,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;

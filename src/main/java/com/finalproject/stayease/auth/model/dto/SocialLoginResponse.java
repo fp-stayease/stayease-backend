@@ -1,7 +1,7 @@
 package com.finalproject.stayease.auth.model.dto;
 
 import com.finalproject.stayease.users.entity.TenantInfo;
-import com.finalproject.stayease.users.entity.User;
+import com.finalproject.stayease.users.entity.Users;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,14 +14,14 @@ public class SocialLoginResponse {
   private String email;
   private String firstName;
   private String lastName;
-  private User.UserType userType;
+  private Users.UserType userType;
   private boolean isNewUser;
   private TenantInfo tenantInfo;
 
   // TODO: this :(
   private String token;  // JWT token for authentication
 
-  public SocialLoginResponse(User user, String token) {
+  public SocialLoginResponse(Users user, String token) {
     this.userId = user.getId();
     this.email = user.getEmail();
     this.firstName = user.getFirstName();
@@ -33,7 +33,7 @@ public class SocialLoginResponse {
 
 
 
-  public SocialLoginResponse(User user, TenantInfo tenantInfo, String token) {
+  public SocialLoginResponse(Users user, TenantInfo tenantInfo, String token) {
     this.userId = user.getId();
     this.email = user.getEmail();
     this.firstName = user.getFirstName();

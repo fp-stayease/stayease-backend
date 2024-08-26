@@ -4,12 +4,12 @@ import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
 import com.finalproject.stayease.auth.model.dto.SocialLoginResponse;
 import com.finalproject.stayease.users.entity.SocialLogin;
 import com.finalproject.stayease.users.entity.TenantInfo;
-import com.finalproject.stayease.users.entity.User;
-import com.finalproject.stayease.users.entity.User.UserType;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.repository.SocialLoginRepository;
-import com.finalproject.stayease.users.repository.TenantInfoRepository;
-import com.finalproject.stayease.users.repository.UserRepository;
 import com.finalproject.stayease.users.service.SocialLoginService;
+import com.finalproject.stayease.users.service.TenantInfoService;
+import com.finalproject.stayease.users.service.UsersService;
 import java.util.Optional;
 import lombok.Data;
 import org.springframework.stereotype.Service;
@@ -18,28 +18,47 @@ import org.springframework.stereotype.Service;
 @Data
 public class SocialLoginServiceImpl implements SocialLoginService {
 
-  private final UserRepository userRepository;
   private final SocialLoginRepository socialLoginRepository;
-  private final TenantInfoRepository tenantInfoRepository;
+  private final UsersService usersService;
+  private final TenantInfoService tenantInfoService;
 
   @Override
-  public User registerOAuth2User(SocialLoginRequest request) {
-    User user = createNewUser(request);
+  public void save(SocialLogin socialLogin) {
+    socialLoginRepository.save(socialLogin);
+  }
+
+  @Override
+  public Users registerOAuth2User(SocialLoginRequest request) {
+    Users user = createNewUser(request);
     linkSocialLogin(user, request.getProvider(), request.getProviderUserId());
     return user;
   }
 
-// Helpers
-  private User createNewUser(SocialLoginRequest request) {
-    User user = new User();
+  @Override
+  public void changeUserType(UserType userType) {
+    Users existingUser = usersService.getLoggedUser();
+    Optional<SocialLogin> socialLoginOptional = socialLoginRepository.findByUser(existingUser);
+    if (socialLoginOptional.isEmpty()) {
+      // TODO : make NoLinkedSocialLoginException
+      throw new RuntimeException("Account not linked to any social login");
+    }
+
+    existingUser.setUserType(userType);
+    usersService.save(existingUser);
+  }
+
+  // Helpers
+  private Users createNewUser(SocialLoginRequest request) {
+    Users user = new Users();
     user.setEmail(request.getEmail());
     user.setFirstName(request.getFirstName());
     user.setLastName(request.getLastName());
     user.setIsVerified(true);
-    return userRepository.save(user);
+    usersService.save(user);
+    return user;
   }
 
-  private void linkSocialLogin(User user, String provider, String providerUserId) {
+  private void linkSocialLogin(Users user, String provider, String providerUserId) {
     SocialLogin socialLogin = new SocialLogin();
     socialLogin.setUser(user);
     socialLogin.setProvider(provider);
@@ -47,12 +66,13 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     socialLoginRepository.save(socialLogin);
   }
 
-  private TenantInfo createTenantInfo(User user, SocialLoginRequest request) {
+  private TenantInfo createTenantInfo(Users user, SocialLoginRequest request) {
     TenantInfo tenantInfo = new TenantInfo();
     tenantInfo.setUser(user);
     tenantInfo.setBusinessName(request.getBusinessName());
     tenantInfo.setTaxId(request.getTaxId());
-    return tenantInfoRepository.save(tenantInfo);
+    tenantInfoService.save(tenantInfo);
+    return tenantInfo;
   }
 
   // Region - Quarantine
@@ -66,19 +86,19 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     Optional<SocialLogin> existingSocialLogin = socialLoginRepository.findByProviderAndProviderUserId(provider, providerUserId);
 
     if (existingSocialLogin.isPresent()) {
-      User user = existingSocialLogin.get().getUser();
+      Users user = existingSocialLogin.get().getUser();
       return new SocialLoginResponse(user, null); // Add JWT token generation here
     }
 
-    Optional<User> existingUser = userRepository.findByEmail(email);
+    Optional<Users> existingUser = usersService.findByEmail(email);
 
     if (existingUser.isPresent()) {
-      User user = existingUser.get();
+      Users user = existingUser.get();
       linkSocialLogin(user, provider, providerUserId);
       return new SocialLoginResponse(user, null); // Add JWT token generation here
     }
 
-    User newUser = createNewUser(request);
+    Users newUser = createNewUser(request);
     linkSocialLogin(newUser, provider, providerUserId);
 
     if (userType == UserType.TENANT) {

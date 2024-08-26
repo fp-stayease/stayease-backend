@@ -32,7 +32,7 @@ public class SocialLogin {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
-  private User user;
+  private Users user;
 
   @Size(max = 20)
   @NotNull
