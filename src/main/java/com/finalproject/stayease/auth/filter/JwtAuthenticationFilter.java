@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,6 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtService jwtService;
   private final AuthService authService;
   private final UserDetailsServiceImpl userDetailsService;
+
+  // TODO : Investigate why JwtFilter is being triggered repeatedly
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -47,11 +50,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       // * 2. extract info from authorization HEADER (this is supposed to be access token)
       accessToken = authHeader.substring(7);
       try {
-        email = jwtService.extractUsername(accessToken);
-      } catch (Exception e) {
-        log.info("Invalid JWT token");
+        email = jwtService.extractSubjectFromToken(request, accessToken);
+      } catch (JwtException e) {
+        log.info("Expired access token, will proceed to refreshing mechanism");
         accessToken =  authService.refreshToken(request, response).getAccessToken();
-        email = jwtService.extractUsername(accessToken);
+        email = jwtService.extractSubjectFromToken(request, accessToken);
+      } catch (Exception e) {
+        log.info("Invalid JWT token: " + e.getLocalizedMessage());
+        filterChain.doFilter(request, response);
+        return;
       }
 
       // * 3. email is extracted = refresh token w/ email exists
@@ -61,7 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // * 4 load userDetails
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-        // * 5. validate refresh token, and if it's valid..
+        // * 5. validate access token, and if it's valid..
         if (jwtService.isAccessTokenValid(accessToken, email)) {
           // * 5.1 Create an authentication token
           UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -83,7 +90,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
       }
     } catch (Exception e) {
-      log.error("(JwtAuthenticationFilter:83) Authentication failed: " + e.getClass() + ": " + e.getLocalizedMessage());
+      log.error("(JwtAuthenticationFilter:91) Authentication failed: " + e.getClass() + ": " + e.getLocalizedMessage());
     }
     // Otherwise, continue the filter chain
     filterChain.doFilter(request, response);

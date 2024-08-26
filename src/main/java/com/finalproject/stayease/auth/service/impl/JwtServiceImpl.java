@@ -5,12 +5,17 @@ import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.users.entity.User;
 import com.finalproject.stayease.users.entity.User.UserType;
 import com.finalproject.stayease.users.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -44,6 +49,8 @@ public class JwtServiceImpl implements JwtService {
     this.userDetailsService = userDetailsService;
   }
 
+  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.MINUTES;
+
   @Override
   public String generateAccessToken(Authentication authentication) {
     Instant now = Instant.now();
@@ -59,7 +66,7 @@ public class JwtServiceImpl implements JwtService {
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
-        .expiresAt(now.plus(1, ChronoUnit.HOURS))
+        .expiresAt(now.plus(1, ACCESS_TOKEN_TIME_UNIT))
         .subject(authentication.getName())
         .claim("userId", user.getId())
         .claim("userType", user.getUserType())
@@ -86,7 +93,7 @@ public class JwtServiceImpl implements JwtService {
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
-        .expiresAt(now.plus(1, ChronoUnit.MINUTES))
+        .expiresAt(now.plus(1, ACCESS_TOKEN_TIME_UNIT))
         .subject(userDetails.getUsername())
         .claim("userId", user.getId())
         .claim("userType", user.getUserType())
@@ -125,14 +132,54 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public String extractUsername(String token) {
+  public String extractSubjectFromToken(HttpServletRequest request, String token) {
     try {
       Jwt jwt = decodeToken(token);
       return jwt.getSubject();
+    } catch (JwtException e) {
+      if (isTokenExpiredThrowsException(token)) {
+        throw new JwtException("JWT token is expired");
+      }
+      throw e;
     } catch (Exception e) {
-      log.error("(JwtServiceImp.extractUsername) Error extracting username from token", e);
+      log.error("(JwtServiceImp.extractSubjectFromToken) Error extracting username from token", e);
       return null;
     }
+  }
+
+  private boolean isTokenExpiredThrowsException(String token) {
+    try {
+      Jwt jwt = jwtDecoder.decode(token);
+      return isTokenExpired(jwt);
+    } catch (JwtException e) {
+      if (e.getMessage().contains("Jwt expired at")) {
+        log.info("Expired JWT token");
+        return true;
+      } else {
+        log.error("(JwtServiceImpl.isTokenExpired) Invalid token", e);
+      }
+      // Handle other JWT exceptions
+      throw e;
+    }
+  }
+
+  @Override
+  public String extractSubjectFromCookie(HttpServletRequest request) {
+    String refreshToken = extractRefreshTokenFromCookie(request);
+    if (refreshToken != null) {
+      return extractSubjectFromToken(request, refreshToken);
+    }
+    return null;
+  }
+
+  @Override
+  public String extractRefreshTokenFromCookie(HttpServletRequest request) throws RuntimeException {
+    return Arrays.stream(Optional.ofNullable(request.getCookies())
+            .orElseThrow(() -> new BadCredentialsException("No cookies present")))
+        .filter(cookie -> "refresh_token".equals(cookie.getName()))
+        .findFirst()
+        .map(Cookie::getValue)
+        .orElse(null);
   }
 
   @Override
@@ -167,7 +214,7 @@ public class JwtServiceImpl implements JwtService {
       return jwtDecoder.decode(token);
     } catch (JwtException e) {
       // Handle invalid token
-      throw new RuntimeException("Invalid JWT token: " + e.getLocalizedMessage());
+      throw new JwtException("Invalid JWT token: " + e.getLocalizedMessage());
     }
   }
 

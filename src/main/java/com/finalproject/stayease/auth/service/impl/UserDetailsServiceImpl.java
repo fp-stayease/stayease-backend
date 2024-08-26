@@ -27,7 +27,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
     User user = userOpt.get();
     log.info("Found user: {}", user.getEmail());
-    log.info("User password hash: {}", user.getPasswordHash());
 
     return new UserAuth(user);
   }

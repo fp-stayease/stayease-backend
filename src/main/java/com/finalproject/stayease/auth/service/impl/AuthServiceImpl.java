@@ -17,11 +17,11 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.BadJwtException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,15 +37,7 @@ public class AuthServiceImpl implements AuthService {
   public ResponseEntity<?> login(LoginRequestDTO loginRequestDTO) {
     try {
       // * 1: get user details from authentication and security context
-      Authentication authentication = authenticationManager.authenticate(
-          new UsernamePasswordAuthenticationToken(loginRequestDTO.getEmail(), loginRequestDTO.getPassword())
-      );
-
-      if (authentication == null) {
-        log.error("User object is null after authentication");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Authentication failed: user object is null");
-      }
+      Authentication authentication = authenticateUser(loginRequestDTO);
 
       // ! 2: generate token
       String accessToken = jwtService.generateAccessToken(authentication);
@@ -53,38 +45,32 @@ public class AuthServiceImpl implements AuthService {
 
       // * 3: generate response, set headers(cookie)
       return buildLoginResponse(accessToken, refreshToken);
-
-    } catch (BadCredentialsException ex) {
-      // Handle bad credentials
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-          .body("Authentication failed. Invalid username or password.");
-    } catch (LockedException ex) {
-      // Handle locked account
-      return ResponseEntity.status(HttpStatus.LOCKED).body("Account is locked.");
-    } catch (Exception ex) {
-      // Handle other exceptions
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An internal error occurred.");
+    } catch (AuthenticationException ex) {
+      return handleAuthenticationException(ex);
     }
+  }
+
+  private Authentication authenticateUser(LoginRequestDTO loginRequestDTO) {
+    Authentication authentication = authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(loginRequestDTO.getEmail(), loginRequestDTO.getPassword())
+    );
+
+    if (authentication == null) {
+      throw new InternalAuthenticationServiceException("Authentication failed: user object is null");
+    }
+
+    return authentication;
   }
 
 
   private ResponseEntity<?> buildLoginResponse(String accessToken, String refreshToken) {
     // * response body
-    String message = "Login successful, welcome to StayEase!";
-    LoginResponseDTO responseBody = responseBody(message, accessToken, refreshToken);
+    LoginResponseDTO responseBody = new LoginResponseDTO("Login successful, welcome to StayEase!", accessToken, refreshToken);
 
     // * set cookie / headers
     HttpHeaders responseHeaders = setHeadersCookie(refreshToken);
 
     return ResponseEntity.ok().headers(responseHeaders).body(responseBody);
-  }
-
-  private LoginResponseDTO responseBody(String message, String accessToken, String refreshToken) {
-    LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
-    loginResponseDTO.setMessage(message);
-    loginResponseDTO.setAccessToken(accessToken);
-    loginResponseDTO.setRefreshToken(refreshToken);
-    return loginResponseDTO;
   }
 
   private HttpHeaders setHeadersCookie(String refreshToken) {
@@ -106,15 +92,26 @@ public class AuthServiceImpl implements AuthService {
         .build();
   }
 
+  private ResponseEntity<?> handleAuthenticationException(AuthenticationException ex) {
+    if (ex instanceof BadCredentialsException) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body("Authentication failed. Invalid username or password.");
+    } else if (ex instanceof LockedException) {
+      return ResponseEntity.status(HttpStatus.LOCKED).body("Account is locked.");
+    } else {
+      log.error("Authentication failed due to an internal error", ex);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An internal error occurred.");
+    }
+  }
+
   // Region - refresh token
 
   @Override
   public LoginResponseDTO refreshToken(HttpServletRequest request, HttpServletResponse response) throws RuntimeException {
-    String refreshToken = extractRefreshToken(request);
+    String refreshToken = jwtService.extractRefreshTokenFromCookie(request);
 
     if (refreshToken == null) {
       log.warn("(AuthServiceImpl.refreshToken) refreshToken is null");
-
       throw new BadCredentialsException("Refresh token not found");
     }
 
@@ -130,57 +127,30 @@ public class AuthServiceImpl implements AuthService {
         updateRefreshTokenCookie(response, newRefreshToken);
 
         log.info("(AuthServiceImpl.refreshToken) Tokens refreshed successfully for user: {}", email);
-
-        String message = "Access token successfully refreshed!";
-        return responseBody(message, newAccessToken, newRefreshToken);
+        return new LoginResponseDTO("Access token successfully refreshed!", newAccessToken, newRefreshToken);
       } else {
         log.warn("(AuthServiceImpl.refreshToken) Invalid refresh token for user: {}", email);
         throw new BadCredentialsException("Invalid refresh token");
       }
     } catch (Exception e) {
       log.error("(AuthServiceImpl.refreshToken) Error processing refresh token: " + e.getClass() + ": " + e.getLocalizedMessage());
-      // TODO create InvalidTokenException
-      throw new RuntimeException("Error processing refresh token: " + e.getClass() + ": " + e.getLocalizedMessage());
+      // TODO create TokenRefreshFailedException
+      throw new RuntimeException("Could not refresh token: " + e.getClass() + ": " + e.getLocalizedMessage());
     }
-  }
-
-  private String extractRefreshToken(HttpServletRequest request) {
-    Cookie[] cookies = request.getCookies();
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        if (cookie.getName().equals("refresh_token")) {
-          return cookie.getValue();
-        }
-      }
-    }
-    return null;
   }
 
   private void updateRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
     ResponseCookie newCookie = setCookie(refreshToken);
-    response.addHeader(HttpHeaders.SET_COOKIE, newCookie.toString());
+    response.setHeader(HttpHeaders.SET_COOKIE, newCookie.toString());
   }
 
   // Region
 
   @Override
-  public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-    // * Get logged in user
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication is null, no user is currently logged"
-                                                                 + " in");
-    }
-    String email = authentication.getName();
-    String token = jwtService.getToken(email);
-
-    if (token != null) {
-      // * Invalidate token
-      jwtService.invalidateToken(email);
-    }
-
+  public void logout(HttpServletRequest request, HttpServletResponse response) {
+    String email = jwtService.extractSubjectFromCookie(request);
+    jwtService.invalidateToken(email);
     invalidateSessionAndCookie(request, response);
-    return ResponseEntity.ok().body("Logged out successfully!");
   }
 
   private void invalidateSessionAndCookie(HttpServletRequest request, HttpServletResponse response) {
