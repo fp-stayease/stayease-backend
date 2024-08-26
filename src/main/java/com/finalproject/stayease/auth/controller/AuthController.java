@@ -62,28 +62,12 @@ public class AuthController {
   }
 
   @PostMapping("/refresh")
-  public ResponseEntity<?> refreshToken(HttpServletRequest request) {
-    return ResponseEntity.ok().body(authService.refreshToken(request));
+  public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    return ResponseEntity.ok().body(authService.refreshToken(request, response));
   }
 
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
     return authService.logout(request, response);
   }
-
-
-  // Region - quarantine methods
-
-//  @PostMapping("/social-login/user")
-//  public ResponseEntity<Response<SocialLoginResponse>> socialLoginUser(@RequestBody SocialLoginRequest request) {
-//    SocialLoginResponse response = socialLoginService.socialLogin(request, UserType.USER);
-//    return Response.successfulResponse(HttpStatus.OK.value(), "User social login successful!", response);
-//  }
-//
-//  @PostMapping("/social-login/tenant")
-//  public ResponseEntity<Response<SocialLoginResponse>> socialLoginTenant(@RequestBody SocialLoginRequest request) {
-//    SocialLoginResponse response = socialLoginService.socialLogin(request, UserType.TENANT);
-//    return Response.successfulResponse(HttpStatus.OK.value(), "Tenant social login successful!", response);
-//  }
-
 }

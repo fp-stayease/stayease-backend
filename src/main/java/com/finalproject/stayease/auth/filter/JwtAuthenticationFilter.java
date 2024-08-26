@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         email = jwtService.extractUsername(accessToken);
       } catch (Exception e) {
         log.info("Invalid JWT token");
-        accessToken =  authService.refreshToken(request);
+        accessToken =  authService.refreshToken(request, response);
         email = jwtService.extractUsername(accessToken);
       }
 

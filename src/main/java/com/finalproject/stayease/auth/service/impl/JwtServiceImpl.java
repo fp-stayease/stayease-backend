@@ -86,7 +86,7 @@ public class JwtServiceImpl implements JwtService {
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
-        .expiresAt(now.plus(1, ChronoUnit.HOURS))
+        .expiresAt(now.plus(1, ChronoUnit.MINUTES))
         .subject(userDetails.getUsername())
         .claim("userId", user.getId())
         .claim("userType", user.getUserType())

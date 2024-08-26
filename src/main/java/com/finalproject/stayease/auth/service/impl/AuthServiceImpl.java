@@ -88,12 +88,7 @@ public class AuthServiceImpl implements AuthService {
 
   private HttpHeaders setHeadersCookie(String refreshToken) {
     // * generate cookie
-    ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
-        .path("/")
-        .httpOnly(true)
-        .secure(true)
-        .maxAge(7 * 24 * 60 * 60)
-        .build();
+    ResponseCookie cookie = setCookie(refreshToken);
 
     // * build header
     HttpHeaders headers = new HttpHeaders();
@@ -101,10 +96,19 @@ public class AuthServiceImpl implements AuthService {
     return headers;
   }
 
+  private ResponseCookie setCookie(String refreshToken) {
+    return ResponseCookie.from("refresh_token", refreshToken)
+        .path("/")
+        .httpOnly(true)
+        .secure(true)
+        .maxAge(7 * 24 * 60 * 60)
+        .build();
+  }
+
   // Region - refresh token
 
   @Override
-  public String refreshToken(HttpServletRequest request) {
+  public String refreshToken(HttpServletRequest request, HttpServletResponse response) {
     String refreshToken = extractRefreshToken(request);
 
     if (refreshToken == null) {
@@ -121,6 +125,7 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
         jwtService.invalidateToken(email);
         String newRefreshToken = jwtService.generateRefreshToken(email);
+        updateRefreshTokenCookie(response, newRefreshToken);
         log.info("(AuthServiceImpl.refreshToken) Tokens refreshed successfully for user: {}", email);
         return newAccessToken;
       } else {
@@ -147,10 +152,9 @@ public class AuthServiceImpl implements AuthService {
     return null;
   }
 
-  private ResponseEntity<?> buildRefreshTokenResponse(String newAccessToken, String refreshToken) {
-    String message = "Refresh token successful, here is your new access token!";
-    LoginResponseDTO responseBody = responseBody(message, newAccessToken, refreshToken);
-    return ResponseEntity.ok(responseBody);
+  private void updateRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+    ResponseCookie newCookie = setCookie(refreshToken);
+    response.addHeader(HttpHeaders.SET_COOKIE, newCookie.toString());
   }
 
   // Region
