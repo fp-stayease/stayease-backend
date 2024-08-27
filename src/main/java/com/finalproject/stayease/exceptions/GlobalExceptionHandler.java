@@ -20,6 +20,9 @@ public class GlobalExceptionHandler {
     EXCEPTION_STATUS_MAP.put(DuplicateEntryException.class, HttpStatus.BAD_REQUEST);
     EXCEPTION_STATUS_MAP.put(DataNotFoundException.class, HttpStatus.NOT_FOUND);
     EXCEPTION_STATUS_MAP.put(PasswordDoesNotMatchException.class, HttpStatus.BAD_REQUEST);
+    EXCEPTION_STATUS_MAP.put(TokenDoesNotExistException.class, HttpStatus.NOT_FOUND);
+    EXCEPTION_STATUS_MAP.put(InvalidRefreshTokenException.class, HttpStatus.BAD_REQUEST);
+    EXCEPTION_STATUS_MAP.put(NoLinkedSocialLoginException.class, HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(Exception.class)
