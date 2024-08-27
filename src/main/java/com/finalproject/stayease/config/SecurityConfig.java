@@ -71,6 +71,9 @@ public class SecurityConfig {
   }
 
   private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+    auth.requestMatchers("api/v1/role").denyAll();
+    auth.requestMatchers("api/v1/role/user").hasRole("USER");
+    auth.requestMatchers("api/v1/role/tenant").hasRole("TENANT");
     auth.requestMatchers("api/v1/auth/**", "/login/**", "/oauth2/**").permitAll();
     auth.anyRequest().authenticated();
   }
