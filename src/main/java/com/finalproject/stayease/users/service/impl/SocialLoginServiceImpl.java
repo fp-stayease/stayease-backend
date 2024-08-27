@@ -2,6 +2,7 @@ package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
 import com.finalproject.stayease.auth.model.dto.SocialLoginResponse;
+import com.finalproject.stayease.exceptions.NoLinkedSocialLoginException;
 import com.finalproject.stayease.users.entity.SocialLogin;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
@@ -39,8 +40,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     Users existingUser = usersService.getLoggedUser();
     Optional<SocialLogin> socialLoginOptional = socialLoginRepository.findByUser(existingUser);
     if (socialLoginOptional.isEmpty()) {
-      // TODO : make NoLinkedSocialLoginException
-      throw new RuntimeException("Account not linked to any social login");
+      throw new NoLinkedSocialLoginException("Account not linked to any social login");
     }
 
     existingUser.setUserType(userType);
