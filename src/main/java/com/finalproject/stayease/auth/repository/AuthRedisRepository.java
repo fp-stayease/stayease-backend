@@ -49,7 +49,7 @@ public class AuthRedisRepository {
     return valueOperations.get(STRING_KEY_PREFIX + email);
   }
 
-  public boolean isValid (String email, String jwtKey) {
+  public boolean isValid (String jwtKey, String email) {
     String storedKey = valueOperations.get(STRING_KEY_PREFIX + email);
     log.info("Validating refresh token for email: {}", email);
     log.info("Stored token: {}", storedKey);

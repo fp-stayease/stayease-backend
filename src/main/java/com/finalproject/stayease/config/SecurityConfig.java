@@ -64,7 +64,7 @@ public class SecurityConfig {
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .oauth2Login(this::configureOAuth2Login)
         .formLogin(Customizer.withDefaults())
-        .addFilterBefore(new JwtAuthenticationFilter(jwtService, authService, userDetailsService),
+        .addFilterBefore(new JwtAuthenticationFilter(jwtService, userDetailsService),
             UsernamePasswordAuthenticationFilter.class)
         .logout(Customizer.withDefaults())
         .build();

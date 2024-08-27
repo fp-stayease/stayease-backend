@@ -3,24 +3,16 @@ package com.finalproject.stayease.auth.service.impl;
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.users.entity.Users;
-import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.service.UsersService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -52,11 +44,10 @@ public class JwtServiceImpl implements JwtService {
   }
 
   private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.MINUTES;
+  private static final int ACCESS_TOKEN_EXPIRY = 1;
 
   @Override
   public String generateAccessToken(Authentication authentication) {
-    Instant now = Instant.now();
-
     List<String> authorities = authentication.getAuthorities()
         .stream()
         .map(GrantedAuthority::getAuthority)
@@ -65,23 +56,13 @@ public class JwtServiceImpl implements JwtService {
     Users user = usersService.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException(
         "User not found"));
 
-    JwtClaimsSet claimsSet = JwtClaimsSet.builder()
-        .issuer("self")
-        .issuedAt(now)
-        .expiresAt(now.plus(1, ACCESS_TOKEN_TIME_UNIT))
-        .subject(authentication.getName())
-        .claim("userId", user.getId())
-        .claim("userType", user.getUserType())
-        .claim("authorities", authorities)
-        .build();
+    JwtClaimsSet claimsSet = buildAccessTokenClaimsSet(user, authorities, user.getEmail());
 
     return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
   }
 
   @Override
   public String generateAccessTokenFromEmail(String email) {
-    Instant now = Instant.now();
-
     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
     List<String> authorities = userDetails.getAuthorities()
@@ -92,17 +73,22 @@ public class JwtServiceImpl implements JwtService {
     Users user = usersService.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(
         "User not found"));
 
-    JwtClaimsSet claimsSet = JwtClaimsSet.builder()
+    JwtClaimsSet claimsSet = buildAccessTokenClaimsSet(user, authorities, userDetails.getUsername());
+
+    return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
+  }
+
+  private JwtClaimsSet buildAccessTokenClaimsSet(Users user, List<String> authorities, String subject) {
+    Instant now = Instant.now();
+    return JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
-        .expiresAt(now.plus(1, ACCESS_TOKEN_TIME_UNIT))
-        .subject(userDetails.getUsername())
+        .expiresAt(now.plus(ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_TIME_UNIT))
+        .subject(subject)
         .claim("userId", user.getId())
         .claim("userType", user.getUserType())
         .claim("authorities", authorities)
         .build();
-
-    return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
   }
 
   @Override
@@ -129,62 +115,8 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public String getToken(String email) {
-    return authRedisRepository.getJwtKey(email);
-  }
-
-  @Override
-  public String extractSubjectFromToken(HttpServletRequest request, String token) {
-    try {
-      Jwt jwt = decodeToken(token);
-      return jwt.getSubject();
-    } catch (JwtException e) {
-      if (isTokenExpiredThrowsException(token)) {
-        throw new JwtException("JWT token is expired");
-      }
-      throw e;
-    } catch (Exception e) {
-      log.error("(JwtServiceImp.extractSubjectFromToken) Error extracting username from token", e);
-      return null;
-    }
-  }
-
-  private boolean isTokenExpiredThrowsException(String token) {
-    try {
-      Jwt jwt = jwtDecoder.decode(token);
-      return isTokenExpired(jwt);
-    } catch (JwtException e) {
-      if (e.getMessage().contains("Jwt expired at")) {
-        log.info("Expired JWT token");
-        return true;
-      } else {
-        log.error("(JwtServiceImpl.isTokenExpired) Invalid token", e);
-      }
-      // Handle other JWT exceptions
-      throw e;
-    }
-  }
-
-  @Override
-  public String extractSubjectFromCookie(HttpServletRequest request) {
-    String refreshToken = extractRefreshTokenFromCookie(request);
-    if (refreshToken != null) {
-      return extractSubjectFromToken(request, refreshToken);
-    }
-    return null;
-  }
-
-  @Override
-  public String extractRefreshTokenFromCookie(HttpServletRequest request) throws RuntimeException {
-    Cookie[] cookies = request.getCookies();
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        if (cookie.getName().equals("refresh_token")) {
-          return cookie.getValue();
-        }
-      }
-    }
-    return null;
+  public String extractSubjectFromToken(String token) {
+    return decodeToken(token).getSubject();
   }
 
   @Override
@@ -193,20 +125,20 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public boolean isRefreshTokenValid(String email, String refreshToken) {
-    return authRedisRepository.isValid(email, refreshToken);
+  public boolean isRefreshTokenValid(String refreshToken, String email) {
+    return authRedisRepository.isValid(refreshToken, email);
   }
 
   @Override
-  public boolean isAccessTokenValid(String accessToken, String email) {
+  public boolean isAccessTokenValid(String token, String email) {
     try {
-      Jwt jwt = decodeToken(accessToken);
+      Jwt jwt = decodeToken(token);
       String tokenEmail = jwt.getSubject();
-      boolean isValid = (tokenEmail != null && tokenEmail.equals(email) && !isTokenExpired(jwt));
+      boolean isValid = (tokenEmail.equals(email) && !isTokenExpired(jwt));
       log.info("(JwtServiceImpl.isAccessTokenValid:201)Token validity check: {}, for email: {} against token email: {}",
           isValid, email, tokenEmail);
       return isValid;
-    } catch (JwtException e) {
+    } catch (Exception e) {
       // Token is invalid or expired
       log.error("(JwtServiceImpl.isAccessTokenValid:205)Token validation failed: " + e.getClass() + ": " + e.getLocalizedMessage());
       return false;
@@ -218,29 +150,32 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public Jwt decodeToken(String token) throws JwtException {
+  public Jwt decodeToken(String token) {
     try {
       return jwtDecoder.decode(token);
     } catch (JwtException e) {
-      // Handle invalid token, throws it back
-      throw e;
+      if (e.getMessage().contains("Jwt expired at")) {
+        throw new ExpiredJwtException(null, null, "Expired JWT token");
+      } else {
+        throw e;
+      }
     }
   }
 
-  @Override
-  public Authentication getAuthenticationFromToken(String token) {
-    Jwt jwt = decodeToken(token);
-
-    Collection<GrantedAuthority> authorities = jwt.getClaimAsStringList("authorities")
-        .stream()
-        .map(SimpleGrantedAuthority::new)
-        .collect(Collectors.toList());
-
-    Users principal = new Users();
-    principal.setId(jwt.getClaim("userId"));
-    principal.setEmail(jwt.getSubject());
-    principal.setUserType(UserType.valueOf(jwt.getClaim("userType")));
-
-    return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-  }
+//  @Override
+//  public Authentication getAuthenticationFromToken(String token) {
+//    Jwt jwt = decodeToken(token);
+//
+//    Collection<GrantedAuthority> authorities = jwt.getClaimAsStringList("authorities")
+//        .stream()
+//        .map(SimpleGrantedAuthority::new)
+//        .collect(Collectors.toList());
+//
+//    Users principal = new Users();
+//    principal.setId(jwt.getClaim("userId"));
+//    principal.setEmail(jwt.getSubject());
+//    principal.setUserType(UserType.valueOf(jwt.getClaim("userType")));
+//
+//    return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+//  }
 }

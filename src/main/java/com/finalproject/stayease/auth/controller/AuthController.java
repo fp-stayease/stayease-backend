@@ -3,6 +3,7 @@ package com.finalproject.stayease.auth.controller;
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
 import com.finalproject.stayease.auth.service.AuthService;
+import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
@@ -11,9 +12,12 @@ import com.finalproject.stayease.users.entity.dto.register.verify.request.Verify
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.SocialLoginService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import java.util.Arrays;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +38,9 @@ public class AuthController {
   private final RegisterService registerService;
   private final SocialLoginService socialLoginService;
   private final AuthService authService;
+  private final JwtService jwtService;
+
+  private final static int COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
   @GetMapping("")
   public String getLoggedInUser() {
@@ -66,18 +73,56 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
-    return authService.login(loginRequestDTO);
-  }
-
-  @PostMapping("/refresh")
-  public ResponseEntity<Response<LoginResponseDTO>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-    return Response.successfulResponse(HttpStatus.OK.value(), authService.refreshToken(request, response));
+  public ResponseEntity<Response<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO,
+      HttpServletResponse response) {
+    LoginResponseDTO loginResponseDTO = authService.login(loginRequestDTO);
+    addRefreshTokenCookie(response, loginResponseDTO.getRefreshToken());
+    return Response.successfulResponse(HttpStatus.OK.value(), "Successfully logged in!", loginResponseDTO);
   }
 
   @PostMapping("/logout")
-  public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-    authService.logout(request, response);
-    return ResponseEntity.ok("Logged out successfully!");
+  public ResponseEntity<Response<String>> logout(HttpServletRequest request, HttpServletResponse response) {
+    String email = jwtService.extractSubjectFromToken(extractAccessToken(request));
+    authService.logout(email);
+    invalidateSessionAndCookie(request, response);
+    return Response.successfulResponse("Logged out successfully!");
+  }
+
+  private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+    Cookie cookie = new Cookie("refresh_token", refreshToken);
+    cookie.setHttpOnly(true);
+    cookie.setSecure(true);
+    cookie.setPath("/");
+    cookie.setMaxAge(COOKIE_MAX_AGE);
+    response.addCookie(cookie);
+  }
+
+  private String extractAccessToken(HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      return Arrays.stream(cookies)
+          .filter(cookie -> "refresh_token".equals(cookie.getName()))
+          .findFirst()
+          .map(Cookie::getValue)
+          .orElse(null);
+    }
+    return null;
+  }
+
+  private void invalidateSessionAndCookie(HttpServletRequest request, HttpServletResponse response) {
+    HttpSession session = request.getSession(false);
+    if (session != null) {
+      session.invalidate();
+    }
+
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        cookie.setValue("");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+      }
+    }
   }
 }
