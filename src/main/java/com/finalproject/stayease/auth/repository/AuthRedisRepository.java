@@ -1,14 +1,18 @@
 package com.finalproject.stayease.auth.repository;
 
 import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
+import jakarta.transaction.Transactional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RedisHash
 @Slf4j
+@Transactional
 public class AuthRedisRepository {
 
   private final static String STRING_KEY_PREFIX = "stayease:jwt:refresh:";
@@ -28,7 +32,7 @@ public class AuthRedisRepository {
     redisTemplate.delete(key); // make sure previous value deleted
     valueOperations.set(STRING_KEY_PREFIX + email, jwtKey, REFRESH_TOKEN_EXPIRE_DAYS, TimeUnit.DAYS);
     log.info("Saved refresh token for email: {}", email);
-    log.debug("Saved refresh token value: {}", jwtKey);
+    log.info("Saved refresh token value: {}", jwtKey);
   }
 
   public void blacklistKey(String email) {
@@ -48,13 +52,14 @@ public class AuthRedisRepository {
   public boolean isValid (String email, String jwtKey) {
     String storedKey = valueOperations.get(STRING_KEY_PREFIX + email);
     log.info("Validating refresh token for email: {}", email);
-    log.debug("Stored token: {}", storedKey);
-    log.debug("Provided token: {}", jwtKey);
+    log.info("Stored token: {}", storedKey);
+    log.info("Provided token: {}", jwtKey);
+    log.info("blacklist? " + isRefreshTokenBlacklisted(jwtKey));
     return storedKey != null && storedKey.equals(jwtKey) && !isRefreshTokenBlacklisted(jwtKey);
   }
 
   public boolean isRefreshTokenBlacklisted(String refreshToken) {
-    String key = BLACKLIST_KEY_PREFIX + refreshToken;
-    return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    String key = STRING_KEY_PREFIX + BLACKLIST_KEY_PREFIX + refreshToken;
+    return getJwtKey(key) != null;
   }
 }

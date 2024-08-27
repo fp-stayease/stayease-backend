@@ -7,6 +7,7 @@ import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@Transactional
 public class JwtServiceImpl implements JwtService {
 
   private final JwtEncoder jwtEncoder;
@@ -174,12 +176,15 @@ public class JwtServiceImpl implements JwtService {
 
   @Override
   public String extractRefreshTokenFromCookie(HttpServletRequest request) throws RuntimeException {
-    return Arrays.stream(Optional.ofNullable(request.getCookies())
-            .orElseThrow(() -> new BadCredentialsException("No cookies present")))
-        .filter(cookie -> "refresh_token".equals(cookie.getName()))
-        .findFirst()
-        .map(Cookie::getValue)
-        .orElse(null);
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if (cookie.getName().equals("refresh_token")) {
+          return cookie.getValue();
+        }
+      }
+    }
+    return null;
   }
 
   @Override
@@ -197,9 +202,13 @@ public class JwtServiceImpl implements JwtService {
     try {
       Jwt jwt = decodeToken(accessToken);
       String tokenEmail = jwt.getSubject();
-      return (tokenEmail != null && tokenEmail.equals(email) && !isTokenExpired(jwt));
+      boolean isValid = (tokenEmail != null && tokenEmail.equals(email) && !isTokenExpired(jwt));
+      log.info("(JwtServiceImpl.isAccessTokenValid:201)Token validity check: {}, for email: {} against token email: {}",
+          isValid, email, tokenEmail);
+      return isValid;
     } catch (JwtException e) {
       // Token is invalid or expired
+      log.error("(JwtServiceImpl.isAccessTokenValid:205)Token validation failed: " + e.getClass() + ": " + e.getLocalizedMessage());
       return false;
     }
   }
@@ -209,12 +218,12 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public Jwt decodeToken(String token) {
+  public Jwt decodeToken(String token) throws JwtException {
     try {
       return jwtDecoder.decode(token);
     } catch (JwtException e) {
-      // Handle invalid token
-      throw new JwtException("Invalid JWT token: " + e.getLocalizedMessage());
+      // Handle invalid token, throws it back
+      throw e;
     }
   }
 

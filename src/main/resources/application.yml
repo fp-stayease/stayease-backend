@@ -10,14 +10,14 @@ spring:
       client:
         registration:
           google:
-            client-id: 317413251269-p05rur3ishg106cqv3ma9qie48mvr6n1.apps.googleusercontent.com
+            client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             redirect-uri: ${BASE_URL}/login/oauth2/code/google
             scope:
               - email
               - profile
           github:
-            client-id: Ov23li10Aa5czyF3eFoa
+            client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
             redirect-uri: ${BASE_URL}/login/oauth2/code/github
             scope:

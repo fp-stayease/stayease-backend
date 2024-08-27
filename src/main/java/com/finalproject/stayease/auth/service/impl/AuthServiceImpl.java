@@ -9,6 +9,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
+import java.util.UUID;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -22,11 +24,13 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
 @Data
 @Slf4j
+@Transactional
 public class AuthServiceImpl implements AuthService {
 
   private final AuthenticationManager authenticationManager;
@@ -108,6 +112,11 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public LoginResponseDTO refreshToken(HttpServletRequest request, HttpServletResponse response) throws RuntimeException {
+    // !! Logging purposes TODO delete when done
+    String requestId = UUID.randomUUID().toString();
+    log.info("Processing request {} in AuthServiceImpl.refreshToken", requestId);
+    log.info("Refresh token method called for request: {}", request.getRequestURI());
+
     String refreshToken = jwtService.extractRefreshTokenFromCookie(request);
 
     if (refreshToken == null) {
@@ -125,6 +134,10 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
         String newRefreshToken = jwtService.generateRefreshToken(email);
         updateRefreshTokenCookie(response, newRefreshToken);
+
+        // Manually set the authentication in SecurityContextHolder
+//        Authentication authentication = jwtService.getAuthenticationFromToken(newAccessToken);
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         log.info("(AuthServiceImpl.refreshToken) Tokens refreshed successfully for user: {}", email);
         return new LoginResponseDTO("Access token successfully refreshed!", newAccessToken, newRefreshToken);
