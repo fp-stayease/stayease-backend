@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Data
 @Slf4j
 @Transactional
-public class AuthServiceImpl implements AuthService {
+public class  AuthServiceImpl implements AuthService {
 
   private final AuthenticationManager authenticationManager;
   private final UserDetailsService userDetailsService;

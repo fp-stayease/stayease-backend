@@ -60,7 +60,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
   private void sendTokenResponse(HttpServletResponse response, String accessToken, String refreshToken) throws IOException {
     Map<String, String> tokens = new HashMap<>();
-    tokens.put("message:", "Successfully registered using socials login!");
+    tokens.put("message:", "Successfully logged in using socials login!");
     tokens.put("access_token", accessToken);
     tokens.put("refresh_token", refreshToken);
 

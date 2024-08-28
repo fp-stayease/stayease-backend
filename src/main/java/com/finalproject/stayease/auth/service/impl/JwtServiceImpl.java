@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -43,7 +44,7 @@ public class JwtServiceImpl implements JwtService {
     this.userDetailsService = userDetailsService;
   }
 
-  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.MINUTES;
+  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.HOURS;
   private static final int ACCESS_TOKEN_EXPIRY = 1;
 
   @Override
@@ -146,7 +147,7 @@ public class JwtServiceImpl implements JwtService {
   }
 
   private boolean isTokenExpired(Jwt jwt) {
-    return jwt.getExpiresAt().isBefore(Instant.now());
+    return Objects.requireNonNull(jwt.getExpiresAt()).isBefore(Instant.now());
   }
 
   @Override

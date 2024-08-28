@@ -5,14 +5,14 @@ import lombok.Data;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @Data
-public class PasswordEncoderConfig {
+public class AuthenticationManagerConfig {
 
   private final UserDetailsServiceImpl userDetailsService;
 
@@ -22,11 +22,16 @@ public class PasswordEncoderConfig {
   }
 
   @Bean
-  public AuthenticationManager authenticationManager() {
-    var authProvider = new DaoAuthenticationProvider();
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    return authenticationConfiguration.getAuthenticationManager();
+  }
+
+  @Bean
+  public DaoAuthenticationProvider authenticationProvider() {
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
     authProvider.setUserDetailsService(userDetailsService);
     authProvider.setPasswordEncoder(passwordEncoder());
-    return new ProviderManager(authProvider);
+    return authProvider;
   }
 
 }

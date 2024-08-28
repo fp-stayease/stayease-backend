@@ -7,7 +7,6 @@ import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -53,13 +52,12 @@ public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
   }
 
   private String extractProviderId(OAuth2User oauth2User, String provider) {
-    Map<String, String> providerIdMap = Map.of(
-        "google", oauth2User.getAttribute("sub"),
-        "github", Objects.requireNonNull(oauth2User.getAttribute("id")).toString()
-    );
-
-    return Optional.ofNullable(providerIdMap.get(provider))
-        .orElseThrow(() -> new OAuth2AuthenticationException("Unsupported provider: " + provider));
+    Map<String, Object> attributes = oauth2User.getAttributes();
+    return switch (provider.toLowerCase()) {
+      case "google" -> (String) attributes.get("sub");
+      case "github" -> attributes.get("id").toString();
+      default -> throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
+    };
   }
 
   private Collection<? extends GrantedAuthority> extractAuthorities(Users user) {

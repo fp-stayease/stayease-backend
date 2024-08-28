@@ -69,6 +69,12 @@ spring:
           auth: true
           starttls:
             enable: true
+logging:
+  level:
+    org:
+      springframework:
+        security:
+          DEBUG
 pending:
   cleanup:
     cron: 0 0 */12 * * ?

@@ -67,7 +67,8 @@ public class AuthController {
   }
 
   @PostMapping("/register/socials/user-select")
-  public ResponseEntity<Response<Object>> selectUserType(@RequestBody UserType userType) {
+  public ResponseEntity<Response<Object>> selectUserType(@RequestBody String role) {
+    UserType userType = UserType.valueOf(role.toUpperCase());
     socialLoginService.changeUserType(userType);
     return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Successfully set user type!", null);
   }

@@ -45,6 +45,10 @@ public class SocialLoginServiceImpl implements SocialLoginService {
 
     existingUser.setUserType(userType);
     usersService.save(existingUser);
+
+    TenantInfo newTenant = new TenantInfo();
+    newTenant.setUser(existingUser);
+    tenantInfoService.save(newTenant);
   }
 
   // Helpers

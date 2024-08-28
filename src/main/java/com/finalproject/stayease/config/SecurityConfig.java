@@ -2,7 +2,6 @@ package com.finalproject.stayease.config;
 
 
 import com.finalproject.stayease.auth.filter.JwtAuthenticationFilter;
-import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.auth.service.impl.CustomAuthenticationSuccessHandler;
 import com.finalproject.stayease.auth.service.impl.CustomOAuth2UserService;
@@ -13,7 +12,6 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,10 +37,9 @@ public class SecurityConfig {
   private final CorsConfigurationSourceImpl corsConfigurationSource;
   private final CustomOAuth2UserService customOAuth2UserService;
   private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
-  private final AuthService authService;
   private final JwtService jwtService;
   private final UserDetailsServiceImpl userDetailsService;
-  private final AuthenticationManager authenticationManager;
+  private final AuthenticationManagerConfig authenticationManagerConfig;
 
   @Value("${spring.security.oauth2.client.registration.google.client-id}")
   private String googleClientId;
@@ -59,7 +56,7 @@ public class SecurityConfig {
     return http
         .csrf(AbstractHttpConfigurer::disable)
         .cors(cors -> cors.configurationSource(corsConfigurationSource))
-        .authenticationManager(authenticationManager)
+        .authenticationProvider(authenticationManagerConfig.authenticationProvider())
         .authorizeHttpRequests(this::configureAuthorization)
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .oauth2Login(this::configureOAuth2Login)
