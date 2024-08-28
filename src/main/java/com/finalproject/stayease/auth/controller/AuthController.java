@@ -64,7 +64,7 @@ public class AuthController {
   public ResponseEntity<Response<InitialRegistrationResponseDTO>> initiateUserRegistration(
       @RequestParam("userType") String type, @Valid @RequestBody InitialRegistrationRequestDTO requestDTO) {
     UserType userType = UserType.valueOf(type.toUpperCase());
-    return Response.successfulResponse(HttpStatus.OK.value(), "Initial 'User' registration successful!",
+    return Response.successfulResponse(HttpStatus.OK.value(), "Initial " + userType + " registration successful!",
         registerService.initialRegistration(requestDTO, userType));
   }
 
