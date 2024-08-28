@@ -135,12 +135,8 @@ public class JwtServiceImpl implements JwtService {
     try {
       Jwt jwt = decodeToken(token);
       String tokenEmail = jwt.getSubject();
-      boolean isValid = (tokenEmail.equals(email) && !isTokenExpired(jwt));
-      log.info("(JwtServiceImpl.isAccessTokenValid:201)Token validity check: {}, for email: {} against token email: {}",
-          isValid, email, tokenEmail);
-      return isValid;
+      return tokenEmail.equals(email) && !isTokenExpired(jwt);
     } catch (Exception e) {
-      // Token is invalid or expired
       log.error("(JwtServiceImpl.isAccessTokenValid:205)Token validation failed: " + e.getClass() + ": " + e.getLocalizedMessage());
       return false;
     }

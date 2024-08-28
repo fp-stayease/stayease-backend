@@ -43,7 +43,6 @@ public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
     if (userOptional.isPresent()) {
       user = userOptional.get();
     } else {
-      // !! TODO : User is by default a 'USER' don't forget to implement change userType from front end
       SocialLoginRequest request = new SocialLoginRequest(provider, providerUserId, email, firstName, lastName, pictureUrl);
       user = socialLoginService.registerOAuth2User(request);
     }
