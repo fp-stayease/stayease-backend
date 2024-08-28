@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Data
 @Slf4j
 @Transactional
-public class  AuthServiceImpl implements AuthService {
+public class AuthServiceImpl implements AuthService {
 
   private final AuthenticationManager authenticationManager;
   private final UserDetailsService userDetailsService;
@@ -28,31 +29,37 @@ public class  AuthServiceImpl implements AuthService {
 
   @Override
   public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-      // * 1: get user details from authentication and security context
-      Authentication authentication = authenticateUser(loginRequestDTO);
+    // * 1: get user details from authentication and security context
+    Authentication authentication = authenticateUser(loginRequestDTO);
 
-      // ! 2: generate token
-      String accessToken = jwtService.generateAccessToken(authentication);
-      String refreshToken = jwtService.generateRefreshToken(authentication.getName());
+    // ! 2: generate token
+    String accessToken = jwtService.generateAccessToken(authentication);
+    String refreshToken = jwtService.generateRefreshToken(authentication.getName());
 
-      // * 3: generate response, set headers(cookie)
-      return new LoginResponseDTO(accessToken, refreshToken);
+    // * 3: generate response, set headers(cookie)
+    return new LoginResponseDTO(accessToken, refreshToken);
   }
 
   private Authentication authenticateUser(LoginRequestDTO loginRequestDTO) {
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(loginRequestDTO.getEmail(), loginRequestDTO.getPassword())
     );
-
     if (authentication == null) {
       throw new InternalAuthenticationServiceException("Authentication failed: user object is null");
     }
-
+    SecurityContextHolder.getContext().setAuthentication(authentication);
     return authentication;
   }
 
   @Override
   public void logout(String email) {
-      jwtService.invalidateToken(email);
+    jwtService.invalidateToken(email);
+  }
+
+  @Override
+  public LoginResponseDTO refreshToken(String email) {
+    String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
+    String newRefreshToken = jwtService.generateRefreshToken(email);
+    return new LoginResponseDTO(newAccessToken, newRefreshToken);
   }
 }

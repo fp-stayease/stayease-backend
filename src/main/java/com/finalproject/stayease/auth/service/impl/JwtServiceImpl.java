@@ -44,8 +44,8 @@ public class JwtServiceImpl implements JwtService {
     this.userDetailsService = userDetailsService;
   }
 
-  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.HOURS;
-  private static final int ACCESS_TOKEN_EXPIRY = 1;
+  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.MINUTES;
+  private static final int ACCESS_TOKEN_EXPIRY = 15;
 
   @Override
   public String generateAccessToken(Authentication authentication) {
@@ -110,6 +110,7 @@ public class JwtServiceImpl implements JwtService {
     String refreshToken = jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
 
     // Store the refresh token in Redis
+    invalidateToken(user.getEmail());
     authRedisRepository.saveJwtKey(user.getEmail(), refreshToken);
 
     return refreshToken;
