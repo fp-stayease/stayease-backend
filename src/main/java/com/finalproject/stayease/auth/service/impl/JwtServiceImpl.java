@@ -2,6 +2,7 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
 import com.finalproject.stayease.auth.service.JwtService;
+import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -44,8 +45,8 @@ public class JwtServiceImpl implements JwtService {
     this.userDetailsService = userDetailsService;
   }
 
-  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.HOURS;
-  private static final int ACCESS_TOKEN_EXPIRY = 1;
+  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.MINUTES;
+  private static final int ACCESS_TOKEN_EXPIRY = 15;
 
   @Override
   public String generateAccessToken(Authentication authentication) {
@@ -110,6 +111,11 @@ public class JwtServiceImpl implements JwtService {
     String refreshToken = jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
 
     // Store the refresh token in Redis
+    try {
+      invalidateToken(user.getEmail());
+    } catch (TokenDoesNotExistException e) {
+      // intentionally left empty to ignore the exception
+    }
     authRedisRepository.saveJwtKey(user.getEmail(), refreshToken);
 
     return refreshToken;
@@ -137,7 +143,8 @@ public class JwtServiceImpl implements JwtService {
       String tokenEmail = jwt.getSubject();
       return tokenEmail.equals(email) && !isTokenExpired(jwt);
     } catch (Exception e) {
-      log.error("(JwtServiceImpl.isAccessTokenValid:205)Token validation failed: " + e.getClass() + ": " + e.getLocalizedMessage());
+      log.error("(JwtServiceImpl.isAccessTokenValid:205)Token validation failed: " + e.getClass() + ": "
+                + e.getLocalizedMessage());
       return false;
     }
   }
