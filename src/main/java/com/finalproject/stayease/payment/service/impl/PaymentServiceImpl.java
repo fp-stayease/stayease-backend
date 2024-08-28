@@ -1,22 +1,29 @@
 package com.finalproject.stayease.payment.service.impl;
 
 import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.payment.repository.PaymentRepository;
 import com.finalproject.stayease.payment.service.PaymentService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
+    private final CloudinaryService cloudinaryService;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, CloudinaryService cloudinaryService) {
         this.paymentRepository = paymentRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @Override
@@ -43,11 +50,17 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Payment uploadPaymentProof(String imageUrl, UUID bookingId) {
-        Payment payment = findPaymentByBookingId(bookingId);
+    public Payment uploadPaymentProof(MultipartFile file, UUID bookingId) throws IOException {
+        List<String> allowedImgType = Arrays.asList("image/jpeg", "image/png", "image/jpg");
+        if (!allowedImgType.contains(file.getContentType())) {
+            throw new IllegalArgumentException("Image must be un JPEG, JPG, or PNG");
+        }
+        String imageUrl = cloudinaryService.uploadFile(file, "Payment Proof");
 
+        Payment payment = findPaymentByBookingId(bookingId);
         payment.setPaymentProof(imageUrl);
         payment.setPaymentStatus("Waiting for confirmation");
+
         return paymentRepository.save(payment);
     }
 

@@ -1,5 +1,6 @@
 package com.finalproject.stayease.payment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.finalproject.stayease.bookings.entity.Booking;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -9,6 +10,7 @@ import java.time.Instant;
 
 @Entity
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "payments")
 public class Payment {
 

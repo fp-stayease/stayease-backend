@@ -1,5 +1,6 @@
 package com.finalproject.stayease.bookings.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "bookings")
 public class Booking {
     @Id
