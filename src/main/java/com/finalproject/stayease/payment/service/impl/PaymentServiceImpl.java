@@ -31,12 +31,42 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    public Payment createPayment(Double amount, String paymentMethod, Booking booking, String paymentStatus, String bankVa) {
+        Payment payment = new Payment();
+        payment.setBooking(booking);
+        payment.setPaymentMethod(paymentMethod);
+        payment.setAmount(amount);
+        payment.setPaymentExpirationAt(Instant.now().plus(30, ChronoUnit.MINUTES));
+        payment.setPaymentStatus(paymentStatus);
+        payment.setBankVa(bankVa);
+        return paymentRepository.save(payment);
+    }
+
+    @Override
     public Payment uploadPaymentProof(String imageUrl, UUID bookingId) {
-        Payment payment = paymentRepository.findByBookingId(bookingId)
-                .orElseThrow(() -> new DataNotFoundException("Booking not found"));
+        Payment payment = findPaymentByBookingId(bookingId);
 
         payment.setPaymentProof(imageUrl);
         payment.setPaymentStatus("Waiting for confirmation");
         return paymentRepository.save(payment);
+    }
+
+    @Override
+    public Payment findPaymentByBookingId(UUID bookingId) {
+        return paymentRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new DataNotFoundException("Payment not found"));
+    }
+
+    @Override
+    public Payment updatePaymentStatus(Long paymentId, String paymentStatus) {
+        Payment payment = findPaymentById(paymentId);
+        payment.setPaymentStatus(paymentStatus);
+        return paymentRepository.save(payment);
+    }
+
+    @Override
+    public Payment findPaymentById(Long paymentId) {
+        return paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new DataNotFoundException("Payment not found"));
     }
 }

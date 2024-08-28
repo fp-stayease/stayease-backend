@@ -1,5 +1,7 @@
 package com.finalproject.stayease.transactions.service.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.midtrans.dto.BankTransfer;
@@ -8,6 +10,7 @@ import com.finalproject.stayease.midtrans.dto.TransactionDetail;
 import com.finalproject.stayease.midtrans.service.MidtransService;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.payment.service.PaymentService;
+import com.finalproject.stayease.transactions.dto.NotificationReqDto;
 import com.finalproject.stayease.transactions.dto.TransactionReqDto;
 import com.finalproject.stayease.transactions.dto.TransactionResDto;
 import com.finalproject.stayease.transactions.service.TransactionService;
@@ -17,7 +20,13 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -54,14 +63,12 @@ public class TransactionServiceImpl implements TransactionService {
             var statusCode = (String) midtrans.get("status_code");
             var vaNumber = (JSONArray) midtrans.get("va_numbers");
             var vaObject = (JSONObject) vaNumber.get(0);
-            log.info("Va number: " + vaObject.get("va_number"));
-            log.info("bank: " + vaObject.get("bank"));
 
             if (!Objects.equals(statusCode, "201")) {
                 throw new RuntimeException("Midtrans error");
             }
 
-            Payment newPayment = paymentService.createPayment(reqDto.getAmount(), reqDto.getPaymentMethod(), newBooking, status);
+            Payment newPayment = paymentService.createPayment(reqDto.getAmount(), reqDto.getPaymentMethod(), newBooking, status, String.valueOf(vaObject.get("va_number")));
 
             return toResDto(newBooking.getId(), newBooking.getStatus(), newPayment.getPaymentMethod(), newPayment.getPaymentStatus(), newPayment.getPaymentExpirationAt());
         }
@@ -69,6 +76,31 @@ public class TransactionServiceImpl implements TransactionService {
         Payment newPayment = paymentService.createPayment(reqDto.getAmount(), reqDto.getPaymentMethod(), newBooking, "Waiting for payment");
 
         return toResDto(newBooking.getId(), newBooking.getStatus(), newPayment.getPaymentMethod(), newPayment.getPaymentStatus(), newPayment.getPaymentExpirationAt());
+    }
+
+    @Override
+    public void notificationHandler(NotificationReqDto reqDto) throws IOException, InterruptedException {
+        Payment payment = paymentService.findPaymentByBookingId(UUID.fromString(reqDto.getOrder_id()));
+        Booking booking = bookingService.getBookingDetail(UUID.fromString(reqDto.getOrder_id()));
+
+        log.info("Incoming notif from -> " + reqDto.getOrder_id());
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.sandbox.midtrans.com/v2/" + reqDto.getOrder_id() + "/status"))
+                .header("accept", "application/json")
+                .header("authorization", "Basic U0ItTWlkLXNlcnZlci1xSzlJVjh6WUF4NERWcU9jeDY2R2wtVl86UnVreXkwMTA2IQ==")
+                .method("GET", HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        var responseBody = response.body();
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(responseBody);
+        String transactionStatus = jsonNode.get("transaction_status").asText();
+
+        paymentService.updatePaymentStatus(payment.getId(), transactionStatus);
+        bookingService.updateBooking(booking.getId(), "paid");
     }
 
     public TransactionResDto toResDto(

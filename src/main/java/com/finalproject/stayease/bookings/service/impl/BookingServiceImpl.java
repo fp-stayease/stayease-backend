@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class BookingServiceImpl implements BookingService {
@@ -82,7 +83,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking getBookingDetail(Long bookingId) {
+    public Booking getBookingDetail(UUID bookingId) {
         return bookingRepository.findById(bookingId).
                 orElseThrow(() -> new DataNotFoundException("Booking not found"));
     }
@@ -94,12 +95,14 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking updateBooking(Long bookingId) {
-        return null;
+    public Booking updateBooking(UUID bookingId, String bookingStatus) {
+        Booking booking = getBookingDetail(bookingId);
+        booking.setStatus(bookingStatus);
+        return bookingRepository.save(booking);
     }
 
     @Override
-    public void deleteBooking(Long bookingId) {
+    public void deleteBooking(UUID bookingId) {
         Booking booking = getBookingDetail(bookingId);
         booking.preRemove();
         bookingRepository.save(booking);

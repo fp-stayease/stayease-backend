@@ -32,6 +32,9 @@ public class Payment {
     @Column(name = "payment_proof")
     private String paymentProof;
 
+    @Column(name = "bank_va")
+    private String bankVa;
+
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "payment_expiration_at")
     private Instant paymentExpirationAt;
