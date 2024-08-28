@@ -4,6 +4,8 @@ import com.finalproject.stayease.auth.service.RegisterRedisService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.PasswordDoesNotMatchException;
+import com.finalproject.stayease.mail.model.MailTemplate;
+import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
@@ -23,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +40,12 @@ public class RegisterServiceImpl implements RegisterService {
   private final PendingRegistrationService pendingRegistrationService;
   private final RegisterRedisService registerRedisService;
   private final PasswordEncoder passwordEncoder;
+  private final MailService mailService;
+
+  @Value("${BASE_URL}")
+  private String baseUrl;
+  @Value("${API_VERSION}")
+  private String apiVersion;
 
 
   @Override
@@ -48,11 +57,14 @@ public class RegisterServiceImpl implements RegisterService {
     Optional<PendingRegistration> registration = pendingRegistrationService.findByEmail(email);
     if (registration.isPresent()) {
       return handleExistingRegistration(registration.get(), userType);
-    } else return submitRegistration(email, userType);
+    } else {
+      return submitRegistration(email, userType);
+    }
   }
 
   @Override
-  public VerifyUserResponseDTO verifyRegistration(VerifyRegistrationDTO verifyRegistrationDTO, String token) throws RuntimeException {
+  public VerifyUserResponseDTO verifyRegistration(VerifyRegistrationDTO verifyRegistrationDTO, String token)
+      throws RuntimeException {
     String email = registerRedisService.getEmail(token);
     PendingRegistration pendingRegistration = getPendingRegistration(email);
     registerRedisService.verifyEmail(email, token);
@@ -94,7 +106,8 @@ public class RegisterServiceImpl implements RegisterService {
     }
 
     // last verification email was sent less than an hour before
-    if (now.minusSeconds(60 * 60).getEpochSecond() < pendingRegistration.getLastVerificationAttempt().getEpochSecond()) {
+    if (now.minusSeconds(60 * 60).getEpochSecond() < pendingRegistration.getLastVerificationAttempt()
+        .getEpochSecond()) {
       log.info("User {} has requested to register less than an hour ago, resending verification email.", email);
       String message = "Your last verification is still valid, we have resent it to your email at " + email;
       return resendVerificationEmail(pendingRegistration, message);
@@ -115,17 +128,24 @@ public class RegisterServiceImpl implements RegisterService {
 
     String token = generateAndSaveRedisToken(email);
 
-    String message = "Verification link has been sent to " + email + " for registration request as a " + userType +"."
+    String message = "Verification link has been sent to " + email + " for registration request as a " + userType + "."
                      + " Please check your e-mail and follow the next steps to verify your account!";
 
     return sendVerificationEmail(registration, token, message);
   }
 
-  public InitialRegistrationResponseDTO resendVerificationEmail(PendingRegistration pendingRegistration, String message) {
+  public InitialRegistrationResponseDTO resendVerificationEmail(PendingRegistration pendingRegistration,
+      String message) {
     String email = pendingRegistration.getEmail();
     String token = registerRedisService.getToken(email);
+    String mailBody =
+        "Welcome to StayEase! You recently requested to resend the verification link for your. Click "
+        + "this link "
+        + "to "
+        + "verify your " + pendingRegistration.getUserType() + " account! " + buildVerificationUrl(token);
 
-    // TODO : resend email func here
+    // TODO : resend email func here - figure out how to send with html
+    sendVerificationEmail(pendingRegistration, token, mailBody);
 
     return registerResponse(message, token);
   }
@@ -142,13 +162,18 @@ public class RegisterServiceImpl implements RegisterService {
 
   public InitialRegistrationResponseDTO sendVerificationEmail(PendingRegistration pendingRegistration, String token,
       String message) {
-    String email = pendingRegistration.getEmail();
-    UserType userType = pendingRegistration.getUserType();
-
-    // TODO: implement sending email here
-    // emailService.sendVerificationEmail(pendingRegistration.getEmail(), token/URL)
+    String mailBody =
+        "Welcome to StayEase! Click this link to verify your " + pendingRegistration.getUserType() + " account! "
+        + buildVerificationUrl(token);
+    // TODO figure out how to send html message
+    MailTemplate verificationEmail = new MailTemplate(pendingRegistration.getEmail(), "Verify your account!", mailBody);
+    mailService.sendMail(verificationEmail);
 
     return registerResponse(message, token);
+  }
+
+  private String buildVerificationUrl(String token) {
+    return baseUrl + "/" + apiVersion + "/auth/register/verify?token=" + token;
   }
 
   public String generateAndSaveRedisToken(String email) {

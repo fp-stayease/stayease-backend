@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.finalproject.stayease.auth.service.RegisterRedisService;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
+import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
@@ -44,18 +45,20 @@ public class RegisterServiceImplTest {
   private RegisterRedisService registerRedisService;
   @MockBean
   private PasswordEncoder passwordEncoder;
+  @MockBean
+  private MailService mailService;
 
   @InjectMocks
   private RegisterServiceImpl registerService = new RegisterServiceImpl(usersService, tenantInfoService,
       pendingRegistrationService,
-      registerRedisService, passwordEncoder);
+      registerRedisService, passwordEncoder, mailService);
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
     registerService = new RegisterServiceImpl(usersService, tenantInfoService,
         pendingRegistrationService,
-        registerRedisService, passwordEncoder);
+        registerRedisService, passwordEncoder, mailService);
   }
 
   @Test
