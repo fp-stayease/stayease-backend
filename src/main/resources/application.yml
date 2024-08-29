@@ -1,8 +1,39 @@
+application:
+  env: ${ENV}
 spring:
   application:
     name: stayease
   config:
     import: optional:.env.properties
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${BASE_URL}/login/oauth2/code/google
+            scope:
+              - email
+              - profile
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            redirect-uri: ${BASE_URL}/login/oauth2/code/github
+            scope:
+              - user:email
+              - read:user
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}
@@ -38,3 +69,15 @@ spring:
           auth: true
           starttls:
             enable: true
+logging:
+  level:
+    org:
+      springframework:
+        security:
+          DEBUG
+pending:
+  cleanup:
+    cron: 0 0 */12 * * ?
+rsa:
+  private-key: ${PRIVATE_KEY}
+  public-key: ${PUBLIC_KEY}
