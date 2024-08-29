@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,8 +46,10 @@ public class JwtServiceImpl implements JwtService {
     this.userDetailsService = userDetailsService;
   }
 
-  private static final ChronoUnit ACCESS_TOKEN_TIME_UNIT = ChronoUnit.MINUTES;
-  private static final int ACCESS_TOKEN_EXPIRY = 15;
+  @Value("${ACCESS_TOKEN_EXPIRY_IN_SECONDS:300}")
+  private int ACCESS_TOKEN_EXPIRY_IN_SECONDS;
+  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
+  private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
   @Override
   public String generateAccessToken(Authentication authentication) {
@@ -85,7 +88,7 @@ public class JwtServiceImpl implements JwtService {
     return JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
-        .expiresAt(now.plus(ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_TIME_UNIT))
+        .expiresAt(now.plus(ACCESS_TOKEN_EXPIRY_IN_SECONDS, ChronoUnit.SECONDS))
         .subject(subject)
         .claim("userId", user.getId())
         .claim("userType", user.getUserType())
@@ -103,7 +106,7 @@ public class JwtServiceImpl implements JwtService {
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(now)
-        .expiresAt(now.plus(7, ChronoUnit.DAYS))
+        .expiresAt(now.plus(REFRESH_TOKEN_EXPIRY_IN_SECONDS, ChronoUnit.SECONDS))
         .subject(email)
         .claim("userId", user.getId())
         .build();

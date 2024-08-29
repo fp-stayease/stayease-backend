@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -24,6 +25,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
   public final JwtService jwtService;
   public final UsersService usersService;
+
+  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
+  private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -51,7 +55,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         .path("/")
         .httpOnly(true)
         .secure(true)
-        .maxAge(7 * 24 * 60 * 60)
+        .maxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS)
         .build();
     response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 

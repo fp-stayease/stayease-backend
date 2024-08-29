@@ -13,6 +13,7 @@ import java.util.Arrays;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,7 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtService jwtService;
   private final UserDetailsServiceImpl userDetailsService;
 
-  private final static int TOKEN_EXPIRY_IN_SECONDS = 7 * 24 * 60 * 60;
+  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
+  private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -116,7 +118,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     refreshCookie.setHttpOnly(true);
     refreshCookie.setSecure(true);
     refreshCookie.setPath("/");
-    refreshCookie.setMaxAge(TOKEN_EXPIRY_IN_SECONDS);
+    refreshCookie.setMaxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS);
     response.addCookie(refreshCookie);
   }
 }

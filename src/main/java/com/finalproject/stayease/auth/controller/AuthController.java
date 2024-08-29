@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,7 +48,8 @@ public class AuthController {
   private final AuthService authService;
   private final JwtService jwtService;
 
-  private final static int COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
+  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
+  private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
   @GetMapping("")
   public String getLoggedInUser() {
@@ -128,7 +130,7 @@ public class AuthController {
     cookie.setHttpOnly(true);
     cookie.setSecure(true);
     cookie.setPath("/");
-    cookie.setMaxAge(COOKIE_MAX_AGE);
+    cookie.setMaxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS);
     response.addCookie(cookie);
     response.setHeader("Authorization", "Bearer " + loginResponseDTO.getAccessToken());
   }
