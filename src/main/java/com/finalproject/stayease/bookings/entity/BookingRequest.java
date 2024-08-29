@@ -1,5 +1,6 @@
 package com.finalproject.stayease.bookings.entity;
 
+import com.finalproject.stayease.bookings.dto.BookingRequestResDto;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -17,7 +18,8 @@ public class BookingRequest {
     @Column(name = "id", nullable = false, unique = true)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
     @Column(name = "checkin_time")
@@ -58,5 +60,15 @@ public class BookingRequest {
     @PreRemove
     public void preRemove() {
         this.deletedAt = Instant.now();
+    }
+
+    public BookingRequestResDto toResDto() {
+        BookingRequestResDto resDto = new BookingRequestResDto();
+        resDto.setCheckInTime(this.checkInTime);
+        resDto.setCheckOutTime(this.checkOutTime);
+        resDto.setNonSmoking(this.nonSmoking);
+        resDto.setOther(this.other);
+
+        return resDto;
     }
 }

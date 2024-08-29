@@ -2,6 +2,7 @@ package com.finalproject.stayease.payment.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.payment.dto.PaymentResDto;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -67,5 +68,17 @@ public class Payment {
     @PreRemove
     public void preRemove() {
         this.deletedAt = Instant.now();
+    }
+
+    public PaymentResDto toResDto() {
+        PaymentResDto resDto = new PaymentResDto();
+        resDto.setId(id);
+        resDto.setAmount(amount);
+        resDto.setPaymentMethod(paymentMethod);
+        resDto.setPaymentStatus(paymentStatus);
+        resDto.setPaymentProof(paymentProof);
+        resDto.setBankVa(bankVa);
+        resDto.setPaymentExpirationAt(paymentExpirationAt);
+        return resDto;
     }
 }

@@ -79,7 +79,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public void notificationHandler(NotificationReqDto reqDto) throws IOException, InterruptedException {
+    public TransactionResDto notificationHandler(NotificationReqDto reqDto) throws IOException, InterruptedException {
         Payment payment = paymentService.findPaymentByBookingId(UUID.fromString(reqDto.getOrder_id()));
         Booking booking = bookingService.getBookingDetail(UUID.fromString(reqDto.getOrder_id()));
 
@@ -101,17 +101,67 @@ public class TransactionServiceImpl implements TransactionService {
 
         paymentService.updatePaymentStatus(payment.getId(), transactionStatus);
         bookingService.updateBooking(booking.getId(), "paid");
+
+        return toResDto(booking.getId(), booking.getStatus(), payment.getPaymentMethod(), payment.getPaymentStatus());
+    }
+
+    @Override
+    public TransactionResDto userCancelTransaction(UUID bookingId, Long userId) {
+        Booking booking = bookingService.getBookingDetail(bookingId);
+        Payment payment = paymentService.findPaymentByBookingId(bookingId);
+
+        if (!Objects.equals(booking.getUserId(), userId)) {
+            throw new RuntimeException("This is not your booking");
+        }
+        if (payment.getPaymentProof() != null) {
+            throw new RuntimeException("You have paid your booking, you cannot cancel this transaction");
+        }
+
+        bookingService.updateBooking(bookingId, "cancelled");
+        paymentService.updatePaymentStatus(payment.getId(), "cancelled");
+
+        return toResDto(booking.getId(), booking.getStatus(), payment.getPaymentMethod(), payment.getPaymentStatus());
+    }
+
+    @Override
+    public TransactionResDto tenantCancelTransaction(UUID bookingId, Long tenantId) {
+        Booking booking = bookingService.getBookingDetail(bookingId);
+        Payment payment = paymentService.findPaymentByBookingId(bookingId);
+
+        if (!Objects.equals(booking.getTenantId(), tenantId)) {
+            throw new RuntimeException("This booking does not belong to this tenant");
+        }
+        if (payment.getPaymentProof() != null) {
+            throw new RuntimeException("This booking already has a payment proof");
+        }
+
+        bookingService.updateBooking(bookingId, "cancelled");
+        paymentService.updatePaymentStatus(payment.getId(), "cancelled");
+
+        return toResDto(booking.getId(), booking.getStatus(), payment.getPaymentMethod(), payment.getPaymentStatus());
     }
 
     public TransactionResDto toResDto(
-            UUID bookingId, String bookingStatus, String paymentMethod, String paymentStatus, Instant paymentExpiredAt)
-    {
+            UUID bookingId, String bookingStatus, String paymentMethod, String paymentStatus, Instant paymentExpiredAt
+    ) {
         var response = new TransactionResDto();
         response.setBookingId(bookingId);
         response.setBookingStatus(bookingStatus);
         response.setPaymentMethod(paymentMethod);
         response.setPaymentStaus(paymentStatus);
         response.setPaymentExpiredAt(paymentExpiredAt);
+
+        return response;
+    }
+
+    public TransactionResDto toResDto(
+            UUID bookingId, String bookingStatus, String paymentMethod, String paymentStatus
+    ) {
+        var response = new TransactionResDto();
+        response.setBookingId(bookingId);
+        response.setBookingStatus(bookingStatus);
+        response.setPaymentMethod(paymentMethod);
+        response.setPaymentStaus(paymentStatus);
 
         return response;
     }

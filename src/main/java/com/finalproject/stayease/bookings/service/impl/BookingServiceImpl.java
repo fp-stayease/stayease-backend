@@ -53,7 +53,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void createBookingItem(BookingItemReqDto bookingItemDto, Booking newBooking) {
         BookingItem bookingItem = new BookingItem();
-        bookingItem.setBookingId(newBooking.getId());
+        bookingItem.setBooking(newBooking);
         bookingItem.setRoomId(bookingItemDto.getRoomId());
         bookingItem.setCheckInDate(bookingItemDto.getCheckInDate());
         bookingItem.setCheckOutDate(bookingItemDto.getCheckOutDate());

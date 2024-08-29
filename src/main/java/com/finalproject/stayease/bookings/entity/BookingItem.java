@@ -1,5 +1,6 @@
 package com.finalproject.stayease.bookings.entity;
 
+import com.finalproject.stayease.bookings.dto.BookingItemResDto;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -18,8 +19,9 @@ public class BookingItem {
     @Column(name = "id", nullable = false, unique = true)
     private Long id;
 
-    @Column(name = "booking_id")
-    private UUID bookingId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
 
     @Column(name = "room_id")
     private Long roomId;
@@ -42,6 +44,7 @@ public class BookingItem {
     @Column(name = "total_infants")
     private int totalInfants;
 
+    @Column(name = "is_extending")
     private boolean isExtending;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
@@ -70,5 +73,18 @@ public class BookingItem {
     @PreRemove
     public void preRemove() {
         this.deletedAt = Instant.now();
+    }
+
+    public BookingItemResDto toResDto() {
+        BookingItemResDto resDto = new BookingItemResDto();
+        resDto.setBasePrice(this.price);
+        resDto.setRoomId(this.roomId);
+        resDto.setCheckInDate(this.checkInDate);
+        resDto.setCheckOutDate(this.checkOutDate);
+        resDto.setTotalAdults(this.totalAdults);
+        resDto.setTotalChildren(this.totalChildren);
+        resDto.setTotalInfants(this.totalInfants);
+        resDto.setExtending(this.isExtending);
+        return resDto;
     }
 }

@@ -5,8 +5,11 @@ import com.finalproject.stayease.transactions.dto.TransactionReqDto;
 import com.finalproject.stayease.transactions.dto.TransactionResDto;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public interface TransactionService {
     TransactionResDto createTransaction(TransactionReqDto reqDto, Long userId);
-    void notificationHandler(NotificationReqDto reqDto) throws IOException, InterruptedException;
+    TransactionResDto notificationHandler(NotificationReqDto reqDto) throws IOException, InterruptedException;
+    TransactionResDto userCancelTransaction(UUID bookingId, Long userId);
+    TransactionResDto tenantCancelTransaction(UUID bookingId, Long tenantId);
 }
