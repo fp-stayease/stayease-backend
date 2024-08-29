@@ -1,7 +1,7 @@
 package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
-import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
+import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.users.service.UsersService;
@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
   private final UsersService usersService;
 
   @Override
-  public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+  public TokenResponseDto login(LoginRequestDTO loginRequestDTO) {
     // * 1: get user details from authentication and security context
     Authentication authentication = authenticateUser(loginRequestDTO);
 
@@ -36,7 +37,8 @@ public class AuthServiceImpl implements AuthService {
     String refreshToken = jwtService.generateRefreshToken(authentication.getName());
 
     // * 3: generate response, set headers(cookie)
-    return new LoginResponseDTO(accessToken, refreshToken);
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    return new TokenResponseDto(accessToken, refreshToken);
   }
 
   private Authentication authenticateUser(LoginRequestDTO loginRequestDTO) {
@@ -55,9 +57,9 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public LoginResponseDTO refreshToken(String email) {
+  public TokenResponseDto refreshToken(String email) {
     String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
     String newRefreshToken = jwtService.generateRefreshToken(email);
-    return new LoginResponseDTO(newAccessToken, newRefreshToken);
+    return new TokenResponseDto(newAccessToken, newRefreshToken);
   }
 }

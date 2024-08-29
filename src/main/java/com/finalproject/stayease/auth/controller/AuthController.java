@@ -1,12 +1,14 @@
 package com.finalproject.stayease.auth.controller;
 
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
-import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
+import com.finalproject.stayease.auth.model.dto.LoginResponseDto;
+import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
 import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.responses.Response;
+import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
 import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
@@ -14,6 +16,7 @@ import com.finalproject.stayease.users.entity.dto.register.verify.request.Verify
 import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.SocialLoginService;
+import com.finalproject.stayease.users.service.UsersService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -46,6 +49,7 @@ public class AuthController {
   private final SocialLoginService socialLoginService;
   private final UserDetailsServiceImpl userDetailsService;
   private final AuthService authService;
+  private final UsersService usersService;
   private final JwtService jwtService;
 
   @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
@@ -85,11 +89,13 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<Response<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO,
+  public ResponseEntity<Response<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO,
       HttpServletResponse response) {
-    LoginResponseDTO loginResponseDTO = authService.login(loginRequestDTO);
-    addRefreshTokenCookie(response, loginResponseDTO);
-    return Response.successfulResponse(HttpStatus.OK.value(), "Successfully logged in!", loginResponseDTO);
+    TokenResponseDto tokenResponseDto = authService.login(loginRequestDTO);
+    addRefreshTokenCookie(response, tokenResponseDto);
+    Users loggedInUser = usersService.getLoggedUser();
+    LoginResponseDto loginResponseDto = new LoginResponseDto(loggedInUser, tokenResponseDto);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Successfully logged in!", loginResponseDto);
   }
 
   @PostMapping("/logout")
@@ -101,17 +107,17 @@ public class AuthController {
   }
 
   @PostMapping("/refresh")
-  public ResponseEntity<Response<LoginResponseDTO>> refreshToken(@CookieValue(name = "refresh_token", required =
+  public ResponseEntity<Response<TokenResponseDto>> refreshToken(@CookieValue(name = "refresh_token", required =
       false) String refreshToken, HttpServletRequest request, HttpServletResponse response) {
     if (refreshToken == null) {
       throw new TokenDoesNotExistException("No refresh token found!");
     }
     String email = jwtService.extractSubjectFromToken(refreshToken);
     if (jwtService.isRefreshTokenValid(refreshToken, email)) {
-      LoginResponseDTO loginResponseDTO = authService.refreshToken(email);
-      addRefreshTokenCookie(response, loginResponseDTO);
+      TokenResponseDto tokenResponseDto = authService.refreshToken(email);
+      addRefreshTokenCookie(response, tokenResponseDto);
       authenticateUser(request, email);
-      return Response.successfulResponse(HttpStatus.OK.value(), "Successfully refreshed token!", loginResponseDTO);
+      return Response.successfulResponse(HttpStatus.OK.value(), "Successfully refreshed token!", tokenResponseDto);
     } else {
       return Response.failedResponse(401, "Invalid refresh token!");
     }
@@ -125,14 +131,14 @@ public class AuthController {
     SecurityContextHolder.getContext().setAuthentication(authentication);
   }
 
-  private void addRefreshTokenCookie(HttpServletResponse response, LoginResponseDTO loginResponseDTO) {
-    Cookie cookie = new Cookie("refresh_token", loginResponseDTO.getRefreshToken());
+  private void addRefreshTokenCookie(HttpServletResponse response, TokenResponseDto tokenResponseDto) {
+    Cookie cookie = new Cookie("refresh_token", tokenResponseDto.getRefreshToken());
     cookie.setHttpOnly(true);
     cookie.setSecure(true);
     cookie.setPath("/");
     cookie.setMaxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS);
     response.addCookie(cookie);
-    response.setHeader("Authorization", "Bearer " + loginResponseDTO.getAccessToken());
+    response.setHeader("Authorization", "Bearer " + tokenResponseDto.getAccessToken());
   }
 
   private String extractRefreshToken(HttpServletRequest request) {
