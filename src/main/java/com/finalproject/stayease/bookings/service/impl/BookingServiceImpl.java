@@ -11,6 +11,9 @@ import com.finalproject.stayease.bookings.repository.BookingRepository;
 import com.finalproject.stayease.bookings.repository.BookingRequestRepository;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.users.service.UsersService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,26 +25,30 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingItemRepository bookingItemRepository;
     private final BookingRequestRepository bookingRequestRepository;
+    private final UsersService usersService;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, BookingItemRepository bookingItemRepository, BookingRequestRepository bookingRequestRepository) {
+    public BookingServiceImpl(BookingRepository bookingRepository, BookingItemRepository bookingItemRepository, BookingRequestRepository bookingRequestRepository, UsersService usersService) {
         this.bookingRepository = bookingRepository;
         this.bookingItemRepository = bookingItemRepository;
         this.bookingRequestRepository = bookingRequestRepository;
+        this.usersService = usersService;
     }
 
     @Override
     @Transactional
-    public Booking createBooking(BookingReqDto reqDto, Long userId) {
+    public Booking createBooking(BookingReqDto reqDto, Long userId, Long roomId) {
         Booking newBooking = new Booking();
         // TO DO: Search and validate user
+        var user = usersService.findById(userId)
+                .orElseThrow(() -> new DataNotFoundException("User not found"));
 
-        newBooking.setUserId(userId);
+        newBooking.setUser(user);
         newBooking.setTotalPrice(reqDto.getPrice());
         newBooking.setStatus("In progress");
 
         bookingRepository.save(newBooking);
 
-        createBookingItem(reqDto.getBookingItem(), newBooking);
+        createBookingItem(reqDto.getBookingItem(), newBooking, roomId);
 
         if (reqDto.getBookingRequest() != null) {
             createBookingRequest(reqDto.getBookingRequest(), newBooking);
@@ -51,10 +58,10 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public void createBookingItem(BookingItemReqDto bookingItemDto, Booking newBooking) {
+    public void createBookingItem(BookingItemReqDto bookingItemDto, Booking newBooking, Long roomId) {
         BookingItem bookingItem = new BookingItem();
         bookingItem.setBooking(newBooking);
-        bookingItem.setRoomId(bookingItemDto.getRoomId());
+        bookingItem.setRoomId(roomId);
         bookingItem.setCheckInDate(bookingItemDto.getCheckInDate());
         bookingItem.setCheckOutDate(bookingItemDto.getCheckOutDate());
         bookingItem.setPrice(bookingItemDto.getPrice());
@@ -89,9 +96,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<Booking> getUserBookings(Long userId) {
+    public Page<Booking> getUserBookings(Long userId, Pageable pageable) {
         // TO DO: find and validate user
-        return bookingRepository.findByUserId(userId);
+        var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+
+        return bookingRepository.findByUserId(user.getId(), pageable);
     }
 
     @Override
@@ -99,12 +108,5 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = getBookingDetail(bookingId);
         booking.setStatus(bookingStatus);
         return bookingRepository.save(booking);
-    }
-
-    @Override
-    public void deleteBooking(UUID bookingId) {
-        Booking booking = getBookingDetail(bookingId);
-        booking.preRemove();
-        bookingRepository.save(booking);
     }
 }

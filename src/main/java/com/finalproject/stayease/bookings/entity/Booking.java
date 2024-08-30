@@ -3,6 +3,8 @@ package com.finalproject.stayease.bookings.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.finalproject.stayease.bookings.dto.BookingResDto;
 import com.finalproject.stayease.payment.entity.Payment;
+import com.finalproject.stayease.users.entity.TenantInfo;
+import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -21,11 +23,13 @@ public class Booking {
     @Column(name = "id", nullable = false, unique = true)
     private UUID id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 
-    @Column(name = "tenant_id")
-    private Long tenantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    private TenantInfo tenant;
 
     @Column(name = "total_price")
     private Double totalPrice;
@@ -36,7 +40,7 @@ public class Booking {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<BookingItem> bookingItems;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private BookingRequest bookingRequest;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -73,8 +77,8 @@ public class Booking {
     public BookingResDto toResDto() {
         BookingResDto resDto = new BookingResDto();
         resDto.setId(this.id);
-        resDto.setUserId(this.userId);
-        resDto.setTenantId(this.tenantId);
+        resDto.setUser(this.user);
+        resDto.setTenant(this.tenant);
         resDto.setCreatedAt(this.createdAt);
         resDto.setStatus(this.status);
         resDto.setTotalPrice(this.totalPrice);

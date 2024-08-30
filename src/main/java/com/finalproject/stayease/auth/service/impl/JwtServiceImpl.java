@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -128,6 +129,9 @@ public class JwtServiceImpl implements JwtService {
   public String extractSubjectFromToken(String token) {
     return decodeToken(token).getSubject();
   }
+
+  @Override
+  public Map<String, Object> extractClaimsFromToken(String token) { return decodeToken(token).getClaims(); }
 
   @Override
   public void invalidateToken(String email) {

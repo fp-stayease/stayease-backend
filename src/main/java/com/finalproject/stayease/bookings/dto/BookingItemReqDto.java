@@ -7,7 +7,6 @@ import java.util.Date;
 
 @Data
 public class BookingItemReqDto {
-    private Long roomId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date checkInDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
