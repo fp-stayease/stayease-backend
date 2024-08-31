@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class LoginResponseDto {
+public class AuthResponseDto {
 
   private Long id;
   private String email;
@@ -15,7 +15,7 @@ public class LoginResponseDto {
   private String lastName;
   private TokenResponseDto token;
 
-  public LoginResponseDto(Users user, TokenResponseDto token) {
+  public AuthResponseDto(Users user, TokenResponseDto token) {
     this.id = user.getId();
     this.email = user.getEmail();
     this.userType = user.getUserType().toString();

@@ -10,11 +10,11 @@ import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
-import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
-import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
-import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
-import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyTenantResponseDTO;
-import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationRequestDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyTenantResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.PendingRegistrationService;
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.TenantInfoService;
@@ -184,7 +184,7 @@ public class RegisterServiceImpl implements RegisterService {
 
   public InitialRegistrationResponseDTO registerResponse(String message, String token) {
     InitialRegistrationResponseDTO responseDTO = new InitialRegistrationResponseDTO();
-    responseDTO.setToken(token);
+    responseDTO.setVerificationLink(buildVerificationUrl(token));
     responseDTO.setMessage(message);
     log.info("Request to register successful.");
     return responseDTO;

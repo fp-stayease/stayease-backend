@@ -1,4 +1,4 @@
-package com.finalproject.stayease.users.entity.dto.register.init;
+package com.finalproject.stayease.auth.model.dto.register.init;
 
 import lombok.Data;
 
@@ -6,6 +6,6 @@ import lombok.Data;
 public class InitialRegistrationResponseDTO {
 
   private String message;
-  private String token;
+  private String verificationLink;
 
 }

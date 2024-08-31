@@ -1,7 +1,7 @@
 package com.finalproject.stayease.auth.controller;
 
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
-import com.finalproject.stayease.auth.model.dto.LoginResponseDto;
+import com.finalproject.stayease.auth.model.dto.AuthResponseDto;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
@@ -10,10 +10,10 @@ import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
-import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
-import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
-import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
-import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationRequestDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
@@ -27,8 +27,8 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -55,15 +55,20 @@ public class AuthController {
   @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
   private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
-  @GetMapping("")
-  public String getLoggedInUser() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    String username = auth.getName();
-    String role = auth.getAuthorities().iterator().next().getAuthority();
-    if (username.equals("anonymousUser")) {
-      return "Not logged in";
+  @GetMapping("/status")
+  public ResponseEntity<Response<AuthResponseDto>> getLoggedInUser(HttpServletRequest request) {
+    try {
+      Users loggedInUser = usersService.getLoggedUser();
+      TokenResponseDto tokenResponseDto = new TokenResponseDto(extractTokenFromRequest(request),
+          extractRefreshToken(request));
+      if (loggedInUser.getEmail().equals("anonymousUser")) {
+        return Response.failedResponse(401, "No logged in user");
+      }
+      AuthResponseDto response = new AuthResponseDto(loggedInUser, tokenResponseDto);
+      return Response.successfulResponse(HttpStatus.OK.value(), "Displaying auth status", response);
+    } catch (AccessDeniedException e) {
+      return Response.failedResponse(401, "");
     }
-    return "Logged in user: " + username + " with role: " + role;
   }
 
   @PostMapping("/register")
@@ -89,13 +94,13 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<Response<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO,
+  public ResponseEntity<Response<AuthResponseDto>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO,
       HttpServletResponse response) {
     TokenResponseDto tokenResponseDto = authService.login(loginRequestDTO);
     addRefreshTokenCookie(response, tokenResponseDto);
     Users loggedInUser = usersService.getLoggedUser();
-    LoginResponseDto loginResponseDto = new LoginResponseDto(loggedInUser, tokenResponseDto);
-    return Response.successfulResponse(HttpStatus.OK.value(), "Successfully logged in!", loginResponseDto);
+    AuthResponseDto authResponseDto = new AuthResponseDto(loggedInUser, tokenResponseDto);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Successfully logged in!", authResponseDto);
   }
 
   @PostMapping("/logout")
@@ -121,6 +126,14 @@ public class AuthController {
     } else {
       return Response.failedResponse(401, "Invalid refresh token!");
     }
+  }
+
+  private String extractTokenFromRequest(HttpServletRequest request) {
+    String bearerToken = request.getHeader("Authorization");
+    if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+      return bearerToken.substring(7);
+    }
+    return null;
   }
 
   private void authenticateUser(HttpServletRequest request, final String email) {

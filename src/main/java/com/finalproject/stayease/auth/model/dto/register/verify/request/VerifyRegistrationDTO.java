@@ -1,4 +1,4 @@
-package com.finalproject.stayease.users.entity.dto.register.verify.request;
+package com.finalproject.stayease.auth.model.dto.register.verify.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;

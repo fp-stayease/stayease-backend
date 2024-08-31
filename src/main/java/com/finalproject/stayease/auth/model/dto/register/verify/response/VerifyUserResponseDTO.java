@@ -1,4 +1,4 @@
-package com.finalproject.stayease.users.entity.dto.register.verify.response;
+package com.finalproject.stayease.auth.model.dto.register.verify.response;
 
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
