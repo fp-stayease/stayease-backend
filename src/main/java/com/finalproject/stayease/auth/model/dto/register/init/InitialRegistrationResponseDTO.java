@@ -6,6 +6,6 @@ import lombok.Data;
 public class InitialRegistrationResponseDTO {
 
   private String message;
-  private String verificationLink;
+  private String verificationToken;
 
 }

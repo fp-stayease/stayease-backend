@@ -17,11 +17,13 @@ import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyU
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.Arrays;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,7 +75,8 @@ public class AuthController {
 
   @PostMapping("/register")
   public ResponseEntity<Response<InitialRegistrationResponseDTO>> initiateUserRegistration(
-      @RequestParam("userType") String type, @Valid @RequestBody InitialRegistrationRequestDTO requestDTO) {
+      @RequestParam("userType") String type, @Valid @RequestBody InitialRegistrationRequestDTO requestDTO)
+      throws MessagingException, IOException {
     UserType userType = UserType.valueOf(type.toUpperCase());
     return Response.successfulResponse(HttpStatus.OK.value(), "Initial " + userType + " registration successful!",
         registerService.initialRegistration(requestDTO, userType));

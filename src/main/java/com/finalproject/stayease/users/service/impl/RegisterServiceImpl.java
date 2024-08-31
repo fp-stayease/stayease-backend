@@ -19,7 +19,9 @@ import com.finalproject.stayease.users.service.PendingRegistrationService;
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,7 +53,7 @@ public class RegisterServiceImpl implements RegisterService {
   @Override
   @Transactional
   public InitialRegistrationResponseDTO initialRegistration(InitialRegistrationRequestDTO requestDTO, UserType userType)
-      throws RuntimeException {
+      throws RuntimeException, MessagingException, IOException {
     String email = requestDTO.getEmail();
     checkExistingUser(email);
     Optional<PendingRegistration> registration = pendingRegistrationService.findByEmail(email);
@@ -82,7 +84,7 @@ public class RegisterServiceImpl implements RegisterService {
 
   @Transactional
   public InitialRegistrationResponseDTO handleExistingRegistration(PendingRegistration pendingRegistration,
-      UserType requestedUserType) {
+      UserType requestedUserType) throws MessagingException, IOException {
     Instant now = Instant.now();
 
     String email = pendingRegistration.getEmail();
@@ -120,7 +122,7 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   public InitialRegistrationResponseDTO submitRegistration(String email, UserType userType)
-      throws DuplicateEntryException {
+      throws DuplicateEntryException, MessagingException, IOException {
     PendingRegistration registration = new PendingRegistration();
     registration.setEmail(email);
     registration.setUserType(userType);
@@ -135,7 +137,7 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   public InitialRegistrationResponseDTO resendVerificationEmail(PendingRegistration pendingRegistration,
-      String message) {
+      String message) throws MessagingException, IOException {
     String email = pendingRegistration.getEmail();
     String token = registerRedisService.getToken(email);
     String mailBody =
@@ -150,7 +152,8 @@ public class RegisterServiceImpl implements RegisterService {
     return registerResponse(message, token);
   }
 
-  public InitialRegistrationResponseDTO updateAndResendVerificationEmail(PendingRegistration pendingRegistration) {
+  public InitialRegistrationResponseDTO updateAndResendVerificationEmail(PendingRegistration pendingRegistration)
+      throws MessagingException, IOException {
     pendingRegistration.setLastVerificationAttempt(Instant.now());
     pendingRegistrationService.save(pendingRegistration);
     String email = pendingRegistration.getEmail();
@@ -161,18 +164,15 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   public InitialRegistrationResponseDTO sendVerificationEmail(PendingRegistration pendingRegistration, String token,
-      String message) {
-    String mailBody =
-        "Welcome to StayEase! Click this link to verify your " + pendingRegistration.getUserType() + " account! "
-        + buildVerificationUrl(token);
+      String message) throws MessagingException, IOException {
     // TODO figure out how to send html message
-    MailTemplate verificationEmail = new MailTemplate(pendingRegistration.getEmail(), "Verify your account!", mailBody);
-    mailService.sendMail(verificationEmail);
+    mailService.sendEmailVerification(pendingRegistration.getEmail(), buildVerificationUrl(token));
 
     return registerResponse(message, token);
   }
 
   private String buildVerificationUrl(String token) {
+    // TODO : replace this with FE URL later
     return baseUrl + "/" + apiVersion + "/auth/register/verify?token=" + token;
   }
 
@@ -184,7 +184,7 @@ public class RegisterServiceImpl implements RegisterService {
 
   public InitialRegistrationResponseDTO registerResponse(String message, String token) {
     InitialRegistrationResponseDTO responseDTO = new InitialRegistrationResponseDTO();
-    responseDTO.setVerificationLink(buildVerificationUrl(token));
+    responseDTO.setVerificationToken(token);
     responseDTO.setMessage(message);
     log.info("Request to register successful.");
     return responseDTO;
