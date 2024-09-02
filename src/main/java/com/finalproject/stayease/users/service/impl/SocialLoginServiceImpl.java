@@ -53,6 +53,11 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     tenantInfoService.save(newTenant);
   }
 
+  @Override
+  public Optional<SocialLogin> findByUser(Users user) {
+    return socialLoginRepository.findByUser(user);
+  }
+
   // Helpers
   private Users createNewUser(SocialLoginRequest request) {
     Users user = new Users();

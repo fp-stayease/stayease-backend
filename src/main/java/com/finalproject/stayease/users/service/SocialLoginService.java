@@ -12,6 +12,7 @@ public interface SocialLoginService {
   void save(SocialLogin socialLogin);
   Users registerOAuth2User(SocialLoginRequest request);
   void changeUserType(UserType userType);
+  Optional<SocialLogin> findByUser(Users user);
 
   // Region - quarantine (delete if by the end not needed)
   SocialLoginResponse socialLogin(SocialLoginRequest request, UserType userType);

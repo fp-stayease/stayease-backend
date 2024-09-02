@@ -1,19 +1,23 @@
 package com.finalproject.stayease.auth.controller;
 
-import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.AuthResponseDto;
+import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
+import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPasswordRequestDTO;
+import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPasswordResponseDTO;
+import com.finalproject.stayease.auth.model.dto.forgorPassword.reset.ResetPasswordRequestDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationRequestDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
+import com.finalproject.stayease.auth.service.ResetPasswordService;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
 import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
-import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationRequestDTO;
-import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
-import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
-import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
@@ -51,6 +55,7 @@ public class AuthController {
   private final SocialLoginService socialLoginService;
   private final UserDetailsServiceImpl userDetailsService;
   private final AuthService authService;
+  private final ResetPasswordService resetPasswordService;
   private final UsersService usersService;
   private final JwtService jwtService;
 
@@ -129,6 +134,19 @@ public class AuthController {
     } else {
       return Response.failedResponse(401, "Invalid refresh token!");
     }
+  }
+
+  @PostMapping("/forgot-password")
+  public ResponseEntity<Response<ForgotPasswordResponseDTO>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO requestDTO) {
+    return Response.successfulResponse(HttpStatus.OK.value(), "Reset password requested!",
+        resetPasswordService.requestResetToken(requestDTO));
+  }
+
+  @PostMapping("/reset-password")
+  public ResponseEntity<Response<Object>> resetPassword(@RequestParam String token, @Valid @RequestBody
+      ResetPasswordRequestDTO requestDTO) {
+    resetPasswordService.resetPassword(token, requestDTO);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Password successfully reset!", null);
   }
 
   private String extractTokenFromRequest(HttpServletRequest request) {
