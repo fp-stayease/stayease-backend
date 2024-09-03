@@ -1,9 +1,6 @@
 package com.finalproject.stayease.transactions.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-
-import java.time.Instant;
 
 @Data
 public class NotificationReqDto {

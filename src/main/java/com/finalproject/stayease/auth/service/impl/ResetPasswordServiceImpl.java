@@ -5,6 +5,9 @@ import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPas
 import com.finalproject.stayease.auth.model.dto.forgorPassword.reset.ResetPasswordRequestDTO;
 import com.finalproject.stayease.auth.repository.ResetPasswordRedisRepository;
 import com.finalproject.stayease.auth.service.ResetPasswordService;
+import com.finalproject.stayease.exceptions.InvalidCredentialsException;
+import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.PasswordDoesNotMatchException;
 import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.SocialLogin;
@@ -93,7 +96,6 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
 
     String randomKey = generateRandomKey(email);
 
-    // TODO : send email?
     sendPasswordResetRequestMail(email, randomKey);
 
     String message = "Request to reset password accepted!";
@@ -105,14 +107,12 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
       throw new TokenDoesNotExistException("You have not requested to reset your password");
     }
     if (!redisRepository.isValid(email, randomKey)) {
-      // TODO make new ex InvalidRequestException
-      throw new TokenDoesNotExistException("Request not valid, please send a new request");
+      throw new InvalidRequestException("Request not valid, please send a new request");
     }
     String password = requestDTO.getPassword();
     String confirmPassword = requestDTO.getConfirmPassword();
     if (!password.equals(confirmPassword)) {
-      // TODO make new ex InvalidCredentialsException
-      throw new RuntimeException("Passwords do not match");
+      throw new PasswordDoesNotMatchException("Passwords do not match");
     }
   }
 
@@ -123,8 +123,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     }
     Optional<SocialLogin> socialLoginOptional = socialLoginService.findByUser(usersOptional.get());
     if (socialLoginOptional.isPresent()) {
-      // TODO make new ex InvalidRequestException
-      throw new RuntimeException("Not allowed to change password for social login users");
+      throw new InvalidRequestException("Not allowed to change password for social login users");
     }
   }
 
@@ -133,8 +132,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     if (authentication != null) {
       String emailFromAuthentication = authentication.getName();
       if (!email.equals(emailFromAuthentication)) {
-        // TODO create ex InvalidCredentialsException
-        throw new RuntimeException("Email does not match");
+        throw new InvalidCredentialsException("Email does not match");
       }
       checkUser(email);
     }

@@ -149,7 +149,6 @@ public class RegisterServiceImpl implements RegisterService {
         + "to "
         + "verify your " + pendingRegistration.getUserType() + " account! " + buildVerificationUrl(token);
 
-    // TODO : resend email func here - figure out how to send with html
     sendVerificationEmail(pendingRegistration, token, mailBody);
 
     return registerResponse(message, token);
