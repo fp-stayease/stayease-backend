@@ -69,6 +69,23 @@ spring:
           auth: true
           starttls:
             enable: true
+
+midtrans:
+  server:
+    key: ${MIDTRANS_SERVER_KEY}
+  client:
+    key: ${MIDTRANS_CLIENT_KEY}
+  is:
+    production: false
+
+cloudinary:
+  cloud:
+    name: ${CLOUDINARY_NAME}
+  public:
+    key: ${CLOUDINARY_KEY}
+  secret:
+    key: ${CLOUDINARY_SECRET_KEY}
+
 logging:
   level:
     org:

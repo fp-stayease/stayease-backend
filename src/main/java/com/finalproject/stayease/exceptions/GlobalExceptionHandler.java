@@ -23,6 +23,8 @@ public class GlobalExceptionHandler {
     EXCEPTION_STATUS_MAP.put(TokenDoesNotExistException.class, HttpStatus.NOT_FOUND);
     EXCEPTION_STATUS_MAP.put(InvalidRefreshTokenException.class, HttpStatus.BAD_REQUEST);
     EXCEPTION_STATUS_MAP.put(NoLinkedSocialLoginException.class, HttpStatus.NOT_FOUND);
+    EXCEPTION_STATUS_MAP.put(InvalidCredentialsException.class, HttpStatus.BAD_REQUEST);
+    EXCEPTION_STATUS_MAP.put(InvalidRequestException.class, HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(Exception.class)
