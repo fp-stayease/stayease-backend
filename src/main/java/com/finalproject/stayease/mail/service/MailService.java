@@ -3,12 +3,8 @@ package com.finalproject.stayease.mail.service;
 import com.finalproject.stayease.mail.model.MailTemplate;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -26,6 +22,8 @@ public class MailService {
   private String baseUrl;
   @Value("${API_VERSION}")
   private String apiVersion;
+  @Value("${FE_URL}")
+  private String feUrl;
 
   public void sendMail(MailTemplate mailTemplate) {
     SimpleMailMessage message = new SimpleMailMessage();
@@ -52,25 +50,15 @@ public class MailService {
     mailSender.send(mimeMessage);
   }
 
-  public void sendEmailVerification(String toEmail, String verificationUrl)
-      throws MessagingException, IOException {
+  public void sendHtmlEmail(String htmlContent, String toEmail, String subject)
+      throws MessagingException {
     MimeMessage mimeMessage = mailSender.createMimeMessage();
     MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-
-    // Load the HTML template
-    Resource resource = new ClassPathResource("templates/verification-email.html");
-    String htmlTemplate = Files.readString(resource.getFile().toPath());
-
-    // Replace placeholders with actual values
-    String htmlContent = htmlTemplate
-        .replace("${verificationUrl}", verificationUrl)
-        // TODO : Replace with FE URL
-        .replace("${feURL}", baseUrl + "/" + apiVersion);
 
     helper.setFrom(MAIL_USERNAME);
     helper.setText(htmlContent, true);
     helper.setTo(toEmail);
-    helper.setSubject("Email Verification");
+    helper.setSubject(subject);
 
     mailSender.send(mimeMessage);
   }

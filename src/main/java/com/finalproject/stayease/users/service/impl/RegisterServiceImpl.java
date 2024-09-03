@@ -4,7 +4,6 @@ import com.finalproject.stayease.auth.service.RegisterRedisService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.PasswordDoesNotMatchException;
-import com.finalproject.stayease.mail.model.MailTemplate;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.TenantInfo;
@@ -22,12 +21,15 @@ import com.finalproject.stayease.users.service.UsersService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +50,8 @@ public class RegisterServiceImpl implements RegisterService {
   private String baseUrl;
   @Value("${API_VERSION}")
   private String apiVersion;
+  @Value("${FE_URL}")
+  private String feUrl;
 
 
   @Override
@@ -76,7 +80,6 @@ public class RegisterServiceImpl implements RegisterService {
   // helpers
   private void checkExistingUser(String email) throws DuplicateEntryException {
     Optional<Users> user = usersService.findByEmail(email);
-    Optional<PendingRegistration> pendingUserOptional = pendingRegistrationService.findByEmail(email);
     if (user.isPresent()) {
       throw new DuplicateEntryException("E-mail already existed! Enter a new e-mail or login");
     }
@@ -165,15 +168,27 @@ public class RegisterServiceImpl implements RegisterService {
 
   public InitialRegistrationResponseDTO sendVerificationEmail(PendingRegistration pendingRegistration, String token,
       String message) throws MessagingException, IOException {
-    // TODO figure out how to send html message
-    mailService.sendEmailVerification(pendingRegistration.getEmail(), buildVerificationUrl(token));
+
+    // Load the HTML template
+    Resource resource = new ClassPathResource("templates/verification-email.html");
+    String htmlTemplate = Files.readString(resource.getFile().toPath());
+
+    // Replace placeholders with actual values
+    String htmlContent = htmlTemplate
+        .replace("${verificationUrl}", buildVerificationUrl(token))
+        // TODO : Replace with FE URL
+        .replace("${feURL}", feUrl);
+
+    String subject = "Verify your account!";
+
+    mailService.sendHtmlEmail(htmlContent, pendingRegistration.getEmail(), subject);
 
     return registerResponse(message, token);
   }
 
   private String buildVerificationUrl(String token) {
     // TODO : replace this with FE URL later
-    return baseUrl + "/" + apiVersion + "/auth/register/verify?token=" + token;
+    return feUrl + "/auth/register/verify?token=" + token;
   }
 
   public String generateAndSaveRedisToken(String email) {

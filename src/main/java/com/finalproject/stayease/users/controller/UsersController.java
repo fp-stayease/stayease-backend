@@ -5,7 +5,9 @@ import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPas
 import com.finalproject.stayease.auth.model.dto.forgorPassword.reset.ResetPasswordRequestDTO;
 import com.finalproject.stayease.auth.service.ResetPasswordService;
 import com.finalproject.stayease.responses.Response;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +25,10 @@ public class UsersController {
   private final ResetPasswordService resetPasswordService;
 
   @PostMapping("/reset-password")
-  public ResponseEntity<Response<ForgotPasswordResponseDTO>> resetPassword(@Valid @RequestBody ForgotPasswordRequestDTO requestDTO) {
+  public ResponseEntity<Response<ForgotPasswordResponseDTO>> resetPassword(@Valid @RequestBody ForgotPasswordRequestDTO requestDTO)
+      throws MessagingException, IOException {
     return Response.successfulResponse(HttpStatus.OK.value(), "Reset password requested!",
-        resetPasswordService.requestResetToken(requestDTO));
+        resetPasswordService.requestResetTokenLoggedIn(requestDTO));
   }
 
   @PostMapping("/reset-password/set")

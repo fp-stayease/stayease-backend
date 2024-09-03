@@ -74,7 +74,7 @@ public class AuthController {
       AuthResponseDto response = new AuthResponseDto(loggedInUser, tokenResponseDto);
       return Response.successfulResponse(HttpStatus.OK.value(), "Displaying auth status", response);
     } catch (AccessDeniedException e) {
-      return Response.failedResponse(401, "");
+      return Response.failedResponse(401, "No user logged in");
     }
   }
 
@@ -137,7 +137,8 @@ public class AuthController {
   }
 
   @PostMapping("/forgot-password")
-  public ResponseEntity<Response<ForgotPasswordResponseDTO>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO requestDTO) {
+  public ResponseEntity<Response<ForgotPasswordResponseDTO>> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO requestDTO)
+      throws MessagingException, IOException {
     return Response.successfulResponse(HttpStatus.OK.value(), "Reset password requested!",
         resetPasswordService.requestResetToken(requestDTO));
   }
