@@ -14,21 +14,19 @@ import com.finalproject.stayease.transactions.dto.NotificationReqDto;
 import com.finalproject.stayease.transactions.dto.TransactionReqDto;
 import com.finalproject.stayease.transactions.dto.TransactionResDto;
 import com.finalproject.stayease.transactions.service.TransactionService;
-import lombok.extern.java.Log;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.extern.java.Log;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log

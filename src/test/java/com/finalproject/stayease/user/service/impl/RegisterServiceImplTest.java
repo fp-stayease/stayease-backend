@@ -15,14 +15,16 @@ import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
-import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationRequestDTO;
-import com.finalproject.stayease.users.entity.dto.register.init.InitialRegistrationResponseDTO;
-import com.finalproject.stayease.users.entity.dto.register.verify.request.VerifyRegistrationDTO;
-import com.finalproject.stayease.users.entity.dto.register.verify.response.VerifyUserResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationRequestDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.PendingRegistrationService;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
 import com.finalproject.stayease.users.service.impl.RegisterServiceImpl;
+import jakarta.mail.MessagingException;
+import java.io.IOException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,7 +64,7 @@ public class RegisterServiceImplTest {
   }
 
   @Test
-  void initialRegistrationTest() {
+  void initialRegistrationTest() throws MessagingException, IOException {
     // Arrange
     String email = "email@email.com";
     UserType userType = UserType.USER;

@@ -1,6 +1,7 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.users.service.PendingRegistrationService;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import lombok.Data;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Data
 @Service
+@Transactional
 public class RegisterCleanupService {
 
   private final PendingRegistrationService pendingRegistrationService;

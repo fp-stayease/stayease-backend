@@ -111,6 +111,8 @@ public class JwtServiceImpl implements JwtService {
         .claim("userId", user.getId())
         .build();
 
+    log.info("value refresh expiry: " + claimsSet.getExpiresAt());
+
     String refreshToken = jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
 
     // Store the refresh token in Redis

@@ -4,9 +4,6 @@ import com.finalproject.stayease.bookings.dto.BookingItemReqDto;
 import com.finalproject.stayease.bookings.dto.BookingReqDto;
 import com.finalproject.stayease.bookings.dto.BookingRequestReqDto;
 import com.finalproject.stayease.bookings.entity.Booking;
-import com.finalproject.stayease.bookings.entity.BookingItem;
-import com.finalproject.stayease.bookings.entity.BookingRequest;
-
 import java.util.List;
 import java.util.UUID;
 

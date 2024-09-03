@@ -11,12 +11,14 @@ import com.finalproject.stayease.users.repository.SocialLoginRepository;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.Data;
 import org.springframework.stereotype.Service;
 
 @Service
 @Data
+@Transactional
 public class SocialLoginServiceImpl implements SocialLoginService {
 
   private final SocialLoginRepository socialLoginRepository;
@@ -49,6 +51,11 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     TenantInfo newTenant = new TenantInfo();
     newTenant.setUser(existingUser);
     tenantInfoService.save(newTenant);
+  }
+
+  @Override
+  public Optional<SocialLogin> findByUser(Users user) {
+    return socialLoginRepository.findByUser(user);
   }
 
   // Helpers
