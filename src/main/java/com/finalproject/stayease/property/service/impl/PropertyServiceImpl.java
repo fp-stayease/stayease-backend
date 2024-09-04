@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 public class PropertyServiceImpl implements PropertyService {
 
   private final PropertyRepository propertyRepository;
-  private final RoomRepository roomRepository;
   private final PropertyCategoryService propertyCategoryService;
 
 
@@ -37,6 +36,11 @@ public class PropertyServiceImpl implements PropertyService {
   public Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO) {
     isTenant(tenant);
     return toPropertyEntity(tenant, requestDTO);
+  }
+
+  @Override
+  public Optional<Property> findPropertyById(Long id) {
+    return propertyRepository.findById(id);
   }
 
   private void isTenant(Users tenant) {

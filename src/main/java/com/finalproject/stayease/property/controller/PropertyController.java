@@ -3,9 +3,12 @@ package com.finalproject.stayease.property.controller;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.CreatePropertyRequestDTO;
+import com.finalproject.stayease.property.entity.dto.CreateRoomRequestDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
+import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
@@ -25,6 +28,7 @@ public class PropertyController {
   private final UsersService usersService;
   private final PropertyService propertyService;
   private final PropertyCategoryService propertyCategoryService;
+  private final RoomService roomService;
 
   @PostMapping("/create")
   public ResponseEntity<Response<PropertyDTO>> addProperty(@RequestBody CreatePropertyRequestDTO requestDTO) {
@@ -38,5 +42,11 @@ public class PropertyController {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Category added!", new CategoryDTO(
         propertyCategoryService.createCategory(tenant, requestDTO)));
+  }
+
+  @PostMapping("/rooms/create")
+  public ResponseEntity<Response<RoomDTO>> addRoom(@RequestBody CreateRoomRequestDTO requestDTO) {
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Room added!",
+        new RoomDTO(roomService.createRoom(requestDTO)));
   }
 }
