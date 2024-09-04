@@ -123,6 +123,12 @@
       <artifactId>hibernate-spatial</artifactId>
       <version>7.0.0.Beta1</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.12.0</version>
+    </dependency>
+
   </dependencies>
 
   <build>

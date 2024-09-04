@@ -3,12 +3,12 @@ package com.finalproject.stayease.property.service.impl;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
-import com.finalproject.stayease.property.entity.dto.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
-import com.finalproject.stayease.property.repository.PropertyCategoryRepository;
+import com.finalproject.stayease.property.entity.dto.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyRepository;
 import com.finalproject.stayease.property.repository.RoomRepository;
+import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
@@ -29,14 +29,14 @@ import org.springframework.stereotype.Service;
 public class PropertyServiceImpl implements PropertyService {
 
   private final PropertyRepository propertyRepository;
-  private final PropertyCategoryRepository propertyCategoryRepository;
   private final RoomRepository roomRepository;
+  private final PropertyCategoryService propertyCategoryService;
 
 
   @Override
   public Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO) {
     isTenant(tenant);
-    return toEntity(tenant, requestDTO);
+    return toPropertyEntity(tenant, requestDTO);
   }
 
   private void isTenant(Users tenant) {
@@ -45,11 +45,11 @@ public class PropertyServiceImpl implements PropertyService {
     }
   }
 
-  private Property toEntity(Users tenant, CreatePropertyRequestDTO requestDTO) {
+  private Property toPropertyEntity(Users tenant, CreatePropertyRequestDTO requestDTO) {
     Point point = toGeographyPoint(requestDTO.getLongitude(), requestDTO.getLatitude());
 
     PropertyCategory category =
-        propertyCategoryRepository.findById(requestDTO.getCategoryId()).orElseThrow(() -> new DataNotFoundException(
+        propertyCategoryService.findCategoryById(requestDTO.getCategoryId()).orElseThrow(() -> new DataNotFoundException(
             "Category not found, please enter a valid category ID"));
 
     Property property = new Property();
