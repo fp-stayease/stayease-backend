@@ -3,7 +3,6 @@ package com.finalproject.stayease.property.entity.dto;
 import com.finalproject.stayease.property.entity.Property;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.locationtech.jts.geom.Point;
 
 @Data
 @AllArgsConstructor
@@ -32,10 +31,6 @@ public class PropertyDTO {
     this.city = property.getCity();
     this.country = property.getCountry();
 //    this.rooms = property.getRooms();
-  }
-
-  public PropertyDTO toPropertyDTO(Property property) {
-    return new PropertyDTO(property);
   }
 
 }
