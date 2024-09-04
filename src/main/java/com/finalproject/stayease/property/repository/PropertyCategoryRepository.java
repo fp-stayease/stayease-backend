@@ -7,5 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PropertyCategoryRepository extends JpaRepository<PropertyCategory, Long> {
-  Optional<PropertyCategory> findByNameIgnoreCase(String name);
+
+  Optional<PropertyCategory> findByNameIgnoreCaseAndDeletedAtIsNull(String name);
+  Optional<PropertyCategory> findByIdAndDeletedAtIsNull(Long categoryId);
+
 }

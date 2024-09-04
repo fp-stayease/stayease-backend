@@ -10,6 +10,7 @@ import com.finalproject.stayease.property.entity.dto.createRequests.CreateCatego
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyCategoryRepository;
 import com.finalproject.stayease.users.entity.Users;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +60,7 @@ public class PropertyCategoryServiceImplTest {
     expectedCategory.setDescription("Residential property for rent");
     expectedCategory.setAddedBy(tenant);
 
-    when(propertyCategoryRepository.findByNameIgnoreCase("Apartment")).thenReturn(Optional.empty());
+    when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull("Apartment")).thenReturn(Optional.empty());
     when(propertyCategoryRepository.save(any(PropertyCategory.class))).thenReturn(expectedCategory);
 
     PropertyCategory createdCategory = propertyCategoryService.createCategory(tenant, requestDTO);
@@ -67,7 +68,7 @@ public class PropertyCategoryServiceImplTest {
     assertEquals(expectedCategory.getName(), createdCategory.getName());
     assertEquals(expectedCategory.getDescription(), createdCategory.getDescription());
     assertEquals(expectedCategory.getAddedBy(), createdCategory.getAddedBy());
-    verify(propertyCategoryRepository, times(1)).findByNameIgnoreCase("Apartment");
+    verify(propertyCategoryRepository, times(1)).findByNameIgnoreCaseAndDeletedAtIsNull("Apartment");
     verify(propertyCategoryRepository, times(1)).save(any(PropertyCategory.class));
   }
 
@@ -85,10 +86,10 @@ public class PropertyCategoryServiceImplTest {
     existingCategory.setDescription("Residential property for rent");
     existingCategory.setAddedBy(tenant);
 
-    when(propertyCategoryRepository.findByNameIgnoreCase("Apartment")).thenReturn(Optional.of(existingCategory));
+    when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull("Apartment")).thenReturn(Optional.of(existingCategory));
 
     assertThrows(DuplicateEntryException.class, () -> propertyCategoryService.createCategory(tenant, requestDTO));
-    verify(propertyCategoryRepository, times(1)).findByNameIgnoreCase("Apartment");
+    verify(propertyCategoryRepository, times(1)).findByNameIgnoreCaseAndDeletedAtIsNull("Apartment");
   }
 
   @Test
@@ -114,13 +115,13 @@ public class PropertyCategoryServiceImplTest {
     PropertyCategory existingCategory = new PropertyCategory();
     existingCategory.setName("Name1");
 
-    when(propertyCategoryRepository.findByNameIgnoreCase("Name2")).thenReturn(Optional.empty());
+    when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull("Name2")).thenReturn(Optional.empty());
     when(propertyCategoryRepository.findAll()).thenReturn(List.of(existingCategory));
     when(levenshteinDistance.apply(anyString(), anyString())).thenReturn(2);
     when(jaroWinklerSimilarity.apply(anyString(), anyString())).thenReturn(0.95);
 
     assertThrows(RuntimeException.class, () -> propertyCategoryService.createCategory(tenant, requestDTO));
-    verify(propertyCategoryRepository, times(1)).findByNameIgnoreCase("Name2");
+    verify(propertyCategoryRepository, times(1)).findByNameIgnoreCaseAndDeletedAtIsNull("Name2");
     verify(propertyCategoryRepository, times(1)).findAll();
   }
 
@@ -145,7 +146,7 @@ public class PropertyCategoryServiceImplTest {
     updatedCategory.setDescription("Updated description");
     updatedCategory.setAddedBy(tenant);
 
-    when(propertyCategoryRepository.findById(requestedCategoryId)).thenReturn(Optional.of(existingCategory));
+    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(requestedCategoryId)).thenReturn(Optional.of(existingCategory));
     when(propertyCategoryRepository.save(existingCategory)).thenReturn(updatedCategory);
 
     PropertyCategory result = propertyCategoryService.updateCategory(requestedCategoryId, tenant, requestDTO);
@@ -153,7 +154,7 @@ public class PropertyCategoryServiceImplTest {
     assertEquals(updatedCategory.getName(), result.getName());
     assertEquals(updatedCategory.getDescription(), result.getDescription());
     assertEquals(updatedCategory.getAddedBy(), result.getAddedBy());
-    verify(propertyCategoryRepository, times(1)).findById(requestedCategoryId);
+    verify(propertyCategoryRepository, times(1)).findByIdAndDeletedAtIsNull(requestedCategoryId);
     verify(propertyCategoryRepository, times(1)).save(existingCategory);
   }
 
@@ -166,10 +167,10 @@ public class PropertyCategoryServiceImplTest {
     Long requestedCategoryId = 1L;
     requestDTO.setDescription("Updated description");
 
-    when(propertyCategoryRepository.findById(requestedCategoryId)).thenReturn(Optional.empty());
+    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(requestedCategoryId)).thenReturn(Optional.empty());
 
     assertThrows(InvalidRequestException.class, () -> propertyCategoryService.updateCategory(requestedCategoryId, tenant, requestDTO));
-    verify(propertyCategoryRepository, times(1)).findById(requestedCategoryId);
+    verify(propertyCategoryRepository, times(1)).findByIdAndDeletedAtIsNull(requestedCategoryId);
   }
 
   @Test
@@ -190,9 +191,30 @@ public class PropertyCategoryServiceImplTest {
     Long requestedCategoryId = 1L;
     requestDTO.setDescription("Updated description");
 
-    when(propertyCategoryRepository.findById(requestedCategoryId)).thenReturn(Optional.of(existingCategory));
+    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(requestedCategoryId)).thenReturn(Optional.of(existingCategory));
 
     assertThrows(BadCredentialsException.class, () -> propertyCategoryService.updateCategory(requestedCategoryId, tenant, requestDTO));
-    verify(propertyCategoryRepository, times(1)).findById(1L);
+    verify(propertyCategoryRepository, times(1)).findByIdAndDeletedAtIsNull(1L);
+  }
+  
+  @Test
+  void testDeleteCategory_ValidRequest() {
+    Users tenant = new Users();
+    tenant.setUserType(Users.UserType.TENANT);
+
+    Instant mockTime = Instant.now();
+    
+    PropertyCategory existingCategory = new PropertyCategory();
+    Long categoryId = 1L;
+    existingCategory.setAddedBy(tenant);
+    existingCategory.setId(categoryId);
+    existingCategory.setDeletedAt(mockTime);
+    
+    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(categoryId)).thenReturn(Optional.of(existingCategory));
+    
+    propertyCategoryService.deleteCategory(categoryId, tenant);
+
+    verify(propertyCategoryRepository, times(1)).findByIdAndDeletedAtIsNull(categoryId);
+    assertEquals(existingCategory.getDeletedAt(), mockTime);
   }
 }

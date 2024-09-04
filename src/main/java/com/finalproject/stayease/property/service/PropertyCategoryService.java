@@ -10,7 +10,8 @@ public interface PropertyCategoryService {
 
   PropertyCategory createCategory(Users tenant, CreateCategoryRequestDTO requestDTO);
   PropertyCategory updateCategory(Long categoryId, Users tenant, UpdateCategoryRequestDTO requestDTO);
+  void deleteCategory(Long categoryId, Users tenant);
 
   // Region - helpers
-  Optional<PropertyCategory> findCategoryById(Long id);
+  Optional<PropertyCategory> findCategoryByIdAndNotDeleted(Long id);
 }

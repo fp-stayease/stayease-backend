@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.service.impl;
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.PropertyCategory;
@@ -10,6 +11,7 @@ import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -70,13 +72,7 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
 
   @Override
   public PropertyCategory updateCategory(Long categoryId, Users tenant, UpdateCategoryRequestDTO requestDTO) {
-
-    // TODO : make ex CategoryNotFoundException
-    PropertyCategory existingCategory = propertyCategoryRepository.findById(categoryId).orElseThrow(
-        () -> new InvalidRequestException("Category with this ID does not exist")
-    );
-
-    checkIfValid(tenant, existingCategory);
+    PropertyCategory existingCategory = checkIfValid(tenant, categoryId);
 
     // TODO : if name is updateable, do checkMatch on the name
 
@@ -91,8 +87,15 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
   }
 
   @Override
-  public Optional<PropertyCategory> findCategoryById(Long id) {
-    return propertyCategoryRepository.findById(id);
+  public void deleteCategory(Long categoryId, Users tenant) {
+    PropertyCategory existingCategory = checkIfValid(tenant, categoryId);
+    existingCategory.setDeletedAt(Instant.now());
+    propertyCategoryRepository.save(existingCategory);
+  }
+
+  @Override
+  public Optional<PropertyCategory> findCategoryByIdAndNotDeleted(Long id) {
+    return propertyCategoryRepository.findByIdAndDeletedAtIsNull(id);
   }
 
   private void isTenant(Users tenant) {
@@ -107,7 +110,7 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
 
   private void checkMatch(String requestedName) {
     // * 1 exact match
-    Optional<PropertyCategory> categoryOptional = propertyCategoryRepository.findByNameIgnoreCase(requestedName);
+    Optional<PropertyCategory> categoryOptional = propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull(requestedName);
     if (categoryOptional.isPresent()) {
       // TODO: make DuplicateCategoryException
       throw new DuplicateEntryException("Category already exist.");
@@ -167,11 +170,16 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     return category;
   }
 
-  private void checkIfValid(Users tenant, PropertyCategory category) {
+  private PropertyCategory checkIfValid(Users tenant, Long categoryId) {
+    // TODO : make ex CategoryNotFoundException
+    PropertyCategory existingCategory = propertyCategoryRepository.findByIdAndDeletedAtIsNull(categoryId).orElseThrow(
+        () -> new InvalidRequestException("Category with this ID does not exist")
+    );
     isTenant(tenant);
-    Users categoryAuthor = category.getAddedBy();
+    Users categoryAuthor = existingCategory.getAddedBy();
     if (tenant != categoryAuthor) {
       throw new BadCredentialsException("You are not the creator of this category");
     }
+    return existingCategory;
   }
 }

@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,7 +34,7 @@ public class PropertyController {
   private final PropertyCategoryService propertyCategoryService;
   private final RoomService roomService;
 
-  @PostMapping("/create")
+  @PostMapping
   public ResponseEntity<Response<PropertyDTO>> addProperty(@RequestBody CreatePropertyRequestDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Property added!",
@@ -42,14 +43,14 @@ public class PropertyController {
 
   // Region - Property Categories
 
-  @PostMapping("/categories/create")
+  @PostMapping("/categories")
   public ResponseEntity<Response<CategoryDTO>> addCategory(@RequestBody CreateCategoryRequestDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Category added!", new CategoryDTO(
         propertyCategoryService.createCategory(tenant, requestDTO)));
   }
 
-  @PostMapping("/categories/{categoryId}/update")
+  @PutMapping("/categories/{categoryId}")
   public ResponseEntity<Response<CategoryDTO>> updateCategory(@PathVariable Long categoryId,
       @RequestBody UpdateCategoryRequestDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
@@ -57,9 +58,15 @@ public class PropertyController {
         propertyCategoryService.updateCategory(categoryId, tenant, requestDTO)));
   }
 
+  @DeleteMapping("/categories/{categoryId}")
+  public ResponseEntity<Response<Object>> deleteCategory(@PathVariable Long categoryId) {
+    Users tenant = usersService.getLoggedUser();
+    return Response.successfulResponse(HttpStatus.OK.value(), "Category successfully deleted!", null);
+  }
+
   // Region - Room
 
-  @PostMapping("/rooms/create")
+  @PostMapping("/rooms")
   public ResponseEntity<Response<RoomDTO>> addRoom(@RequestBody CreateRoomRequestDTO requestDTO) {
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Room added!",
         new RoomDTO(roomService.createRoom(requestDTO)));

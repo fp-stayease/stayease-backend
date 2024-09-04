@@ -52,7 +52,7 @@ public class PropertyServiceImpl implements PropertyService {
     Point point = toGeographyPoint(requestDTO.getLongitude(), requestDTO.getLatitude());
 
     PropertyCategory category =
-        propertyCategoryService.findCategoryById(requestDTO.getCategoryId()).orElseThrow(() -> new DataNotFoundException(
+        propertyCategoryService.findCategoryByIdAndNotDeleted(requestDTO.getCategoryId()).orElseThrow(() -> new DataNotFoundException(
             "Category not found, please enter a valid category ID"));
 
     Property property = new Property();
