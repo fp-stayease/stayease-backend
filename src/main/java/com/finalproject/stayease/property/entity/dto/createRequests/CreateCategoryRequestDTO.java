@@ -1,4 +1,4 @@
-package com.finalproject.stayease.property.entity.dto;
+package com.finalproject.stayease.property.entity.dto.createRequests;
 
 import lombok.Data;
 

@@ -3,7 +3,8 @@ package com.finalproject.stayease.property.service.impl;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.PropertyCategory;
-import com.finalproject.stayease.property.entity.dto.CreateCategoryRequestDTO;
+import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
+import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyCategoryRepository;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.users.entity.Users;
@@ -13,6 +14,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -67,6 +69,28 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
   }
 
   @Override
+  public PropertyCategory updateCategory(Long categoryId, Users tenant, UpdateCategoryRequestDTO requestDTO) {
+
+    // TODO : make ex CategoryNotFoundException
+    PropertyCategory existingCategory = propertyCategoryRepository.findById(categoryId).orElseThrow(
+        () -> new InvalidRequestException("Category with this ID does not exist")
+    );
+
+    checkIfValid(tenant, existingCategory);
+
+    // TODO : if name is updateable, do checkMatch on the name
+
+    // update category
+    if (requestDTO.getDescription() == null || requestDTO.getDescription().trim().isEmpty()) {
+      // do nothing
+    } else {
+      existingCategory.setDescription(requestDTO.getDescription());
+    }
+    propertyCategoryRepository.save(existingCategory);
+    return existingCategory;
+  }
+
+  @Override
   public Optional<PropertyCategory> findCategoryById(Long id) {
     return propertyCategoryRepository.findById(id);
   }
@@ -99,7 +123,7 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     }
     if (!similarCategories.isEmpty()) {
       // TODO: make SimilarCategoryException
-      throw new RuntimeException("Similar categories exist: " + String.join(", ", similarCategories));
+      throw new DuplicateEntryException("Similar categories exist: " + String.join(", ", similarCategories));
     }
   }
 
@@ -141,5 +165,13 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     category.setAddedBy(tenant);
     propertyCategoryRepository.save(category);
     return category;
+  }
+
+  private void checkIfValid(Users tenant, PropertyCategory category) {
+    isTenant(tenant);
+    Users categoryAuthor = category.getAddedBy();
+    if (tenant != categoryAuthor) {
+      throw new BadCredentialsException("You are not the creator of this category");
+    }
   }
 }

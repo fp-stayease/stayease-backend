@@ -4,7 +4,7 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
-import com.finalproject.stayease.property.entity.dto.CreateRoomRequestDTO;
+import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
 import com.finalproject.stayease.property.repository.RoomRepository;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
