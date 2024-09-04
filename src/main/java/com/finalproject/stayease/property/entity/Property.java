@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.entity;
 
 import com.finalproject.stayease.users.entity.Users;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -97,10 +98,10 @@ public class Property {
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
-  @OneToMany(mappedBy = "property")
+  @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<PeakSeasonRate> peakSeasonRates = new LinkedHashSet<>();
 
-  @OneToMany(mappedBy = "property")
+  @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Room> rooms = new LinkedHashSet<>();
 
   @PrePersist

@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.entity;
 
 import com.finalproject.stayease.users.entity.Users;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

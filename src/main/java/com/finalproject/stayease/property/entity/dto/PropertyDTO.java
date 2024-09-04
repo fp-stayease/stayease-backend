@@ -18,7 +18,7 @@ public class PropertyDTO {
   private String address;
   private String city;
   private String country;
-  private Point location;
+
 //  private Set<Room> rooms = new HashSet<>(); TODO : add this later after making room DTO
 
   public PropertyDTO(Property property) {
@@ -31,7 +31,6 @@ public class PropertyDTO {
     this.address = property.getAddress();
     this.city = property.getCity();
     this.country = property.getCountry();
-    this.location = property.getLocation();
 //    this.rooms = property.getRooms();
   }
 
