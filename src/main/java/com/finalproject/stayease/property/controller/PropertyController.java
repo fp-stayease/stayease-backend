@@ -62,6 +62,7 @@ public class PropertyController {
   @DeleteMapping("/categories/{categoryId}")
   public ResponseEntity<Response<Object>> deleteCategory(@PathVariable Long categoryId) {
     Users tenant = usersService.getLoggedUser();
+    propertyCategoryService.deleteCategory(categoryId, tenant);
     return Response.successfulResponse(HttpStatus.OK.value(), "Category successfully deleted!", null);
   }
 

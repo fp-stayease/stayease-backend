@@ -82,11 +82,7 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     // TODO : if name is updateable, do checkMatch on the name
 
     // update category
-    if (requestDTO.getDescription() == null || requestDTO.getDescription().trim().isEmpty()) {
-      // do nothing
-    } else {
-      existingCategory.setDescription(requestDTO.getDescription());
-    }
+    Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingCategory::setDescription);
     propertyCategoryRepository.save(existingCategory);
     return existingCategory;
   }
