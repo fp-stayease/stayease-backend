@@ -39,7 +39,7 @@ public class PropertyServiceImpl implements PropertyService {
 
   @Override
   public Optional<Property> findPropertyById(Long id) {
-    return propertyRepository.findById(id);
+    return propertyRepository.findByIdAndDeletedAtIsNull(id);
   }
 
   private void isTenant(Users tenant) {
@@ -75,7 +75,7 @@ public class PropertyServiceImpl implements PropertyService {
     GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
 
-    Optional<Property> checkProp = propertyRepository.findByLocation(point);
+    Optional<Property> checkProp = propertyRepository.findByLocationAndDeletedAtIsNull(point);
     if (checkProp.isPresent()) {
       throw new DuplicateEntryException("Property at this location already exist.");
     }

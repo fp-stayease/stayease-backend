@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
-  Optional<Room> findByNameIgnoreCase(String roomName);
+  Optional<Room> findByNameIgnoreCaseAndDeletedAtIsNull(String roomName);
+  Optional<Room> findByIdAndDeletedAtIsNull(Long id);
 
 }

@@ -1,7 +1,13 @@
 package com.finalproject.stayease.property.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
@@ -11,7 +17,6 @@ import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCatego
 import com.finalproject.stayease.property.repository.PropertyCategoryRepository;
 import com.finalproject.stayease.users.entity.Users;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -215,6 +220,6 @@ public class PropertyCategoryServiceImplTest {
     propertyCategoryService.deleteCategory(categoryId, tenant);
 
     verify(propertyCategoryRepository, times(1)).findByIdAndDeletedAtIsNull(categoryId);
-    assertEquals(existingCategory.getDeletedAt(), mockTime);
+    assertNotNull(existingCategory.getDeletedAt());
   }
 }

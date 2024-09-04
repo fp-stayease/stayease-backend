@@ -7,6 +7,7 @@ import com.finalproject.stayease.property.entity.dto.createRequests.CreateCatego
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
+import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
@@ -70,5 +71,13 @@ public class PropertyController {
   public ResponseEntity<Response<RoomDTO>> addRoom(@RequestBody CreateRoomRequestDTO requestDTO) {
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Room added!",
         new RoomDTO(roomService.createRoom(requestDTO)));
+  }
+
+  @PutMapping("/rooms/{roomId}")
+  public ResponseEntity<Response<RoomDTO>> updateRoom(@PathVariable Long roomId,
+      @RequestBody UpdateRoomRequestDTO requestDTO) {
+    Users tenant = usersService.getLoggedUser();
+    return Response.successfulResponse(HttpStatus.OK.value(), "Room updated!",
+        new RoomDTO(roomService.updateRoom(roomId, requestDTO)));
   }
 }

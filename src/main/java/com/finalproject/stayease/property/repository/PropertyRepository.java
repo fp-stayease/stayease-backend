@@ -9,5 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PropertyRepository extends JpaRepository<Property, Long> {
 
-  Optional<Property> findByLocation(Point location);
+  Optional<Property> findByLocationAndDeletedAtIsNull(Point location);
+  Optional<Property> findByIdAndDeletedAtIsNull(Long id);
 }
