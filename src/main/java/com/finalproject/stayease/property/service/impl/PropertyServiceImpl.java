@@ -6,6 +6,7 @@ import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
+import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyRepository;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyService;
@@ -19,6 +20,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,6 +40,12 @@ public class PropertyServiceImpl implements PropertyService {
   }
 
   @Override
+  public Property updateProperty(Users tenant, Long propertyId, UpdatePropertyRequestDTO requestDTO) {
+    Property existingProperty = checkIfValid(tenant, propertyId);
+    return update(existingProperty, requestDTO);
+  }
+
+  @Override
   public Optional<Property> findPropertyById(Long id) {
     return propertyRepository.findByIdAndDeletedAtIsNull(id);
   }
@@ -51,9 +59,7 @@ public class PropertyServiceImpl implements PropertyService {
   private Property toPropertyEntity(Users tenant, CreatePropertyRequestDTO requestDTO) {
     Point point = toGeographyPoint(requestDTO.getLongitude(), requestDTO.getLatitude());
 
-    PropertyCategory category =
-        propertyCategoryService.findCategoryByIdAndNotDeleted(requestDTO.getCategoryId()).orElseThrow(() -> new DataNotFoundException(
-            "Category not found, please enter a valid category ID"));
+    PropertyCategory category = getCategoryById(requestDTO.getCategoryId());
 
     Property property = new Property();
     property.setTenant(tenant);
@@ -71,14 +77,72 @@ public class PropertyServiceImpl implements PropertyService {
     return property;
   }
 
+  private PropertyCategory getCategoryById(Long propertyCategoryId) {
+    return
+        propertyCategoryService.findCategoryByIdAndNotDeleted(propertyCategoryId)
+            .orElseThrow(() -> new DataNotFoundException(
+                "Category not found, please enter a valid category ID"));
+  }
+
   private Point toGeographyPoint(double longitude, double latitude) {
     GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
 
     Optional<Property> checkProp = propertyRepository.findByLocationAndDeletedAtIsNull(point);
     if (checkProp.isPresent()) {
+      // TODO : make ex DuplicatePropertyException
       throw new DuplicateEntryException("Property at this location already exist.");
     }
     return point;
   }
+
+  private Property checkIfValid(Users tenant, Long categoryId) {
+    // TODO : make ex PropertyNotFoundException
+    Property existingProperty = propertyRepository.findByIdAndDeletedAtIsNull(categoryId).orElseThrow(
+        () -> new InvalidRequestException("Property with this ID does not exist or is deleted")
+    );
+    isTenant(tenant);
+    Users propertyOwner = existingProperty.getTenant();
+    if (tenant != propertyOwner) {
+      // TODO : make ex UnauthorizedOperationException
+      throw new BadCredentialsException("You are not the owner of this property");
+    }
+    return existingProperty;
+  }
+
+  private Property update(Property existingProperty, UpdatePropertyRequestDTO requestDTO) {
+    PropertyCategory updatedCategory = getUpdatedCategory(existingProperty, requestDTO);
+    Optional.ofNullable(updatedCategory).ifPresent(existingProperty::setCategory);
+    Optional.ofNullable(requestDTO.getName()).ifPresent(existingProperty::setName);
+    Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingProperty::setDescription);
+    Optional.ofNullable(requestDTO.getPicture()).ifPresent(existingProperty::setPicture);
+    propertyRepository.save(existingProperty);
+    return existingProperty;
+  }
+
+  private PropertyCategory getUpdatedCategory(Property existingProperty, UpdatePropertyRequestDTO requestDTO) {
+    if (requestDTO.getCategoryId() != null) {
+      PropertyCategory existingCategory = existingProperty.getCategory();
+      PropertyCategory requestedCategory = getCategoryById(requestDTO.getCategoryId());
+      if (existingCategory != requestedCategory) {
+        return requestedCategory;
+      }
+    }
+    return null;
+  }
+
+  // Region - quarantine
+
+//  private Point getUpdatedPoint(Property existingProperty, UpdatePropertyRequestDTO requestDTO) {
+//    Double existingLongitude = existingProperty.getLongitude();
+//    Double existingLatitude = existingProperty.getLatitude();
+//    Double requestLongitude = requestDTO.getLongitude();
+//    Double requestLatitude = requestDTO.getLatitude();
+//    if (requestLongitude != null && requestLatitude != null) {
+//      if (existingLongitude.equals(requestLongitude) && existingLatitude.equals(requestLongitude)) {
+//        return toGeographyPoint(requestLongitude, requestLatitude);
+//      }
+//    }
+//    return null;
+//  }
 }

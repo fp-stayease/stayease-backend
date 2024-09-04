@@ -179,6 +179,7 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     isTenant(tenant);
     Users categoryAuthor = existingCategory.getAddedBy();
     if (tenant != categoryAuthor) {
+      // TODO : make ex UnauthorizedOperationException
       throw new BadCredentialsException("You are not the creator of this category");
     }
     return existingCategory;
