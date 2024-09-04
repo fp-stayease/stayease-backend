@@ -1,11 +1,7 @@
 package com.finalproject.stayease.property.service.impl;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
@@ -130,5 +126,24 @@ public class RoomServiceImplTest {
     when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
     assertThrows(InvalidRequestException.class, () -> roomService.updateRoom(roomId, new UpdateRoomRequestDTO()));
+  }
+
+  @Test
+  void testDeleteRoom() {
+    //Arrange
+    Long roomId = 1L;
+
+    Room existingRoom = new Room();
+    existingRoom.setId(roomId);
+
+    when(roomRepository.findByIdAndDeletedAtIsNull(roomId)).thenReturn(Optional.of(existingRoom));
+
+    // Act
+    roomService.deleteRoom(roomId);
+
+    // Assert
+    verify(roomRepository, times(1)).findByIdAndDeletedAtIsNull(1L);
+    verify(roomRepository, times(1)).save(any(Room.class));
+    assertNotNull(existingRoom.getDeletedAt());
   }
 }

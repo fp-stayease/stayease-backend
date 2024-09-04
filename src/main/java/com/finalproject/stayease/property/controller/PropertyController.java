@@ -77,8 +77,13 @@ public class PropertyController {
   @PutMapping("/rooms/{roomId}")
   public ResponseEntity<Response<RoomDTO>> updateRoom(@PathVariable Long roomId,
       @RequestBody UpdateRoomRequestDTO requestDTO) {
-    Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.OK.value(), "Room updated!",
         new RoomDTO(roomService.updateRoom(roomId, requestDTO)));
+  }
+
+  @DeleteMapping("/rooms/{roomId}")
+  public ResponseEntity<Response<Object>> deleteRoom(@PathVariable Long roomId) {
+    roomService.deleteRoom(roomId);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Room successfully deleted!", null);
   }
 }

@@ -10,6 +10,7 @@ import com.finalproject.stayease.property.repository.RoomRepository;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.util.Optional;
 import lombok.Data;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,13 @@ public class RoomServiceImpl implements RoomService {
   public Room updateRoom(Long roomId, UpdateRoomRequestDTO requestDTO) {
     Room existingRoom = checkRoom(roomId);
     return update(existingRoom, requestDTO);
+  }
+
+  @Override
+  public void deleteRoom(Long roomId) {
+    Room existingRoom = checkRoom(roomId);
+    existingRoom.setDeletedAt(Instant.now());
+    roomRepository.save(existingRoom);
   }
 
   private Property checkDuplicate(CreateRoomRequestDTO requestDTO) {
