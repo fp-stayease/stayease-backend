@@ -51,6 +51,13 @@ public class PropertyController {
         new PropertyDTO(propertyService.updateProperty(tenant, propertyId, requestDTO)));
   }
 
+  @DeleteMapping("/{propertyId}")
+  public ResponseEntity<Response<Object>> deleteProperty(@PathVariable Long propertyId) {
+    Users tenant = usersService.getLoggedUser();
+    propertyService.deleteProperty(tenant, propertyId);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Property deleted successfully", null);
+  }
+
   // Region - Property Categories
 
   @PostMapping("/categories")

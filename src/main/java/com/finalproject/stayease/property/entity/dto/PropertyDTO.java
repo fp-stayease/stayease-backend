@@ -1,6 +1,10 @@
 package com.finalproject.stayease.property.entity.dto;
 
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.Room;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -18,7 +22,7 @@ public class PropertyDTO {
   private String city;
   private String country;
 
-//  private Set<Room> rooms = new HashSet<>(); TODO : add this later after making room DTO
+  private Set<RoomSummary> rooms = new HashSet<>();
 
   public PropertyDTO(Property property) {
     this.id = property.getId();
@@ -30,7 +34,18 @@ public class PropertyDTO {
     this.address = property.getAddress();
     this.city = property.getCity();
     this.country = property.getCountry();
-//    this.rooms = property.getRooms();
+    this.rooms = property.getRooms().stream().map(RoomSummary::new).collect(Collectors.toSet());
+  }
+
+  @Data
+  static class RoomSummary {
+    private Long roomId;
+    private String roomName;
+
+    public RoomSummary(Room room) {
+      this.roomId = room.getId();
+      this.roomName = room.getName();
+    }
   }
 
 }

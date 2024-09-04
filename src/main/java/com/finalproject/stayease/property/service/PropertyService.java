@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface PropertyService {
     Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO);
     Property updateProperty(Users tenant, Long propertyId, UpdatePropertyRequestDTO requestDTO);
+    void deleteProperty(Users tenant, Long propertyId);
 
     Optional<Property> findPropertyById(Long id);
 }

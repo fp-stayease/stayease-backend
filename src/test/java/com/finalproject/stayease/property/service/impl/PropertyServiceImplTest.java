@@ -187,6 +187,7 @@ public class PropertyServiceImplTest {
     assertNotNull(updatedProperty);
     assertEquals(updatedProperty.getCategory(), existingProperty.getCategory());
     assertEquals(updatedProperty.getId(), existingProperty.getId());
+    verify(propertyRepository, times(1)).save(any(Property.class));
   }
 
   @Test
@@ -229,5 +230,24 @@ public class PropertyServiceImplTest {
 
     // Act & Assert
     assertThrows(BadCredentialsException.class, () -> propertyService.updateProperty(requestedTenant, propertyId, requestDTO));
+  }
+
+  @Test
+  void testDeleteProperty_ValidRequest() {
+    // Arrange
+    Users tenant = new Users();
+    tenant.setUserType(Users.UserType.TENANT);
+    Long propertyId = 1L;
+    Property existingProperty = new Property();
+    existingProperty.setId(propertyId);
+    existingProperty.setTenant(tenant);
+
+    // Act
+    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(existingProperty));
+    propertyService.deleteProperty(tenant, propertyId);
+
+    // Assert
+    verify(propertyRepository, times(1)).save(any(Property.class));
+    assertNotNull(existingProperty.getDeletedAt());
   }
 }

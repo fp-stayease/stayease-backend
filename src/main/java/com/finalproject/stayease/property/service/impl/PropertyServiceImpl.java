@@ -13,6 +13,7 @@ import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,13 @@ public class PropertyServiceImpl implements PropertyService {
   public Property updateProperty(Users tenant, Long propertyId, UpdatePropertyRequestDTO requestDTO) {
     Property existingProperty = checkIfValid(tenant, propertyId);
     return update(existingProperty, requestDTO);
+  }
+
+  @Override
+  public void deleteProperty(Users tenant, Long propertyId) {
+    Property existingProperty = checkIfValid(tenant, propertyId);
+    existingProperty.setDeletedAt(Instant.now());
+    propertyRepository.save(existingProperty);
   }
 
   @Override
