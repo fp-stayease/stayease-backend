@@ -1,5 +1,7 @@
 package com.finalproject.stayease.property.controller;
 
+import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
@@ -15,10 +17,12 @@ import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
+import java.util.List;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,6 +39,30 @@ public class PropertyController {
   private final PropertyService propertyService;
   private final PropertyCategoryService propertyCategoryService;
   private final RoomService roomService;
+
+  @GetMapping
+  public ResponseEntity<Response<List<PropertyDTO>>> getAllProperties() {
+    List<Property> propertyList = propertyService.findAll();
+    List<PropertyDTO> propertyDTOList = propertyList.stream().map(PropertyDTO::new).toList();
+    return Response.successfulResponse(200, "Listing all properties", propertyDTOList);
+  }
+
+  @GetMapping("/{propertyId}")
+  public ResponseEntity<Response<PropertyDTO>> getProperty(@PathVariable Long propertyId) {
+    // TODO : PropertyNotFoundException
+    Property property = propertyService.findPropertyById(propertyId).orElseThrow(() -> new DataNotFoundException("No property "
+                                                                                                       + "is found "
+                                                                                                       + "with ID: " + propertyId));
+    return Response.successfulResponse(200, "Listing property ID: " + propertyId, new PropertyDTO(property));
+  }
+
+  @GetMapping("/tenant")
+  public ResponseEntity<Response<List<PropertyDTO>>> getAllTenantProperties() {
+    Users tenant = usersService.getLoggedUser();
+    List<Property> tenantsProperties = propertyService.findAllByTenant(tenant);
+    List<PropertyDTO> propertyDTOList = tenantsProperties.stream().map(PropertyDTO::new).toList();
+    return Response.successfulResponse(200, "Listing tenant properties", propertyDTOList);
+  }
 
   @PostMapping
   public ResponseEntity<Response<PropertyDTO>> addProperty(@RequestBody CreatePropertyRequestDTO requestDTO) {
