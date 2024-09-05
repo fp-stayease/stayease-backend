@@ -17,7 +17,7 @@ public class RoomDTO {
  public RoomDTO(Room room) {
    this.id = room.getId();
    this.name = room.getName();
-   this.description = room.getDescription();
+   this.description = room.getDescription() != null ? room.getDescription() :  null;
    this.basePrice = room.getBasePrice();
    this.capacity = room.getCapacity();
    this.propertySummary = new PropertySummary(room.getProperty().getId(), room.getProperty().getName());

@@ -2,6 +2,7 @@ package com.finalproject.stayease.property.controller;
 
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
@@ -87,6 +88,13 @@ public class PropertyController {
   }
 
   // Region - Property Categories
+
+  @GetMapping("/categories")
+  public ResponseEntity<Response<List<CategoryDTO>>> getAllCategories() {
+    List<PropertyCategory> categoryList = propertyCategoryService.findAll();
+    List<CategoryDTO> categoryDTOList = categoryList.stream().map(CategoryDTO::new).toList();
+    return Response.successfulResponse(200, "Listing all categories", categoryDTOList);
+  }
 
   @PostMapping("/categories")
   public ResponseEntity<Response<CategoryDTO>> addCategory(@RequestBody CreateCategoryRequestDTO requestDTO) {
