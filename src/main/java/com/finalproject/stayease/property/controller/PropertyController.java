@@ -3,6 +3,7 @@ package com.finalproject.stayease.property.controller;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
+import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
@@ -119,6 +120,13 @@ public class PropertyController {
   }
 
   // Region - Room
+
+  @GetMapping("/{propertyId}/rooms")
+  public ResponseEntity<Response<List<RoomDTO>>> getAllRooms(@PathVariable Long propertyId) {
+    List<Room> roomList = roomService.getRoomsOfProperty(propertyId);
+    List<RoomDTO> roomDTOList = roomList.stream().map(RoomDTO::new).toList();
+    return Response.successfulResponse(200, "Listing all rooms for property ID: " + propertyId, roomDTOList);
+  }
 
   @PostMapping("/{propertyId}/rooms")
   public ResponseEntity<Response<RoomDTO>> addRoom(@PathVariable Long propertyId,

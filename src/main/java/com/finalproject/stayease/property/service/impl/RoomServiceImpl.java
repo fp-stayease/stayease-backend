@@ -11,6 +11,7 @@ import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Data;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,16 @@ public class RoomServiceImpl implements RoomService {
   private final RoomRepository roomRepository;
   private final PropertyService propertyService;
 
+
+  @Override
+  public List<Room> getRoomsOfProperty(Long propertyId) {
+    Property property = checkProperty(propertyId);
+    List<Room> roomList = roomRepository.findAllByPropertyAndDeletedAtIsNull(property);
+    if (roomList.isEmpty()) {
+      throw new InvalidRequestException("No room found for property id " + propertyId);
+    }
+    return roomList;
+  }
 
   @Override
   public Room createRoom(Long propertyId, CreateRoomRequestDTO requestDTO) {
