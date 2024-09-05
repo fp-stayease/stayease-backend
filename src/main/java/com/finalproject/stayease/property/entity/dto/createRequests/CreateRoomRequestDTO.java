@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateRoomRequestDTO {
-  private Long propertyId;
   private String name;
   private String description;
   private BigDecimal basePrice;

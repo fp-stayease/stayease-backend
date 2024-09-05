@@ -120,22 +120,23 @@ public class PropertyController {
 
   // Region - Room
 
-  @PostMapping("/rooms")
-  public ResponseEntity<Response<RoomDTO>> addRoom(@RequestBody CreateRoomRequestDTO requestDTO) {
+  @PostMapping("/{propertyId}/rooms")
+  public ResponseEntity<Response<RoomDTO>> addRoom(@PathVariable Long propertyId,
+      @RequestBody CreateRoomRequestDTO requestDTO) {
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Room added!",
-        new RoomDTO(roomService.createRoom(requestDTO)));
+        new RoomDTO(roomService.createRoom(propertyId, requestDTO)));
   }
 
-  @PutMapping("/rooms/{roomId}")
-  public ResponseEntity<Response<RoomDTO>> updateRoom(@PathVariable Long roomId,
+  @PutMapping("/{propertyId}/rooms/{roomId}")
+  public ResponseEntity<Response<RoomDTO>> updateRoom(@PathVariable Long propertyId, @PathVariable Long roomId,
       @RequestBody UpdateRoomRequestDTO requestDTO) {
     return Response.successfulResponse(HttpStatus.OK.value(), "Room updated!",
-        new RoomDTO(roomService.updateRoom(roomId, requestDTO)));
+        new RoomDTO(roomService.updateRoom(propertyId, roomId, requestDTO)));
   }
 
-  @DeleteMapping("/rooms/{roomId}")
-  public ResponseEntity<Response<Object>> deleteRoom(@PathVariable Long roomId) {
-    roomService.deleteRoom(roomId);
+  @DeleteMapping("/{propertyId}/rooms/{roomId}")
+  public ResponseEntity<Response<Object>> deleteRoom(@PathVariable Long propertyId, @PathVariable Long roomId) {
+    roomService.deleteRoom(propertyId, roomId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Room successfully deleted!", null);
   }
 }

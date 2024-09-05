@@ -6,7 +6,7 @@ import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRe
 
 public interface RoomService {
 
-  Room createRoom(CreateRoomRequestDTO requestDTO);
-  Room updateRoom(Long roomId, UpdateRoomRequestDTO requestDTO);
-  void deleteRoom(Long roomId);
+  Room createRoom(Long propertyId, CreateRoomRequestDTO requestDTO);
+  Room updateRoom(Long propertyId, Long roomId, UpdateRoomRequestDTO requestDTO);
+  void deleteRoom(Long propertyId, Long roomId);
 }
