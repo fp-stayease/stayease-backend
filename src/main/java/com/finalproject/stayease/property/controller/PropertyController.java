@@ -5,14 +5,17 @@ import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
+import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
+import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
+import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
@@ -41,6 +44,7 @@ public class PropertyController {
   private final PropertyService propertyService;
   private final PropertyCategoryService propertyCategoryService;
   private final RoomService roomService;
+  private final PeakSeasonRateService peakSeasonRateService;
 
   @GetMapping
   public ResponseEntity<Response<List<PropertyDTO>>> getAllProperties() {
@@ -146,5 +150,15 @@ public class PropertyController {
   public ResponseEntity<Response<Object>> deleteRoom(@PathVariable Long propertyId, @PathVariable Long roomId) {
     roomService.deleteRoom(propertyId, roomId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Room successfully deleted!", null);
+  }
+
+  // Region - PeakSeasonRate
+
+  @PostMapping("/{propertyId}/rate")
+  public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
+      @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
+    Users tenant = usersService.getLoggedUser();
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Set!",
+        new PeakSeasonRateDTO(peakSeasonRateService.setPeakSeasonRate(tenant, propertyId, requestDTO)));
   }
 }

@@ -2,6 +2,8 @@ package com.finalproject.stayease.property.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -10,7 +12,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,9 +46,9 @@ public class PeakSeasonRate {
   @Column(name = "rate_adjustment", nullable = false, precision = 10, scale = 2)
   private BigDecimal rateAdjustment;
 
-  @Size(max = 10)
+  @Enumerated(EnumType.STRING)
   @Column(name = "adjustment_type", length = 10)
-  private String adjustmentType;
+  private AdjustmentType adjustmentType;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "created_at")
@@ -69,6 +70,11 @@ public class PeakSeasonRate {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = Instant.now();
+  }
+
+  public enum AdjustmentType {
+    PERCENTAGE,
+    FIXED
   }
 
 }
