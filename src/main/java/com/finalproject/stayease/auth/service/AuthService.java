@@ -1,13 +1,13 @@
 package com.finalproject.stayease.auth.service;
 
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
-import com.finalproject.stayease.auth.model.dto.LoginResponseDTO;
+import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 
 public interface AuthService {
 
-  LoginResponseDTO login(LoginRequestDTO loginRequestDTO);
+  TokenResponseDto login(LoginRequestDTO loginRequestDTO);
 
   void logout(String email);
 
-  LoginResponseDTO refreshToken(String email);
+  TokenResponseDto refreshToken(String email);
 }

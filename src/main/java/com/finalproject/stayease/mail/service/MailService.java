@@ -24,6 +24,12 @@ public class MailService {
 
   @Value("${spring.mail.username}")
   private String MAIL_USERNAME;
+  @Value("${BASE_URL}")
+  private String baseUrl;
+  @Value("${API_VERSION}")
+  private String apiVersion;
+  @Value("${FE_URL}")
+  private String feUrl;
 
   public void sendMail(MailTemplate mailTemplate) {
     SimpleMailMessage message = new SimpleMailMessage();
@@ -50,9 +56,21 @@ public class MailService {
     mailSender.send(mimeMessage);
   }
 
+  public void sendHtmlEmail(String htmlContent, String toEmail, String subject)
+      throws MessagingException {
+    MimeMessage mimeMessage = mailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+
+    helper.setFrom(MAIL_USERNAME);
+    helper.setText(htmlContent, true);
+    helper.setTo(toEmail);
+    helper.setSubject(subject);
+
+    mailSender.send(mimeMessage);
+  }
+
   public void sendMailWithPdf(String to, String subject, String templateName, Map<String, String> templateData) throws MessagingException, IOException {
     String htmlTemplate = pdfService.loadHtmlTemplate(templateName);
-
     String filledHtmlTemplate = pdfService.fillTemplate(htmlTemplate, templateData);
     byte[] pdfBytes = pdfService.generatePdfFromHtml(filledHtmlTemplate);
 
