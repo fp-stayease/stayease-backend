@@ -6,8 +6,7 @@ import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
-import java.util.Date;
-import java.util.UUID;
+import java.time.LocalDate;
 
 @Entity
 @Data
@@ -26,26 +25,8 @@ public class BookingItem {
     @Column(name = "room_id")
     private Long roomId;
 
-    @Column(name = "checkin_date")
-    private Date checkInDate;
-
-    @Column(name = "checkout_date")
-    private Date checkOutDate;
-
-    @Column(name = "price")
-    private Double price;
-
-    @Column(name = "total_adults")
-    private int totalAdults;
-
-    @Column(name = "total_children")
-    private int totalChildren;
-
-    @Column(name = "total_infants")
-    private int totalInfants;
-
-    @Column(name = "is_extending")
-    private boolean isExtending;
+    @Column(name = "extending_until")
+    private LocalDate extendingUntil;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
@@ -77,14 +58,8 @@ public class BookingItem {
 
     public BookingItemResDto toResDto() {
         BookingItemResDto resDto = new BookingItemResDto();
-        resDto.setBasePrice(this.price);
         resDto.setRoomId(this.roomId);
-        resDto.setCheckInDate(this.checkInDate);
-        resDto.setCheckOutDate(this.checkOutDate);
-        resDto.setTotalAdults(this.totalAdults);
-        resDto.setTotalChildren(this.totalChildren);
-        resDto.setTotalInfants(this.totalInfants);
-        resDto.setExtending(this.isExtending);
+        resDto.setExtendingUntil(this.extendingUntil);
         return resDto;
     }
 }

@@ -10,6 +10,7 @@ import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,14 +38,29 @@ public class Booking {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "total_adults")
+    private int totalAdults;
+
+    @Column(name = "total_children")
+    private int totalChildren;
+
+    @Column(name = "total_infants")
+    private int totalInfants;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<BookingItem> bookingItems;
 
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private BookingRequest bookingRequest;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "booking")
     private Payment payment;
+
+    @Column(name = "checkin_date")
+    private LocalDate checkInDate;
+
+    @Column(name = "checkout_date")
+    private LocalDate checkOutDate;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
@@ -85,6 +101,8 @@ public class Booking {
         resDto.setBookingItems(this.bookingItems.stream().map(BookingItem::toResDto).toList());
         resDto.setBookingRequest(this.bookingRequest.toResDto());
         resDto.setPayment(this.payment.toResDto());
+        resDto.setCheckInDate(this.checkInDate);
+        resDto.setCheckOutDate(this.checkOutDate);
 
         return resDto;
     }

@@ -3,6 +3,7 @@ package com.finalproject.stayease.bookings.service.impl;
 import com.finalproject.stayease.bookings.dto.BookingItemReqDto;
 import com.finalproject.stayease.bookings.dto.BookingReqDto;
 import com.finalproject.stayease.bookings.dto.BookingRequestReqDto;
+import com.finalproject.stayease.bookings.dto.BookingResDto;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.bookings.entity.BookingItem;
 import com.finalproject.stayease.bookings.entity.BookingRequest;
@@ -11,13 +12,16 @@ import com.finalproject.stayease.bookings.repository.BookingRepository;
 import com.finalproject.stayease.bookings.repository.BookingRequestRepository;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.users.dto.TenantInfoResDto;
+import com.finalproject.stayease.users.entity.TenantInfo;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,25 +30,35 @@ public class BookingServiceImpl implements BookingService {
     private final BookingItemRepository bookingItemRepository;
     private final BookingRequestRepository bookingRequestRepository;
     private final UsersService usersService;
+    private final TenantInfoService tenantInfoService;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, BookingItemRepository bookingItemRepository, BookingRequestRepository bookingRequestRepository, UsersService usersService) {
+    public BookingServiceImpl(BookingRepository bookingRepository, BookingItemRepository bookingItemRepository, BookingRequestRepository bookingRequestRepository, UsersService usersService, TenantInfoService tenantInfoService) {
         this.bookingRepository = bookingRepository;
         this.bookingItemRepository = bookingItemRepository;
         this.bookingRequestRepository = bookingRequestRepository;
         this.usersService = usersService;
+        this.tenantInfoService = tenantInfoService;
     }
 
     @Override
     @Transactional
     public Booking createBooking(BookingReqDto reqDto, Long userId, Long roomId) {
         Booking newBooking = new Booking();
-        // TO DO: Search and validate user
         var user = usersService.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
+        // TO DO: Find room and get property ID
+        // TO DO: Find property using ID obtained from room and get tenant ID
+        // TO DO: Find tenant using tenant ID obtained from property
 
         newBooking.setUser(user);
         newBooking.setTotalPrice(reqDto.getPrice());
         newBooking.setStatus("In progress");
+        newBooking.setCheckInDate(reqDto.getCheckInDate());
+        newBooking.setCheckOutDate(reqDto.getCheckOutDate());
+        newBooking.setTotalAdults(reqDto.getTotalAdults());
+        newBooking.setTotalChildren(reqDto.getTotalChildren());
+        newBooking.setTotalInfants(reqDto.getTotalInfants());
+//        newBooking.setTenant();
 
         bookingRepository.save(newBooking);
 
@@ -62,12 +76,6 @@ public class BookingServiceImpl implements BookingService {
         BookingItem bookingItem = new BookingItem();
         bookingItem.setBooking(newBooking);
         bookingItem.setRoomId(roomId);
-        bookingItem.setCheckInDate(bookingItemDto.getCheckInDate());
-        bookingItem.setCheckOutDate(bookingItemDto.getCheckOutDate());
-        bookingItem.setPrice(bookingItemDto.getPrice());
-        bookingItem.setTotalAdults(bookingItemDto.getTotalAdults());
-        bookingItem.setTotalChildren(bookingItemDto.getTotalChildren());
-        bookingItem.setTotalInfants(bookingItemDto.getTotalInfants());
 
         bookingItemRepository.save(bookingItem);
     }
@@ -90,23 +98,38 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking getBookingDetail(UUID bookingId) {
+    public Booking findById(UUID bookingId) {
         return bookingRepository.findById(bookingId).
                 orElseThrow(() -> new DataNotFoundException("Booking not found"));
     }
 
     @Override
-    public Page<Booking> getUserBookings(Long userId, Pageable pageable) {
+    public BookingResDto getBookingById(UUID bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new DataNotFoundException("Booking not found"));
+        return booking.toResDto();
+    }
+
+    @Override
+    public Page<BookingResDto> getUserBookings(Long userId, Pageable pageable) {
         // TO DO: find and validate user
         var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
 
-        return bookingRepository.findByUserId(user.getId(), pageable);
+        return bookingRepository.findByUserIdAndStatusNotExpired(user.getId(), pageable).map(Booking::toResDto);
     }
 
     @Override
     public Booking updateBooking(UUID bookingId, String bookingStatus) {
-        Booking booking = getBookingDetail(bookingId);
+        Booking booking = findById(bookingId);
         booking.setStatus(bookingStatus);
         return bookingRepository.save(booking);
+    }
+
+    @Override
+    public Page<BookingResDto> getTenantBookings(Long userId, Pageable pageable) {
+        Users user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+        TenantInfoResDto tenant = tenantInfoService.findTenantByUserId(user.getId());
+
+        return bookingRepository.findByTenantId(tenant.getId(), pageable).map(Booking::toResDto);
     }
 }

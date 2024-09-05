@@ -6,6 +6,7 @@ import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.transactions.dto.NotificationReqDto;
 import com.finalproject.stayease.transactions.dto.TransactionReqDto;
 import com.finalproject.stayease.transactions.service.TransactionService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.java.Log;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class TransactionController {
     }
 
     @PostMapping("/notification-handler")
-    public ResponseEntity<?> notificationHandler(@RequestBody NotificationReqDto reqDto) throws IOException, InterruptedException {
+    public ResponseEntity<?> notificationHandler(@RequestBody NotificationReqDto reqDto) throws IOException, InterruptedException, MessagingException {
         var response = transactionService.notificationHandler(reqDto);
         return Response.successfulResponse("Updated", response);
     }
@@ -56,5 +57,11 @@ public class TransactionController {
         var response = transactionService.userCancelTransaction(UUID.fromString(bookingId), userId);
 
         return Response.successfulResponse("Transaction cancelled by user", response);
+    }
+
+    @PatchMapping("/{bookingId}")
+    public ResponseEntity<?> approveTransaction(@PathVariable String bookingId) {
+        var response = transactionService.approveTransaction(UUID.fromString(bookingId));
+        return Response.successfulResponse("Approved transaction", response);
     }
 }

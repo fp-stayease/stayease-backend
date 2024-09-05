@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Voucher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .voucher {
+            border: 2px solid #172554;
+            padding: 10px 30px;
+            border-radius: 5px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            background-color: #f0f0f0;
+            padding: 5px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding: 1px 5px;
+        }
+
+        .important-note {
+            background-color: #fffbe6;
+            border: 1px solid #ffe58f;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="voucher">
+    <header style="display: flex; width: 100%; justify-content: space-between; align-items: center;">
+        <img src="https://res.cloudinary.com/dnbi2dgvo/image/upload/v1724032556/hrvgteu2h87agkfeuiht.png"
+             style="height: 50px; width: 160px;">
+        <h1>Invoice</h1>
+    </header>
+    <hr>
+
+    <div class="section">
+        <div style="display: flex; justify-content: space-between">
+            <p>Invoiced to:</p>
+            <div>
+                <p>{{userName}}</p>
+                <p>{{userEmail}}</p>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between">
+            <p>Check-in: {{checkInDate}}</p>
+            <p>Check-out: {{checkOutDate}}</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Booking Detail</div>
+        <div class="detail-row">
+            <span>Booking ID:</span>
+            <span>{{bookingId}}</span>
+        </div>
+        <div class="detail-row">
+            <span>Room:</span>
+            <div style="display: flex; flex-direction: column; gap: 5px; text-align: right;">
+                {{roomName}}
+            </div>
+        </div>
+        <div class="detail-row">
+            <span>Total Guests:</span>
+            <div style="display: flex; flex-direction: column; gap: 5px; text-align: right;">
+                <span>{{totalAdults}} Adults</span>
+                <span>{{totalChildren}} Children</span>
+                <span>{{totalInfants}} Infants</span>
+            </div>
+        </div>
+        <!--<div class="detail-row">-->
+        <!--    <span>Termasuk Sarapan?</span>-->
+        <!--    <span>Tidak Termasuk</span>-->
+        <!--</div>-->
+    </div>
+
+    <div class="section">
+        <div class="section-title">Booking Requests</div>
+        <p>{{bookingRequest}}</p>
+    </div>
+
+
+
+    <div class="section">
+        <div class="section-title">Property</div>
+        <p>{{propertyName}}<br>
+            {{propertyAddress}}</p>
+        <p>{{propertyContact}}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Cancellation Policy</div>
+        <p>Free cancellation before D+3 from booking.<br>
+            After that, there will be only partial refund.<br>
+    </div>
+
+    <div class="important-note">
+        <strong>Important Note:</strong>
+        <p>Check-in requires identification and a credit card or cash deposit to cover incidental charges.
+            Fulfillment of special requests is subject to availability during check-in and may incur additional
+            charges. Special requests are not guaranteed to be fulfilled.</p>
+    </div>
+
+    <div class="footer">
+        <p>No need to print. Preserve the forest by not printing! Present your e-ticket at redemption or at the
+            entrance via Order on the Stay Ease Website.</p>
+    </div>
+</div>
+</body>
+
+</html>

@@ -6,6 +6,7 @@ import com.finalproject.stayease.users.entity.Users;
 import lombok.Data;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,4 +21,6 @@ public class BookingResDto {
     private BookingRequestResDto bookingRequest;
     private PaymentResDto payment;
     private Instant createdAt;
+    private LocalDate checkInDate;
+    private LocalDate checkOutDate;
 }
