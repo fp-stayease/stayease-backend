@@ -154,11 +154,20 @@ public class PropertyController {
 
   // Region - PeakSeasonRate
 
-  @PostMapping("/{propertyId}/rate")
+  @PostMapping("/{propertyId}/rates")
   public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
       @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Set!",
         new PeakSeasonRateDTO(peakSeasonRateService.setPeakSeasonRate(tenant, propertyId, requestDTO)));
+  }
+
+  @PostMapping("/{propertyId}/rates/{rateId}")
+  public ResponseEntity<Response<PeakSeasonRateDTO>> updatePeakSeasonRate(@PathVariable Long propertyId,
+      @PathVariable Long rateId,
+      @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
+    Users tenant = usersService.getLoggedUser();
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
+        new PeakSeasonRateDTO(peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO)));
   }
 }

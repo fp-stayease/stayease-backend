@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -50,26 +49,19 @@ public class PeakSeasonRate {
   @Column(name = "adjustment_type", length = 10)
   private AdjustmentType adjustmentType;
 
-  @ColumnDefault("CURRENT_TIMESTAMP")
-  @Column(name = "created_at")
-  private Instant createdAt;
+  @Column(name = "reason", length = Integer.MAX_VALUE)
+  private String reason;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
-  @Column(name = "updated_at")
-  private Instant updatedAt;
+  @Column(name = "valid_from")
+  private Instant validFrom;
 
-  @Column(name = "deleted_at")
-  private Instant deletedAt;
+  @Column(name = "valid_to")
+  private Instant validTo;
 
   @PrePersist
   protected void onCreate() {
-    createdAt = Instant.now();
-    updatedAt = Instant.now();
-  }
-
-  @PreUpdate
-  protected void onUpdate() {
-    updatedAt = Instant.now();
+    validFrom = Instant.now();
   }
 
   public enum AdjustmentType {
