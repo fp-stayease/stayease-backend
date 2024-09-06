@@ -1,6 +1,8 @@
 package com.finalproject.stayease.bookings.entity;
 
 import com.finalproject.stayease.bookings.dto.BookingItemResDto;
+import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
@@ -22,8 +24,9 @@ public class BookingItem {
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    @Column(name = "room_id")
-    private Long roomId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
 
     @Column(name = "extending_until")
     private LocalDate extendingUntil;
@@ -58,7 +61,7 @@ public class BookingItem {
 
     public BookingItemResDto toResDto() {
         BookingItemResDto resDto = new BookingItemResDto();
-        resDto.setRoomId(this.roomId);
+        resDto.setRoom(new RoomDTO(this.room));
         resDto.setExtendingUntil(this.extendingUntil);
         return resDto;
     }

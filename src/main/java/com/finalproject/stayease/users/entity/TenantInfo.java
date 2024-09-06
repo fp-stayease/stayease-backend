@@ -1,5 +1,6 @@
 package com.finalproject.stayease.users.entity;
 
+import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -68,4 +69,13 @@ public class TenantInfo {
     updatedAt = Instant.now();
   }
 
+  public TenantInfoResDto toResDto() {
+    var resDto = new TenantInfoResDto();
+    resDto.setId(this.id);
+    resDto.setBusinessName(this.businessName);
+    resDto.setUser(this.user.toResDto());
+    resDto.setRegisterDate(this.registrationDate);
+
+    return resDto;
+  }
 }

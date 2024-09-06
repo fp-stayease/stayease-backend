@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.bookings.entity.BookingItem;
 import com.finalproject.stayease.bookings.service.BookingService;
+import com.finalproject.stayease.helpers.HtmlDataMap;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.midtrans.dto.BankTransfer;
 import com.finalproject.stayease.midtrans.dto.MidtransReqDto;
@@ -48,11 +49,12 @@ public class TransactionServiceImpl implements TransactionService {
     private final MidtransService midtransService;
     private final UsersService usersService;
     private final MailService mailService;
+    private final HtmlDataMap htmlDataMap;
 
     @Override
     @Transactional
     public TransactionResDto createTransaction(TransactionReqDto reqDto, Long userId, Long roomId) {
-        Booking newBooking = bookingService.createBooking(reqDto.getBooking(), userId, roomId);
+        Booking newBooking = bookingService.createBooking(reqDto.getBooking(), userId, roomId, reqDto.getAmount());
 
         if (Objects.equals(reqDto.getPaymentMethod(), "bank_transfer")){
             var transactionDetail = new TransactionDetail();
@@ -119,24 +121,16 @@ public class TransactionServiceImpl implements TransactionService {
         updatedBooking = bookingService.updateBooking(booking.getId(), "paid");
 
         Users user = booking.getUser();
-        var bookingItems = booking.getBookingItems();
-        Map<String, String> data = new HashMap<>();
-        data.put("userEmail", user.getEmail());
-        data.put("userName", user.getFirstName() + " " + user.getLastName());
-        data.put("checkInDate", booking.getCheckInDate().toString());
-        data.put("checkOutDate", booking.getCheckOutDate().toString());
-        data.put("bookingId", booking.getId().toString());
-
-        StringBuilder rooms = new StringBuilder();
-        for (BookingItem bookingItem : bookingItems) {
-            rooms.append("<div class=\"detail-row\">")
-                    .append("<span>Room:</span>")
-                    .append("<span>").append(bookingItem.getRoomId()).append("</span>")
-                    .append("</div>");
+        if (Objects.equals(transactionStatus, "settlement")) {
+            var data = htmlDataMap.dataGenerator(booking);
+            String message = "Dear Guest \n" +
+                    "Thank you for trusting us to be your trusted accommodation finder and booking! \n" +
+                    "We have received your payment and you have complete your transaction. \n" +
+                    "Enjoy your trip! \n" +
+                    "Sincerely, \n" +
+                    "Stay Ease Admin";
+            mailService.sendMailWithPdf(user.getEmail(), "Booking Invoice", "booking-invoice.html", data, message);
         }
-        data.put("roomName", rooms.toString());
-
-        mailService.sendMailWithPdf(user.getEmail(), "Booking Invoice", "booking-invoice.html", data);
 
         return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
     }

@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.service.impl;
 
+import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
@@ -41,6 +42,11 @@ public class RoomServiceImpl implements RoomService {
     Room existingRoom = checkRoom(roomId);
     existingRoom.setDeletedAt(Instant.now());
     roomRepository.save(existingRoom);
+  }
+
+  @Override
+  public Room findById(Long roomId) {
+    return roomRepository.findById(roomId).orElseThrow(() -> new DataNotFoundException("Room not found"));
   }
 
   private Property checkDuplicate(CreateRoomRequestDTO requestDTO) {

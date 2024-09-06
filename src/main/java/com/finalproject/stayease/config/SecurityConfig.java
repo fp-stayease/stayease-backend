@@ -82,8 +82,9 @@ public class SecurityConfig {
     auth.requestMatchers(HttpMethod.PATCH, "api/v1/transactions/{bookingId}").hasRole("TENANT");
     auth.requestMatchers("api/v1/bookings/tenant").hasRole("TENANT");
     auth.requestMatchers("api/v1/bookings/user").hasRole("USER");
-    auth.requestMatchers("api/v1/bookings//{bookingId}").permitAll();
+    auth.requestMatchers("api/v1/bookings/{bookingId}").permitAll();
     auth.requestMatchers("api/v1/auth/**", "/login/**", "/oauth2/**").permitAll();
+    auth.requestMatchers("/error/**").permitAll();
     auth.anyRequest().authenticated();
   }
 

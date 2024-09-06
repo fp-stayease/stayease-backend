@@ -7,7 +7,6 @@ import java.time.LocalDate;
 
 @Data
 public class BookingReqDto {
-    private Double price;
     private BookingItemReqDto bookingItem;
     private BookingRequestReqDto bookingRequest;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")

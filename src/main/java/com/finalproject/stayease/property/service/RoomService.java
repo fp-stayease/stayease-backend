@@ -9,4 +9,5 @@ public interface RoomService {
   Room createRoom(CreateRoomRequestDTO requestDTO);
   Room updateRoom(Long roomId, UpdateRoomRequestDTO requestDTO);
   void deleteRoom(Long roomId);
+  Room findById(Long roomId);
 }

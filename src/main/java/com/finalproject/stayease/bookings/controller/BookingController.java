@@ -28,7 +28,7 @@ public class BookingController {
     @GetMapping("/user")
     public ResponseEntity<?> getUserBookings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request
 //            @RequestParam(defaultValue = "ASC") Sort.Direction direction
     ) {
@@ -50,7 +50,7 @@ public class BookingController {
     @GetMapping("/tenant")
     public ResponseEntity<?> getTenantBookings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request
 //            @RequestParam(defaultValue = "ASC") Sort.Direction direction
     ) {

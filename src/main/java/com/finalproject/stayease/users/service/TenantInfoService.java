@@ -6,5 +6,6 @@ import com.finalproject.stayease.users.entity.TenantInfo;
 public interface TenantInfoService {
 
   void save(TenantInfo tenantInfo);
-  TenantInfoResDto findTenantByUserId(Long userId);
+  TenantInfo findTenantByUserId(Long userId);
+  TenantInfoResDto getTenantDetail(Long tenantId);
 }

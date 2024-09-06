@@ -3,6 +3,7 @@ package com.finalproject.stayease.bookings.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.finalproject.stayease.bookings.dto.BookingResDto;
 import com.finalproject.stayease.payment.entity.Payment;
+import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.*;
@@ -31,6 +32,10 @@ public class Booking {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id")
     private TenantInfo tenant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "property_id")
+    private Property property;
 
     @Column(name = "total_price")
     private Double totalPrice;
@@ -93,8 +98,8 @@ public class Booking {
     public BookingResDto toResDto() {
         BookingResDto resDto = new BookingResDto();
         resDto.setId(this.id);
-        resDto.setUser(this.user);
-        resDto.setTenant(this.tenant);
+        resDto.setUser(this.user.toResDto());
+        resDto.setTenant(this.tenant.toResDto());
         resDto.setCreatedAt(this.createdAt);
         resDto.setStatus(this.status);
         resDto.setTotalPrice(this.totalPrice);

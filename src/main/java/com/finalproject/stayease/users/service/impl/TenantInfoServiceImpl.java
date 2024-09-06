@@ -21,11 +21,16 @@ public class TenantInfoServiceImpl implements TenantInfoService {
   }
 
   @Override
-  public TenantInfoResDto findTenantByUserId(Long userId) {
-    TenantInfo tenantInfo = tenantInfoRepository.findByUserId(userId)
+  public TenantInfo findTenantByUserId(Long userId) {
+      return tenantInfoRepository.findByUserId(userId)
             .orElseThrow(() -> new DataNotFoundException("Tenant not found"));
+  }
 
-    return toResDto(tenantInfo);
+  @Override
+  public TenantInfoResDto getTenantDetail(Long tenantId) {
+    var tenant = tenantInfoRepository.findById(tenantId)
+            .orElseThrow(() -> new DataNotFoundException("Tenant not found"));
+    return toResDto(tenant);
   }
 
   public TenantInfoResDto toResDto(TenantInfo tenantInfo) {

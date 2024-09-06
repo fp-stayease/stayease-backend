@@ -3,6 +3,7 @@ package com.finalproject.stayease.pdf;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
+import lombok.extern.java.Log;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
@@ -12,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Service
+@Log
 public class PdfService {
     public String loadHtmlTemplate(String templateName) throws IOException {
         ClassPathResource resource = new ClassPathResource("pdf-templates/" + templateName);
@@ -26,11 +28,13 @@ public class PdfService {
         try {
             PdfWriter writer = PdfWriter.getInstance(document, outputStream);
             document.open();
-            XMLWorkerHelper.getInstance().parseXHtml(writer, document, new ByteArrayInputStream(html.getBytes()));
+            XMLWorkerHelper.getInstance().parseXHtml(writer, document, new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IOException("Failed to generate PDF", e);
         } finally {
-            document.close();
+            if (document.isOpen()) {
+                document.close();
+            }
         }
         return outputStream.toByteArray();
     }
