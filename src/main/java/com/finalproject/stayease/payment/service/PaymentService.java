@@ -16,4 +16,5 @@ public interface PaymentService {
     Payment updatePaymentStatus(Long paymentId, String paymentStatus);
     Payment findPaymentById(Long paymentId);
     List<Payment> findExpiredPendingPayment();
+    void tenantRejectPayment(Long paymentId);
 }

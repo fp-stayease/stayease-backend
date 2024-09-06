@@ -95,4 +95,12 @@ public class PaymentServiceImpl implements PaymentService {
         var now = Instant.now();
         return paymentRepository.findByStatusAndExpirationBefore("pending", now);
     }
+
+    @Override
+    public void tenantRejectPayment(Long paymentId) {
+        Payment payment = findPaymentById(paymentId);
+        payment.setPaymentExpirationAt(Instant.now().plus(1, ChronoUnit.HOURS));
+
+        paymentRepository.save(payment);
+    }
 }

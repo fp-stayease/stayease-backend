@@ -44,9 +44,9 @@ public class TransactionController {
     }
 
     @PutMapping("/{bookingId}")
-    public ResponseEntity<?> tenantCancelTransaction(@PathVariable String bookingId, HttpServletRequest request) {
+    public ResponseEntity<?> tenantRejectTransaction(@PathVariable String bookingId, HttpServletRequest request) {
         Long userId = (Long) jwtService.extractClaimsFromToken(extractToken.extractTokenFromRequest(request)).get("userId");
-        var response = transactionService.tenantCancelTransaction(UUID.fromString(bookingId), userId);
+        var response = transactionService.tenantRejectTransaction(UUID.fromString(bookingId), userId);
 
         return Response.successfulResponse("Transaction cancelled by tenant", response);
     }

@@ -15,12 +15,15 @@ import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.mail.model.MailTemplate;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
+import com.finalproject.stayease.property.service.impl.RoomAvailabilityServiceImpl;
 import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
+import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,6 +35,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Data
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingItemRepository bookingItemRepository;
@@ -40,27 +44,19 @@ public class BookingServiceImpl implements BookingService {
     private final TenantInfoService tenantInfoService;
     private final RoomService roomService;
     private final MailService mailService;
-
-    public BookingServiceImpl(BookingRepository bookingRepository, BookingItemRepository bookingItemRepository, BookingRequestRepository bookingRequestRepository, UsersService usersService, TenantInfoService tenantInfoService, RoomService roomService, MailService mailService) {
-        this.bookingRepository = bookingRepository;
-        this.bookingItemRepository = bookingItemRepository;
-        this.bookingRequestRepository = bookingRequestRepository;
-        this.usersService = usersService;
-        this.tenantInfoService = tenantInfoService;
-        this.roomService = roomService;
-        this.mailService = mailService;
-    }
+    private final RoomAvailabilityService roomAvailabilityService;
 
     @Override
     @Transactional
     public Booking createBooking(BookingReqDto reqDto, Long userId, Long roomId, Double amount) {
         Booking newBooking = new Booking();
         var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
-
-        var room = roomService.findById(roomId);
-        var tenantAccount = room.getProperty().getTenant();
+        var room = roomService.findRoomById(roomId).orElseThrow(() -> new DataNotFoundException("Room not found"));
         var property = room.getProperty();
+        var tenantAccount = room.getProperty().getTenant();
         var tenant = tenantInfoService.findTenantByUserId(tenantAccount.getId());
+
+        var availableRoom = roomAvailabilityService.setUnavailability(room.getId(), reqDto.getCheckInDate(), reqDto.getCheckOutDate());
 
         newBooking.setUser(user);
         newBooking.setTotalPrice(amount);

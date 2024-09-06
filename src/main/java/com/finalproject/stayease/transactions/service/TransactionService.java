@@ -12,7 +12,7 @@ public interface TransactionService {
     TransactionResDto createTransaction(TransactionReqDto reqDto, Long userId, Long roomId);
     TransactionResDto notificationHandler(NotificationReqDto reqDto) throws IOException, InterruptedException, MessagingException;
     TransactionResDto userCancelTransaction(UUID bookingId, Long userId);
-    TransactionResDto tenantCancelTransaction(UUID bookingId, Long userId);
+    TransactionResDto tenantRejectTransaction(UUID bookingId, Long userId);
     void autoCancelTransaction();
     TransactionResDto approveTransaction(UUID bookingId);
 }
