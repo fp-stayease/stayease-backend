@@ -1,7 +1,13 @@
 package com.finalproject.stayease.property.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
@@ -13,7 +19,6 @@ import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.users.entity.Users;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;

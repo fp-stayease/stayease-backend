@@ -13,7 +13,6 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import lombok.Getter;
@@ -47,10 +46,6 @@ public class RoomAvailability {
   @ColumnDefault("true")
   @Column(name = "is_available")
   private Boolean isAvailable;
-
-  @ColumnDefault("0")
-  @Column(name = "price_adjustment", precision = 10, scale = 2)
-  private BigDecimal priceAdjustment;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "created_at")

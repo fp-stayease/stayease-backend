@@ -36,6 +36,11 @@ public class RoomServiceImpl implements RoomService {
   }
 
   @Override
+  public Optional<Room> findRoomById(Long roomId) {
+    return roomRepository.findByIdAndDeletedAtIsNull(roomId);
+  }
+
+  @Override
   public Room createRoom(Long propertyId, CreateRoomRequestDTO requestDTO) {
     Property property = checkDuplicate(propertyId, requestDTO);
     return toRoomEntity(property, requestDTO);
