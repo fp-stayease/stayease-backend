@@ -1,6 +1,5 @@
 package com.finalproject.stayease.property.repository;
 
-import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.RoomAvailability;
 import java.time.LocalDate;
 import org.springframework.data.jpa.repository.JpaRepository;
