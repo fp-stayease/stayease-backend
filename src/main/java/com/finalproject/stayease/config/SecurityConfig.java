@@ -69,6 +69,11 @@ public class SecurityConfig {
   }
 
   private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+    auth.requestMatchers("/api/v1/role").denyAll();
+    auth.requestMatchers(HttpMethod.GET, "/api/v1/properties/**"). permitAll();
+    auth.requestMatchers("/api/v1/role/user").hasRole("USER");
+    auth.requestMatchers("/api/v1/role/tenant", "/api/v1/properties/**").hasRole("TENANT");
+    auth.requestMatchers("/api/v1/auth/**", "/login/**", "/oauth2/**").permitAll();
     auth.requestMatchers("api/v1/role").denyAll();
     auth.requestMatchers("api/v1/role/user").hasRole("USER");
       auth.requestMatchers(HttpMethod.GET, "/api/v1/properties/", "/api/v1/properties/rooms/"). permitAll();

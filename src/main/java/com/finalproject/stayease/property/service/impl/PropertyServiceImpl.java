@@ -14,6 +14,7 @@ import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,25 @@ public class PropertyServiceImpl implements PropertyService {
   private final PropertyRepository propertyRepository;
   private final PropertyCategoryService propertyCategoryService;
 
+
+  @Override
+  public List<Property> findAll() {
+    List<Property> propertyList = propertyRepository.findAll();
+    if (propertyList.isEmpty()) {
+      throw new DataNotFoundException("No property found");
+    }
+    return propertyList;
+  }
+
+  @Override
+  public List<Property> findAllByTenant(Users tenant) {
+    isTenant(tenant);
+    List<Property> tenantsProperties = propertyRepository.findByTenantAndDeletedAtIsNull(tenant);
+    if (tenantsProperties.isEmpty()) {
+      throw new DataNotFoundException("You have no properties yet");
+    }
+    return tenantsProperties;
+  }
 
   @Override
   public Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO) {
