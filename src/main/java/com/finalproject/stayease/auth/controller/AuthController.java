@@ -1,6 +1,7 @@
 package com.finalproject.stayease.auth.controller;
 
 import com.finalproject.stayease.auth.model.dto.AuthResponseDto;
+import com.finalproject.stayease.auth.model.dto.CodeExchangeRequestDTO;
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPasswordRequestDTO;
@@ -13,6 +14,8 @@ import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyU
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.auth.service.ResetPasswordService;
+import com.finalproject.stayease.auth.service.impl.OneTimeCodeService;
+import com.finalproject.stayease.auth.service.impl.OneTimeCodeService.UserTokenPair;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
 import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.responses.Response;
@@ -58,6 +61,7 @@ public class AuthController {
   private final ResetPasswordService resetPasswordService;
   private final UsersService usersService;
   private final JwtService jwtService;
+  private final OneTimeCodeService oneTimeCodeService;
 
   @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
   private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
@@ -76,6 +80,14 @@ public class AuthController {
     } catch (AccessDeniedException e) {
       return Response.failedResponse(401, "No user logged in");
     }
+  }
+
+  @PostMapping("/exchange-code")
+  public ResponseEntity<Response<AuthResponseDto>> exchangeCode(@RequestBody CodeExchangeRequestDTO requestDTO) {
+    UserTokenPair userTokenPair = oneTimeCodeService.getAndRemoveTokens(requestDTO.getCode());
+    AuthResponseDto responseDto = new AuthResponseDto(userTokenPair.getUser(), new TokenResponseDto(
+        userTokenPair.getAccessToken(), userTokenPair.getRefreshToken()) );
+    return Response.successfulResponse(200, "OAuth2 sign in successful!", responseDto);
   }
 
   @PostMapping("/register")

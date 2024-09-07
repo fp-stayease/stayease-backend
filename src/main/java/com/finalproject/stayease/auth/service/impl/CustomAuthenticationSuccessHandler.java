@@ -1,14 +1,11 @@
 package com.finalproject.stayease.auth.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,16 +15,21 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @Data
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-  public final JwtService jwtService;
-  public final UsersService usersService;
+  private final JwtService jwtService;
+  private final UsersService usersService;
+  private final OneTimeCodeService oneTimeCodeService;
+
 
   @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
   private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
+  @Value("${FE_URL}")
+  private String FE_URL;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -39,7 +41,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     Optional<Users> existingUser = usersService.findByEmail(email);
 
     if (existingUser.isPresent()) {
-      generateTokensAndResponse(response, authentication);
+      generateTokensAndResponse(response, authentication, existingUser.get());
     } else {
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       response.getWriter().write("User not found");
@@ -47,7 +49,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
   }
 
-  private void generateTokensAndResponse(HttpServletResponse response, Authentication authentication) throws IOException {
+  private void generateTokensAndResponse(HttpServletResponse response, Authentication authentication, Users user) throws IOException {
     String accessToken = jwtService.generateAccessToken(authentication);
     String refreshToken = jwtService.generateRefreshToken(authentication.getName());
 
@@ -59,17 +61,25 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         .build();
     response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-    sendTokenResponse(response, accessToken, refreshToken);
+    sendTokenResponse(response, user, accessToken, refreshToken);
   }
 
-  private void sendTokenResponse(HttpServletResponse response, String accessToken, String refreshToken) throws IOException {
-    Map<String, String> tokens = new HashMap<>();
-    tokens.put("message:", "Successfully logged in using socials login!");
-    tokens.put("access_token", accessToken);
-    tokens.put("refresh_token", refreshToken);
+  private void sendTokenResponse(HttpServletResponse response, Users user, String accessToken, String refreshToken) throws IOException {
+//    Map<String, String> tokens = new HashMap<>();
+//    tokens.put("message:", "Successfully logged in using socials login!");
+//    tokens.put("access_token", accessToken);
+//    tokens.put("refresh_token", refreshToken);
+//
+//    response.setContentType("application/json");
+//    response.getWriter().write(new ObjectMapper().writeValueAsString(tokens));
 
-    response.setContentType("application/json");
-    response.getWriter().write(new ObjectMapper().writeValueAsString(tokens));
+    String oneTimeCode = oneTimeCodeService.generateAndStoreCode(user, accessToken, refreshToken);
+    String redirectUrl = UriComponentsBuilder.fromUriString(FE_URL)
+        .path("/callback")
+        .queryParam("code", oneTimeCode)
+        .build().toUriString();
+
+    response.sendRedirect(redirectUrl);
   }
 
 }
