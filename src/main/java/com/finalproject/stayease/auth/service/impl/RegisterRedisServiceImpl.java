@@ -2,11 +2,13 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.repository.RegisterRedisRepository;
 import com.finalproject.stayease.auth.service.RegisterRedisService;
+import jakarta.transaction.Transactional;
 import lombok.Data;
 import org.springframework.stereotype.Service;
 
 @Service
 @Data
+@Transactional
 public class RegisterRedisServiceImpl implements RegisterRedisService {
 
   private final RegisterRedisRepository registerRedisRepository;

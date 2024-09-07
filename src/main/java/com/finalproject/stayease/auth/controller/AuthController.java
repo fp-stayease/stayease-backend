@@ -3,6 +3,8 @@ package com.finalproject.stayease.auth.controller;
 import com.finalproject.stayease.auth.model.dto.AuthResponseDto;
 import com.finalproject.stayease.auth.model.dto.CodeExchangeRequestDTO;
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
+import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
+import com.finalproject.stayease.auth.model.dto.SocialSelectUserTypeDTO;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPasswordRequestDTO;
 import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPasswordResponseDTO;
@@ -17,6 +19,7 @@ import com.finalproject.stayease.auth.service.ResetPasswordService;
 import com.finalproject.stayease.auth.service.impl.OneTimeCodeService;
 import com.finalproject.stayease.auth.service.impl.OneTimeCodeService.UserTokenPair;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
+import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
@@ -32,7 +35,9 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +57,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Data
 @RestController
 @RequestMapping("api/v1/auth")
+@Slf4j
 public class AuthController {
 
   private final RegisterService registerService;
@@ -62,6 +68,7 @@ public class AuthController {
   private final UsersService usersService;
   private final JwtService jwtService;
   private final OneTimeCodeService oneTimeCodeService;
+  private final HttpSession session;
 
   @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
   private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
@@ -90,6 +97,42 @@ public class AuthController {
     return Response.successfulResponse(200, "OAuth2 sign in successful!", responseDto);
   }
 
+  // * for new oauth2 users to choose their usertype
+  @PostMapping("/user-select")
+  public ResponseEntity<Response<AuthResponseDto>> selectUserType(HttpServletResponse response,
+      HttpServletRequest request,
+      @RequestBody SocialSelectUserTypeDTO requestDTO) {
+    UserType userType = requestDTO.getUserType();
+
+    Map<String, Object> oAuth2UserInfo = (Map<String, Object>) session.getAttribute("oAuth2UserInfo");
+    if (oAuth2UserInfo == null) {
+      throw new DataNotFoundException("No userinfo found");
+    }
+    log.info("user info:" + oAuth2UserInfo);
+
+//    OAuth2User oAuth2User = (OAuth2User) oAuth2UserInfo.get("oAuth2UserInfo");
+
+    String provider = (String) session.getAttribute("provider");
+    String providerUserId = (String) session.getAttribute("providerUserId");
+    String email = (String) oAuth2UserInfo.get("email");
+    String firstName = (String) oAuth2UserInfo.get("given_name");
+    String lastName = (String) oAuth2UserInfo.get("family_name");
+    String pictureUrl = (String) oAuth2UserInfo.get("picture");
+
+    SocialLoginRequest requestDto = new SocialLoginRequest(provider, providerUserId, email, userType, firstName, lastName,
+        pictureUrl);
+    log.info("request: " + requestDto);
+    Users newUser = socialLoginService.registerOAuth2User(requestDto);
+    TokenResponseDto tokenResponseDto = authService.generateTokenFromEmail(email);
+    addRefreshTokenCookie(response, tokenResponseDto);
+    authenticateUser(request, email);
+    AuthResponseDto responseDto = new AuthResponseDto(newUser, tokenResponseDto);
+
+    clearOAuth2SessionData();
+
+    return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Successfully set user type!", responseDto);
+  }
+
   @PostMapping("/register")
   public ResponseEntity<Response<InitialRegistrationResponseDTO>> initiateUserRegistration(
       @RequestParam("userType") String type, @Valid @RequestBody InitialRegistrationRequestDTO requestDTO)
@@ -106,12 +149,6 @@ public class AuthController {
         registerService.verifyRegistration(verifyRegistrationDTO, token));
   }
 
-  @PostMapping("/register/socials/user-select")
-  public ResponseEntity<Response<Object>> selectUserType(@RequestBody String role) {
-    UserType userType = UserType.valueOf(role.toUpperCase());
-    socialLoginService.changeUserType(userType);
-    return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Successfully set user type!", null);
-  }
 
   @PostMapping("/login")
   public ResponseEntity<Response<AuthResponseDto>> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO,
@@ -139,7 +176,7 @@ public class AuthController {
     }
     String email = jwtService.extractSubjectFromToken(refreshToken);
     if (jwtService.isRefreshTokenValid(refreshToken, email)) {
-      TokenResponseDto tokenResponseDto = authService.refreshToken(email);
+      TokenResponseDto tokenResponseDto = authService.generateTokenFromEmail(email);
       addRefreshTokenCookie(response, tokenResponseDto);
       authenticateUser(request, email);
       return Response.successfulResponse(HttpStatus.OK.value(), "Successfully refreshed token!", tokenResponseDto);
@@ -170,7 +207,7 @@ public class AuthController {
     return null;
   }
 
-  private void authenticateUser(HttpServletRequest request, final String email) {
+  private void authenticateUser(HttpServletRequest request, String email) {
     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
         userDetails.getAuthorities());
@@ -215,5 +252,11 @@ public class AuthController {
         response.addCookie(cookie);
       }
     }
+  }
+
+  private void clearOAuth2SessionData() {
+    session.removeAttribute("oAuth2UserInfo");
+    session.removeAttribute("provider");
+    session.removeAttribute("providerId");
   }
 }

@@ -15,6 +15,7 @@ import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Data
 @Slf4j
+@Transactional
 public class ResetPasswordServiceImpl implements ResetPasswordService {
 
   private final ResetPasswordRedisRepository redisRepository;

@@ -1,16 +1,19 @@
 package com.finalproject.stayease.auth.service.impl;
 
-import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
 import com.finalproject.stayease.auth.model.entity.UserAuth;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
+import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -21,11 +24,12 @@ import org.springframework.stereotype.Service;
 @EqualsAndHashCode(callSuper = true)
 @Service
 @Data
+@Transactional
 public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
 
   private final SocialLoginService socialLoginService;
   private final UsersService usersService;
-
+  private final HttpSession session;
 
 
   @Override
@@ -35,21 +39,21 @@ public class  CustomOAuth2UserService extends DefaultOAuth2UserService {
     String provider = userRequest.getClientRegistration().getRegistrationId();
     String providerUserId = extractProviderId(oAuth2User, provider);
     String email = oAuth2User.getAttribute("email");
-    String firstName = oAuth2User.getAttribute("given_name");
-    String lastName = oAuth2User.getAttribute("family_name");
-    String pictureUrl = oAuth2User.getAttribute("picture");
 
     Optional<Users> userOptional = usersService.findByEmail(email);
-    Users user;
+
 
     if (userOptional.isPresent()) {
-      user = userOptional.get();
+      return new DefaultOAuth2User(extractAuthorities(userOptional.get()), oAuth2User.getAttributes(), "email");
     } else {
-      SocialLoginRequest request = new SocialLoginRequest(provider, providerUserId, email, firstName, lastName, pictureUrl);
-      user = socialLoginService.registerOAuth2User(request);
+      // Store OAuth2 user info in session for later use
+      session.setAttribute("oAuth2UserInfo", oAuth2User.getAttributes());
+      session.setAttribute("provider", provider);
+      session.setAttribute("providerUserId", providerUserId);
+      // Create a temporary user with a special role
+      return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority("ROLE_SELECT_USER_TYPE")),
+          oAuth2User.getAttributes(), "email");
     }
-
-    return new DefaultOAuth2User(extractAuthorities(user), oAuth2User.getAttributes(), "email");
   }
 
   private String extractProviderId(OAuth2User oauth2User, String provider) {
