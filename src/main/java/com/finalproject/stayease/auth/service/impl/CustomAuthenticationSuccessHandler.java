@@ -70,6 +70,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         .path("/")
         .httpOnly(true)
         .secure(true)
+        .sameSite("Strict")
         .maxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS)
         .build();
     response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());

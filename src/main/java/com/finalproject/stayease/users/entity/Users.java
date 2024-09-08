@@ -1,5 +1,6 @@
 package com.finalproject.stayease.users.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -81,10 +82,10 @@ public class Users {
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<SocialLogin> socialLogins = new LinkedHashSet<>();
 
-  @OneToOne(mappedBy = "user")
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private TenantInfo tenantInfo;
 
   public enum UserType {

@@ -14,7 +14,7 @@ public class AuthResponseDto {
   private Boolean isVerified;
   private String firstName;
   private String lastName;
-  private Boolean isSocialAccount;
+  private Boolean isOAuth2;
   private TokenResponseDto token;
 
   public AuthResponseDto(Users user, TokenResponseDto token) {
@@ -24,7 +24,7 @@ public class AuthResponseDto {
     this.isVerified = user.getIsVerified();
     this.firstName = user.getFirstName();
     this.lastName = user.getLastName();
-    this.isSocialAccount = !user.getSocialLogins().isEmpty();
+    this.isOAuth2 = !user.getSocialLogins().isEmpty();
     this.token = token;
   }
 }
