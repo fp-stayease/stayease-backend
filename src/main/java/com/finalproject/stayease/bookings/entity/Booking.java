@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.finalproject.stayease.bookings.dto.BookingResDto;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.*;
@@ -53,7 +54,7 @@ public class Booking {
     @Column(name = "total_infants")
     private int totalInfants;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<BookingItem> bookingItems;
 
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -101,6 +102,7 @@ public class Booking {
         resDto.setId(this.id);
         resDto.setUser(this.user.toResDto());
         resDto.setTenant(this.tenant.toResDto());
+        resDto.setProperty(new PropertyDTO(this.property));
         resDto.setCreatedAt(this.createdAt);
         resDto.setStatus(this.status);
         resDto.setTotalPrice(this.totalPrice);
@@ -109,6 +111,9 @@ public class Booking {
         resDto.setPayment(this.payment.toResDto());
         resDto.setCheckInDate(this.checkInDate);
         resDto.setCheckOutDate(this.checkOutDate);
+        resDto.setTotalAdults(this.totalAdults);
+        resDto.setTotalChildren(this.totalChildren);
+        resDto.setTotalInfants(this.totalInfants);
 
         return resDto;
     }

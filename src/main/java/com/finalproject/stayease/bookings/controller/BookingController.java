@@ -49,17 +49,12 @@ public class BookingController {
 
     @GetMapping("/tenant")
     public ResponseEntity<?> getTenantBookings(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request
-//            @RequestParam(defaultValue = "ASC") Sort.Direction direction
     ) {
         Long userId = (Long) jwtService.extractClaimsFromToken(extractToken.extractTokenFromRequest(request)).get("userId");
+//        Long userId = 18L;
 
-//        Sort sort = Sort.by(direction, "createdAt");
-        Pageable pageable = PageRequest.of(page, size);
-
-        var bookings = bookingService.getTenantBookings(userId, pageable);
+        var bookings = bookingService.getTenantBookings(userId);
         return Response.successfulResponse("User booking list fetched", bookings);
     }
 }

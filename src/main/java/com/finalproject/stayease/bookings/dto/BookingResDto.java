@@ -1,6 +1,7 @@
 package com.finalproject.stayease.bookings.dto;
 
 import com.finalproject.stayease.payment.dto.PaymentResDto;
+import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import com.finalproject.stayease.users.dto.UsersResDto;
 import com.finalproject.stayease.users.entity.TenantInfo;
@@ -17,6 +18,7 @@ public class BookingResDto {
     private UUID id;
     private UsersResDto user;
     private TenantInfoResDto tenant;
+    private PropertyDTO property;
     private Double totalPrice;
     private String status;
     private List<BookingItemResDto> bookingItems;
@@ -25,4 +27,7 @@ public class BookingResDto {
     private Instant createdAt;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
+    private int totalAdults;
+    private int totalChildren;
+    private int totalInfants;
 }

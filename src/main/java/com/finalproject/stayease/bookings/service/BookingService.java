@@ -9,6 +9,7 @@ import com.finalproject.stayease.property.entity.Room;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface BookingService {
@@ -19,6 +20,6 @@ public interface BookingService {
     BookingResDto getBookingById(UUID bookingId);
     Page<BookingResDto> getUserBookings(Long userId, Pageable pageable);
     Booking updateBooking(UUID bookingId, String bookingStatus);
-    Page<BookingResDto> getTenantBookings(Long userId, Pageable pageable);
+    List<BookingResDto> getTenantBookings(Long userId);
     void userBookingReminder();
 }

@@ -71,7 +71,7 @@ public class BookingServiceImpl implements BookingService {
 
         bookingRepository.save(newBooking);
 
-        createBookingItem(reqDto.getBookingItem(), newBooking, room);
+        createBookingItem(reqDto.getBookingItem(), newBooking, availableRoom.getRoom());
 
         if (reqDto.getBookingRequest() != null) {
             createBookingRequest(reqDto.getBookingRequest(), newBooking);
@@ -138,11 +138,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Page<BookingResDto> getTenantBookings(Long userId, Pageable pageable) {
+    public List<BookingResDto> getTenantBookings(Long userId) {
         Users user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
         TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
 
-        return bookingRepository.findByTenantId(tenant.getId(), pageable).map(Booking::toResDto);
+        return bookingRepository.findByTenantId(tenant.getId()).stream().map(Booking::toResDto).toList();
     }
 
     @Override
