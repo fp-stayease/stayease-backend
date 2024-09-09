@@ -15,11 +15,9 @@ public class EmailChangeRedisRepository {
   public static final String VERIFIED_SUFFIX = ":verified";
 
   private final ValueOperations<String, String> valueOperations;
-  private final RedisTemplate<String, String> redisTemplate;
 
   public EmailChangeRedisRepository(RedisTemplate<String, String> redisTemplate) {
     this.valueOperations = redisTemplate.opsForValue();
-    this.redisTemplate = redisTemplate;
   }
 
   // * save verification token
