@@ -10,6 +10,9 @@ public interface UsersService {
   Optional<Users> findByEmail(String email);
   Users getLoggedUser();
 
+  // Region - Profile Showing
+
+
 
   // Region - Quarantine
   Optional<Users> findById(Long id);
