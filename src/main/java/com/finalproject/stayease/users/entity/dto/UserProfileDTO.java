@@ -1,4 +1,4 @@
-package com.finalproject.stayease.users.entity.dto.register;
+package com.finalproject.stayease.users.entity.dto;
 
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;

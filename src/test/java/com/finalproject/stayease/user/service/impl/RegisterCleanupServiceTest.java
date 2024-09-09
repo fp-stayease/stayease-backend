@@ -3,9 +3,8 @@ package com.finalproject.stayease.user.service.impl;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.finalproject.stayease.users.repository.PendingRegistrationRepository;
 import com.finalproject.stayease.users.service.PendingRegistrationService;
-import com.finalproject.stayease.users.service.impl.RegisterCleanupService;
+import com.finalproject.stayease.scheduler.RegisterCleanupService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.BeforeEach;
