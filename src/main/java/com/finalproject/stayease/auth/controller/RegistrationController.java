@@ -31,8 +31,22 @@ public class RegistrationController {
     return Response.successfulResponse(HttpStatus.OK.value(), "Initial " + userType + " registration successful!", registerService.initialRegistration(requestDTO, userType));
   }
 
+  @PostMapping("/checkToken")
+  public ResponseEntity<Response<Boolean>> checkToken(@RequestParam String token) {
+    Boolean isValid = registerService.checkToken(token);
+    if (isValid) {
+      return Response.successfulResponse(HttpStatus.OK.value(), "Token is valid", true);
+    } else {
+      return Response.failedResponse(HttpStatus.BAD_REQUEST.value(), "Token is invalid, please check your email. Or "
+                                                                     + "try to resend a registration request.",
+          false);
+    }
+  }
+
   @PostMapping("/verify")
   public ResponseEntity<Response<VerifyUserResponseDTO>> verifyRegistration(@RequestParam String token, @Valid @RequestBody VerifyRegistrationDTO verifyRegistrationDTO) {
-    return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Verification successful, welcome to StayEase!", registerService.verifyRegistration(verifyRegistrationDTO, token));
+    return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Verification successful, welcome to StayEase! "
+                                                                    + "Please login with your new credentials!",
+        registerService.verifyRegistration(verifyRegistrationDTO, token));
   }
 }
