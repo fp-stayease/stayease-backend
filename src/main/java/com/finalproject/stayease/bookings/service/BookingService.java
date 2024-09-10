@@ -18,7 +18,7 @@ public interface BookingService {
     void createBookingRequest(BookingRequestReqDto reqDto, Booking newBooking);
     Booking findById(UUID bookingId);
     BookingResDto getBookingById(UUID bookingId);
-    Page<BookingResDto> getUserBookings(Long userId, Pageable pageable);
+    Page<BookingResDto> getUserBookings(Long userId, String search, Pageable pageable);
     Booking updateBooking(UUID bookingId, String bookingStatus);
     List<BookingResDto> getTenantBookings(Long userId);
     void userBookingReminder();

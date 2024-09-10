@@ -123,7 +123,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Page<BookingResDto> getUserBookings(Long userId, Pageable pageable) {
+    public Page<BookingResDto> getUserBookings(Long userId, String search, Pageable pageable) {
         // TO DO: find and validate user
         var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
 

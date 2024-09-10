@@ -7,6 +7,7 @@ import com.finalproject.stayease.responses.Response;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,15 +30,16 @@ public class BookingController {
     public ResponseEntity<?> getUserBookings(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "ASC") Sort.Direction direction,
+            @RequestParam(required = false) String search,
             HttpServletRequest request
-//            @RequestParam(defaultValue = "ASC") Sort.Direction direction
     ) {
         Long userId = (Long) jwtService.extractClaimsFromToken(extractToken.extractTokenFromRequest(request)).get("userId");
 
-//        Sort sort = Sort.by(direction, "createdAt");
+        Sort sort = Sort.by(direction, "createdAt");
         Pageable pageable = PageRequest.of(page, size);
 
-        var bookings = bookingService.getUserBookings(userId, pageable);
+        var bookings = bookingService.getUserBookings(userId, search, pageable);
         return Response.successfulResponse("User booking list fetched", bookings);
     }
 
