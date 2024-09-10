@@ -2,12 +2,13 @@ package com.finalproject.stayease.users.entity.dto;
 
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserProfileDTO {
+public class UsersProfileDTO {
   private String id;
   private String email;
   private String firstName;
@@ -19,7 +20,7 @@ public class UserProfileDTO {
   private UserType userType;
   private TenantInfoDTO tenantInfo;
 
-  public UserProfileDTO(Users user) {
+  public UsersProfileDTO(Users user) {
     this.id = user.getId().toString();
     this.email = user.getEmail();
     this.firstName = user.getFirstName();
@@ -33,6 +34,7 @@ public class UserProfileDTO {
       this.tenantInfo = new TenantInfoDTO();
       this.tenantInfo.setBusinessName(user.getTenantInfo().getBusinessName());
       this.tenantInfo.setTaxId(user.getTenantInfo().getTaxId());
+      this.tenantInfo.setRegistrationDate(user.getTenantInfo().getRegistrationDate());
     }
   }
 
@@ -41,5 +43,6 @@ public class UserProfileDTO {
   private static class TenantInfoDTO {
     private String businessName;
     private String taxId;
+    private Instant registrationDate;
   }
 }

@@ -1,8 +1,12 @@
 package com.finalproject.stayease.users.service.impl;
 
+import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.dto.UpdateTenantInfoRequestDTO;
 import com.finalproject.stayease.users.entity.dto.UpdateUserProfileRequestDTO;
 import com.finalproject.stayease.users.service.ProfileService;
+import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class ProfileServiceImpl implements ProfileService {
 
   private final UsersService usersService;
+  private final TenantInfoService tenantInfoService;
 
 
   @Override
@@ -30,6 +35,16 @@ public class ProfileServiceImpl implements ProfileService {
   }
 
   @Override
+  public Users updateTenantInfo(Users tenant, UpdateTenantInfoRequestDTO requestDTO) {
+    TenantInfo tenantInfo = validateTenant(tenant);
+    log.info("Updating tenant info: " + requestDTO);
+    Optional.ofNullable(requestDTO.getBusinessName()).ifPresent(tenantInfo::setBusinessName);
+    Optional.ofNullable(requestDTO.getTaxId()).ifPresent(tenantInfo::setTaxId);
+    tenantInfoService.save(tenantInfo);
+    return tenant;
+  }
+
+  @Override
   public Users changeAvatar(Users user, String imageUrl) {
     user.setAvatar(imageUrl);
     return usersService.save(user);
@@ -39,5 +54,14 @@ public class ProfileServiceImpl implements ProfileService {
   public Users removeAvatar(Users user) {
     user.setAvatar(null);
     return usersService.save(user);
+  }
+
+  private TenantInfo validateTenant(Users tenant) {
+    if (tenant.getUserType() != Users.UserType.TENANT) {
+      throw new InvalidRequestException("User is not a tenant");
+    }
+    return tenantInfoService.findByTenant(tenant).orElseThrow(
+        // TODO : make TenantInfoNotFound
+        () -> new RuntimeException("Tenant info not found for tenant: " + tenant.getEmail()));
   }
 }
