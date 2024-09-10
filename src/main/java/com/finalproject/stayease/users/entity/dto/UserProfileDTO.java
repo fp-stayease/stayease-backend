@@ -2,9 +2,11 @@ package com.finalproject.stayease.users.entity.dto;
 
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class UserProfileDTO {
   private String id;
   private String email;

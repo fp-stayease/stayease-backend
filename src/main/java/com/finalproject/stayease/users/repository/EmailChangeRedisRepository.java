@@ -3,6 +3,7 @@ package com.finalproject.stayease.users.repository;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
@@ -16,6 +17,9 @@ public class EmailChangeRedisRepository {
 
   private final ValueOperations<String, String> valueOperations;
 
+  @Value("${token.expiration.hours:1}")
+  private int tokenExpirationHours;
+
   public EmailChangeRedisRepository(RedisTemplate<String, String> redisTemplate) {
     this.valueOperations = redisTemplate.opsForValue();
   }
@@ -23,13 +27,13 @@ public class EmailChangeRedisRepository {
   // * save verification token
   public void saveToken(String tokenUUID, String jwt) {
     String key = EMAIL_CHANGE_TOKEN_PREFIX + tokenUUID;
-    valueOperations.set(key, jwt, 1, TimeUnit.HOURS);
+    valueOperations.set(key, jwt, tokenExpirationHours, TimeUnit.HOURS);
   }
 
   // * verify
   public void verifyEmail(String tokenUUID) {
     String key = EMAIL_CHANGE_TOKEN_PREFIX + tokenUUID;
-    valueOperations.set(key + VERIFIED_SUFFIX, "true", 1, TimeUnit.HOURS);
+    valueOperations.set(key + VERIFIED_SUFFIX, "true", tokenExpirationHours, TimeUnit.HOURS);
   }
 
   // helpers

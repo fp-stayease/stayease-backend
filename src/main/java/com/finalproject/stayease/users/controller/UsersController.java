@@ -7,9 +7,15 @@ import com.finalproject.stayease.users.entity.dto.RequestEmailChangeDTO;
 import com.finalproject.stayease.users.entity.dto.UpdateUserProfileRequestDTO;
 import com.finalproject.stayease.users.entity.dto.UserProfileDTO;
 import com.finalproject.stayease.users.entity.dto.UsersImageDTO;
+import com.finalproject.stayease.users.service.EmailChangeService;
+import com.finalproject.stayease.users.service.ProfileService;
 import com.finalproject.stayease.users.service.UsersImageUploadService;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -30,6 +36,8 @@ public class UsersController {
 
   private final UsersService usersService;
   private final UsersImageUploadService usersImageUploadService;
+  private final EmailChangeService emailChangeService;
+  private final ProfileService profileService;
 
   @GetMapping("/profile")
   public ResponseEntity<Response<UserProfileDTO>> getLoggedInProfile() {
@@ -40,7 +48,7 @@ public class UsersController {
   @PutMapping("/profile")
   public ResponseEntity<Response<UserProfileDTO>> updateProfile(@RequestBody UpdateUserProfileRequestDTO requestDTO) {
     Users loggedUser = usersService.getLoggedUser();
-    Users updatedUser = usersService.updateProfile(loggedUser, requestDTO);
+    Users updatedUser = profileService.updateProfile(loggedUser, requestDTO);
     return Response.successfulResponse(HttpStatus.OK.value(), "Profile updated successfully!", new UserProfileDTO(updatedUser));
   }
 
@@ -54,28 +62,51 @@ public class UsersController {
   }
 
   @PutMapping("/profile/avatar")
-  public ResponseEntity<Response<Object>> updateAvatar(@RequestBody UsersImageDTO requestDTO) {
+  public ResponseEntity<Response<UserProfileDTO>> updateAvatar(@RequestBody UsersImageDTO requestDTO) {
+    Users loggedInUser = usersService.getLoggedUser();
+    Users updatedUser;
     if (requestDTO.getAvatarUrl() == null) {
-      usersService.removeAvatar();
-      return Response.successfulResponse(HttpStatus.OK.value(), "Avatar removed successfully!", null);
+      updatedUser = profileService.removeAvatar(loggedInUser);
+      return Response.successfulResponse(HttpStatus.OK.value(), "Avatar removed successfully!", new UserProfileDTO(updatedUser));
     } else {
-      usersService.changeAvatar(requestDTO.getAvatarUrl());
+      updatedUser = profileService.removeAvatar(loggedInUser);
+      profileService.changeAvatar(loggedInUser, requestDTO.getAvatarUrl());
     }
-    return Response.successfulResponse(HttpStatus.OK.value(), "Avatar updated successfully!", null);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Avatar updated successfully!", new UserProfileDTO(updatedUser));
   }
 
   @PostMapping("/profile/email")
   public ResponseEntity<Response<EmailChangeResponseDTO>> requestEmailChange(@RequestBody RequestEmailChangeDTO requestDTO)
       throws MessagingException, IOException {
     Users loggedUser = usersService.getLoggedUser();
-    String verificationUrl = usersService.requestEmailChange(loggedUser, requestDTO);
+    String verificationUrl = emailChangeService.requestEmailChange(loggedUser, requestDTO);
     return Response.successfulResponse(HttpStatus.OK.value(), "Email change request sent successfully!", new EmailChangeResponseDTO(verificationUrl));
   }
 
   @PutMapping("/profile/email")
-  public ResponseEntity<Response<Object>> verifyEmailChange(@RequestParam("token") String tokenUUID) {
-    usersService.verifyEmailChange(tokenUUID);
-    return Response.successfulResponse(HttpStatus.OK.value(), "Email changed successfully!", null);
+  public ResponseEntity<Response<UserProfileDTO>> verifyEmailChange(@RequestParam("token") String tokenUUID,
+      HttpServletRequest request, HttpServletResponse response) {
+    Users user = emailChangeService.verifyEmailChange(tokenUUID);
+    invalidateSessionAndCookie(request, response);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Email changed successfully! Please log back in with "
+                                                              + "your new credentials!", new UserProfileDTO(user));
+  }
+
+  private void invalidateSessionAndCookie(HttpServletRequest request, HttpServletResponse response) {
+    HttpSession session = request.getSession(false);
+    if (session != null) {
+      session.invalidate();
+    }
+
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        cookie.setValue("");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+      }
+    }
   }
 
 
