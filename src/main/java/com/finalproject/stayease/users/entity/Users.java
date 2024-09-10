@@ -58,7 +58,6 @@ public class Users {
   @Column(name = "phone_number", length = 20)
   private String phoneNumber;
 
-  @Size(max = 255)
   @Column(name = "avatar")
   private String avatar;
 
