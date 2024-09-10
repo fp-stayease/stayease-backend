@@ -1,4 +1,4 @@
-package com.finalproject.stayease.users.service.impl;
+package com.finalproject.stayease.scheduler;
 
 import com.finalproject.stayease.users.service.PendingRegistrationService;
 import jakarta.transaction.Transactional;

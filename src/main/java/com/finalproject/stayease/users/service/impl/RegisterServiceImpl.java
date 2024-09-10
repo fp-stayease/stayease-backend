@@ -187,7 +187,7 @@ public class RegisterServiceImpl implements RegisterService {
 
   private String buildVerificationUrl(String token) {
     // TODO : replace this with FE URL later
-    return feUrl + "/auth/register/verify?token=" + token;
+    return feUrl + "/register/verify?token=" + token;
   }
 
   public String generateAndSaveRedisToken(String email) {
