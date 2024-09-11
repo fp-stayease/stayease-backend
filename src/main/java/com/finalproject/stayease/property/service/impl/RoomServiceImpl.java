@@ -12,6 +12,7 @@ import com.finalproject.stayease.property.service.RoomService;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.Data;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,11 @@ public class RoomServiceImpl implements RoomService {
     checkDuplicateRoom(requestDTO.getName());
     Room existingRoom = checkBelongsToProperty(propertyId, roomId);
     return update(existingRoom, requestDTO);
+  }
+
+  @Override
+  public Room getRoom(Long propertyId, Long roomId) {
+    return checkBelongsToProperty(propertyId, roomId);
   }
 
   @Override
@@ -114,7 +120,7 @@ public class RoomServiceImpl implements RoomService {
   private Room checkBelongsToProperty(Long propertyId, Long roomId) {
     checkProperty(propertyId);
     Room checkRoom = checkRoom(roomId);
-    if (checkRoom.getProperty().getId() != propertyId) {
+    if (!Objects.equals(checkRoom.getProperty().getId(), propertyId)) {
       throw new InvalidRequestException("Property and room does not match! Please enter a valid property ID and room "
                                         + "ID that correlate to each other");
     }

@@ -139,6 +139,12 @@ public class PropertyController {
         new RoomDTO(roomService.createRoom(propertyId, requestDTO)));
   }
 
+  @GetMapping("/{propertyId}/rooms/{roomId}")
+  public ResponseEntity<Response<RoomDTO>> getRoom(@PathVariable Long propertyId, @PathVariable Long roomId) {
+    Room room = roomService.getRoom(propertyId, roomId);
+    return Response.successfulResponse(200, "Listing room ID: " + roomId, new RoomDTO(room));
+  }
+
   @PutMapping("/{propertyId}/rooms/{roomId}")
   public ResponseEntity<Response<RoomDTO>> updateRoom(@PathVariable Long propertyId, @PathVariable Long roomId,
       @RequestBody UpdateRoomRequestDTO requestDTO) {

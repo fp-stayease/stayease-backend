@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.entity;
 
+import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -11,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
@@ -19,7 +21,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,9 +58,9 @@ public class Property {
   @NotNull(message = "Must include description")
   private String description;
 
-  @Column(name = "images", length = Integer.MAX_VALUE)
+  @Column(name = "imageUrl", length = Integer.MAX_VALUE)
   @NotNull(message = "Must include picture") //TODO: update with picture inclusion
-  private String images;
+  private String imagesUrl;
 
   @Size(max = 255)
   @NotNull(message = "Must include address")
@@ -105,6 +106,12 @@ public class Property {
   @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Room> rooms = new LinkedHashSet<>();
 
+  @OneToMany(mappedBy = "property")
+  private Set<Booking> bookings = new LinkedHashSet<>();
+
+  @OneToOne(mappedBy = "property")
+  private PropertyRateSetting propertyRateSetting;
+
   @PrePersist
   protected void onCreate() {
     createdAt = Instant.now();
@@ -116,10 +123,4 @@ public class Property {
     updatedAt = Instant.now();
   }
 
-/*
- TODO [Reverse Engineering] create field to map the 'location' column
- Available actions: Define target Java type | Uncomment as is | Remove column mapping
-    @Column(name = "location", columnDefinition = "geography")
-    private Object location;
-*/
 }
