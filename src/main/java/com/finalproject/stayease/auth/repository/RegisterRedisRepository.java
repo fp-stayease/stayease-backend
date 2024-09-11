@@ -1,5 +1,6 @@
 package com.finalproject.stayease.auth.repository;
 
+import jakarta.transaction.Transactional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Slf4j
+@Transactional
 public class RegisterRedisRepository {
 
   public static final String VERIFICATION_TOKEN_PREFIX = "stayease:verification:strings:";

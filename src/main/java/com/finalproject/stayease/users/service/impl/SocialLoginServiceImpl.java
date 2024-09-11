@@ -14,11 +14,13 @@ import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @Data
 @Transactional
+@Slf4j
 public class SocialLoginServiceImpl implements SocialLoginService {
 
   private final SocialLoginRepository socialLoginRepository;
@@ -34,6 +36,9 @@ public class SocialLoginServiceImpl implements SocialLoginService {
   public Users registerOAuth2User(SocialLoginRequest request) {
     Users user = createNewUser(request);
     linkSocialLogin(user, request.getProvider(), request.getProviderUserId());
+    if (request.getUserType() == UserType.TENANT) {
+      createTenantInfo(user, request);
+    }
     return user;
   }
 
@@ -62,10 +67,12 @@ public class SocialLoginServiceImpl implements SocialLoginService {
   private Users createNewUser(SocialLoginRequest request) {
     Users user = new Users();
     user.setEmail(request.getEmail());
+    user.setUserType(request.getUserType());
     user.setFirstName(request.getFirstName());
     user.setLastName(request.getLastName());
     user.setIsVerified(true);
     usersService.save(user);
+    log.info("user registered: " + request.getEmail());
     return user;
   }
 
@@ -75,12 +82,13 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     socialLogin.setProvider(provider);
     socialLogin.setProviderUserId(providerUserId);
     socialLoginRepository.save(socialLogin);
+    log.info("link social login: " + socialLogin.getProvider());
   }
 
   private TenantInfo createTenantInfo(Users user, SocialLoginRequest request) {
     TenantInfo tenantInfo = new TenantInfo();
     tenantInfo.setUser(user);
-    tenantInfo.setBusinessName(request.getBusinessName());
+    tenantInfo.setBusinessName(Optional.ofNullable(request.getBusinessName()).orElse(user.getFirstName()));
     tenantInfo.setTaxId(request.getTaxId());
     tenantInfoService.save(tenantInfo);
     return tenantInfo;

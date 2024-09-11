@@ -9,5 +9,5 @@ public interface AuthService {
 
   void logout(String email);
 
-  TokenResponseDto refreshToken(String email);
+  TokenResponseDto generateTokenFromEmail(String email);
 }

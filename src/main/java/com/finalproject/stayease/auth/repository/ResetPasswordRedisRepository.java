@@ -1,6 +1,7 @@
 package com.finalproject.stayease.auth.repository;
 
 import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
+import jakarta.transaction.Transactional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Slf4j
+@Transactional
 public class ResetPasswordRedisRepository {
 
   private static final String RESET_PASSWORD_KEY_PREFIX = "stayease:password:reset:";

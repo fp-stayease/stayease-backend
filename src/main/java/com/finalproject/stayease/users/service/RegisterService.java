@@ -12,5 +12,6 @@ public interface RegisterService {
 
   InitialRegistrationResponseDTO initialRegistration(InitialRegistrationRequestDTO requestDTO, UserType userType)
       throws MessagingException, IOException;
+  Boolean checkToken(String token);
   VerifyUserResponseDTO verifyRegistration(VerifyRegistrationDTO verifyRegistrationDTO, String token);
 }
