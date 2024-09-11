@@ -46,7 +46,7 @@ public class PropertyServiceImplTest {
     CreatePropertyRequestDTO requestDTO = new CreatePropertyRequestDTO();
     requestDTO.setName("Apartment A");
     requestDTO.setDescription("Cozy apartment");
-    requestDTO.setPicture("example.jpg");
+    requestDTO.setImageUrl("example.jpg");
     requestDTO.setAddress("123 Main St");
     requestDTO.setCity("Anytown");
     requestDTO.setCountry("USA");
@@ -64,7 +64,7 @@ public class PropertyServiceImplTest {
     expectedProperty.setCategory(category);
     expectedProperty.setName("Apartment A");
     expectedProperty.setDescription("Cozy apartment");
-    expectedProperty.setPicture("example.jpg");
+    expectedProperty.setImageUrl("example.jpg");
     expectedProperty.setAddress("123 Main St");
     expectedProperty.setCity("Anytown");
     expectedProperty.setCountry("USA");
@@ -89,7 +89,7 @@ public class PropertyServiceImplTest {
     CreatePropertyRequestDTO requestDTO = new CreatePropertyRequestDTO();
     requestDTO.setName("Apartment A");
     requestDTO.setDescription("Cozy apartment");
-    requestDTO.setPicture("example.jpg");
+    requestDTO.setImageUrl("example.jpg");
     requestDTO.setAddress("123 Main St");
     requestDTO.setCity("Anytown");
     requestDTO.setCountry("USA");
@@ -108,7 +108,7 @@ public class PropertyServiceImplTest {
     CreatePropertyRequestDTO requestDTO = new CreatePropertyRequestDTO();
     requestDTO.setName("Apartment A");
     requestDTO.setDescription("Cozy apartment");
-    requestDTO.setPicture("example.jpg");
+    requestDTO.setImageUrl("example.jpg");
     requestDTO.setAddress("123 Main St");
     requestDTO.setCity("Anytown");
     requestDTO.setCountry("USA");
@@ -130,7 +130,7 @@ public class PropertyServiceImplTest {
     CreatePropertyRequestDTO requestDTO = new CreatePropertyRequestDTO();
     requestDTO.setName("Apartment A");
     requestDTO.setDescription("Cozy apartment");
-    requestDTO.setPicture("example.jpg");
+    requestDTO.setImageUrl("example.jpg");
     requestDTO.setAddress("123 Main St");
     requestDTO.setCity("Anytown");
     requestDTO.setCountry("USA");
@@ -159,7 +159,7 @@ public class PropertyServiceImplTest {
     requestDTO.setCategoryId(2L);
     requestDTO.setName("Apartment A");
     requestDTO.setDescription("Cozy apartment");
-    requestDTO.setPicture("example.jpg");
+    requestDTO.setImageUrl("example.jpg");
 
     PropertyCategory newCategory = new PropertyCategory();
     newCategory.setId(2L);
@@ -175,7 +175,7 @@ public class PropertyServiceImplTest {
     existingProperty.setCategory(existingCategory);
     existingProperty.setName("Apartment B");
     existingProperty.setDescription("Home sweet home");
-    existingProperty.setPicture("oldExample.jpg");
+    existingProperty.setImageUrl("oldExample.jpg");
 
     // Act
     when(propertyCategoryService.findCategoryByIdAndNotDeleted(2L)).thenReturn(Optional.of(newCategory));
