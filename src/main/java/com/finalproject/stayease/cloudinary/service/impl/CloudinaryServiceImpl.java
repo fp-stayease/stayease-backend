@@ -6,6 +6,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class CloudinaryServiceImpl implements CloudinaryService {
 
   private final Cloudinary cloudinary;
@@ -26,6 +28,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
   public String uploadFile(MultipartFile file, String folderName) throws IOException {
     HashMap<Object, Object> options = new HashMap<>();
     options.put("folder", folderName);
+    log.info("Uploading file: {} to folder: {}", file.getOriginalFilename(), folderName);
     Map uploadedFile = cloudinary.uploader().upload(file.getBytes(), options);
     String publicId = (String) uploadedFile.get("public_id");
 

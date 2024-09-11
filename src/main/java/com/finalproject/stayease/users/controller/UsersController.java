@@ -12,6 +12,7 @@ import com.finalproject.stayease.users.service.EmailChangeService;
 import com.finalproject.stayease.users.service.ProfileService;
 import com.finalproject.stayease.users.service.UsersImageUploadService;
 import com.finalproject.stayease.users.service.UsersService;
+import jakarta.annotation.Nullable;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/users")
 @Data
+@Slf4j
 public class UsersController {
 
   private final UsersService usersService;
@@ -65,19 +68,23 @@ public class UsersController {
       throws IOException {
     Users loggedUser = usersService.getLoggedUser();
     String imageUrl = usersImageUploadService.uploadImage(image, loggedUser);
+    log.info("Avatar uploaded successfully! With imageUrl: {}", imageUrl);
     return Response.successfulResponse(HttpStatus.OK.value(), "Avatar uploaded successfully!",
         new UsersImageDTO(imageUrl));
   }
 
   @PutMapping("/profile/avatar")
-  public ResponseEntity<Response<UsersProfileDTO>> updateAvatar(@RequestBody UsersImageDTO requestDTO) {
+  public ResponseEntity<Response<UsersProfileDTO>> updateAvatar(@Nullable @RequestBody UsersImageDTO requestDTO) {
     Users loggedInUser = usersService.getLoggedUser();
+    log.info("Updating avatar for user: {}, with avatarUrl: {}", loggedInUser.getEmail(), requestDTO);
     Users updatedUser;
-    if (requestDTO.getAvatarUrl() == null) {
+    if (requestDTO == null) {
       updatedUser = profileService.removeAvatar(loggedInUser);
+      log.info("Avatar removed successfully!");
       return Response.successfulResponse(HttpStatus.OK.value(), "Avatar removed successfully!", new UsersProfileDTO(updatedUser));
     } else {
       updatedUser = profileService.changeAvatar(loggedInUser, requestDTO.getAvatarUrl());
+      log.info("Avatar updated successfully!");
     }
     return Response.successfulResponse(HttpStatus.OK.value(), "Avatar updated successfully!", new UsersProfileDTO(updatedUser));
   }

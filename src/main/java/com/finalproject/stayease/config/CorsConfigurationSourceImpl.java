@@ -12,13 +12,14 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class CorsConfigurationSourceImpl implements CorsConfigurationSource {
 
   @Value("${FE_URL}")
-  private static String FE_URL;
+  private String FE_URL;
 
   @Override
   public CorsConfiguration getCorsConfiguration(@NonNull HttpServletRequest request) {
     CorsConfiguration corsConfiguration = new CorsConfiguration();
     corsConfiguration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-    corsConfiguration.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:3001", FE_URL));
+    corsConfiguration.setAllowedOriginPatterns(List.of(FE_URL, "http://localhost:3001"));
+
     corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     corsConfiguration.setAllowCredentials(true);
     corsConfiguration.setExposedHeaders(

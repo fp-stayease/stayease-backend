@@ -151,6 +151,7 @@ public class RegisterServiceImpl implements RegisterService {
       String message) throws MessagingException, IOException {
     String email = pendingRegistration.getEmail();
     String token = registerRedisService.getToken(email);
+    log.info("Resending verification email to {}, with token {}", email, token);
     String mailBody =
         "Welcome to StayEase! You recently requested to resend the verification link for your. Click "
         + "this link "
