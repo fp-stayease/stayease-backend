@@ -57,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public TokenResponseDto refreshToken(String email) {
+  public TokenResponseDto generateTokenFromEmail(String email) {
     String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
     String newRefreshToken = jwtService.generateRefreshToken(email);
     return new TokenResponseDto(newAccessToken, newRefreshToken);

@@ -3,6 +3,7 @@ package com.finalproject.stayease.auth.service.impl;
 import com.finalproject.stayease.auth.model.entity.UserAuth;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Data
 @Slf4j
+@Transactional
 public class UserDetailsServiceImpl implements UserDetailsService {
 
   public final UsersService usersService;

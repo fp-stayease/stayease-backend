@@ -47,12 +47,14 @@ public class ProfileServiceImpl implements ProfileService {
   @Override
   public Users changeAvatar(Users user, String imageUrl) {
     user.setAvatar(imageUrl);
+    log.info("Updating user avatar: " + imageUrl);
     return usersService.save(user);
   }
 
   @Override
   public Users removeAvatar(Users user) {
     user.setAvatar(null);
+    log.info("Removing user avatar");
     return usersService.save(user);
   }
 

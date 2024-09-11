@@ -15,6 +15,7 @@ import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Data
 @Slf4j
+@Transactional
 public class ResetPasswordServiceImpl implements ResetPasswordService {
 
   private final ResetPasswordRedisRepository redisRepository;
@@ -49,10 +51,10 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
   private final JwtEncoder jwtEncoder;
   private final PasswordEncoder passwordEncoder;
 
-  private static final int TOKEN_EXPIRE = 1 * 60 * 60;
-
   @Value("${FE_URL}")
   private String feUrl;
+  @Value("${token.expire.hours:1}")
+  private long TOKEN_EXPIRE;
 
   @Override
   public ForgotPasswordResponseDTO requestResetToken(ForgotPasswordRequestDTO requestDTO)
@@ -119,6 +121,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
   private void checkUser(String email) {
     Optional<Users> usersOptional = usersService.findByEmail(email);
     if (usersOptional.isEmpty()) {
+      // TODO : make UserNotFoundException
       throw new UsernameNotFoundException("User not found");
     }
     Optional<SocialLogin> socialLoginOptional = socialLoginService.findByUser(usersOptional.get());
@@ -164,7 +167,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(Instant.now())
-        .expiresAt(Instant.now().plus(TOKEN_EXPIRE, ChronoUnit.SECONDS))
+        .expiresAt(Instant.now().plus(TOKEN_EXPIRE, ChronoUnit.HOURS))
         .id(jti)
         .subject(email)
         .build();

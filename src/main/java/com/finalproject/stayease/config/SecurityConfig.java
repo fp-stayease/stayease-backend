@@ -48,6 +48,8 @@ public class SecurityConfig {
   private String googleClientSecret;
   @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
   private String googleRedirectUri;
+  @Value("${API_VERSION}")
+  private String API_VERSION;
 
 
 
@@ -69,12 +71,14 @@ public class SecurityConfig {
   }
 
   private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
-    auth.requestMatchers("/api/v1/role").denyAll();
-    auth.requestMatchers(HttpMethod.GET, "/api/v1/properties/", "/api/v1/properties/rooms/"). permitAll();
-    auth.requestMatchers(HttpMethod.PUT, "/api/v1/users/profile/email").permitAll();
-    auth.requestMatchers("/api/v1/role/user").hasRole("USER");
-    auth.requestMatchers("/api/v1/role/tenant", "/api/v1/properties/**").hasRole("TENANT");
-    auth.requestMatchers("/api/v1/auth/**", "api/v1/auth/login/**", "api/v1/oauth2/**", "/register**").permitAll();
+    auth.requestMatchers(API_VERSION+"/role").denyAll();
+    auth.requestMatchers(HttpMethod.GET, API_VERSION+"/properties", API_VERSION+"/properties/rooms"). permitAll();
+    auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/users/profile/email").permitAll();
+    auth.requestMatchers(API_VERSION+"/role/user").hasRole("USER");
+    auth.requestMatchers(API_VERSION+"/role/tenant", API_VERSION+"/properties/**", API_VERSION+"/profile/tenant").hasRole(
+        "TENANT");
+    auth.requestMatchers(API_VERSION+"/auth/**", API_VERSION+"/register/**", API_VERSION+"/oauth2/**", API_VERSION+"/password/**")
+     .permitAll();
     auth.anyRequest().authenticated();
   }
 

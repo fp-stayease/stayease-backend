@@ -30,6 +30,9 @@ public class AuthRedisRepository {
   public void saveJwtKey(String email, String jwtKey) {
     String key = STRING_KEY_PREFIX + email;
     redisTemplate.delete(key); // make sure previous value deleted
+    if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
+      log.info("Previous token deleted for email: {}", email);
+    }
     valueOperations.set(STRING_KEY_PREFIX + email, jwtKey, REFRESH_TOKEN_EXPIRE_DAYS, TimeUnit.DAYS);
     log.info("Saved refresh token for email: {}", email);
     log.info("Saved refresh token value: {}", jwtKey);

@@ -28,6 +28,7 @@ public class UsersImageUploadServiceImpl implements UsersImageUploadService {
 
   @Override
   public String uploadImage(MultipartFile image, Users user) throws IOException {
+    log.info("Validating file: {}", image.getOriginalFilename());
     validateFile(image);
     String folderName = "users/id-" + user.getId();
     log.info("Uploading image: {} to folder: {}", image.getOriginalFilename(), folderName);
