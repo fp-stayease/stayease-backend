@@ -12,7 +12,7 @@ public class CreatePropertyRequestDTO {
   private Long categoryId;
   private String name;
   private String description;
-  private String picture;
+  private String imageUrl;
   private String address;
   private String city;
   private String country;

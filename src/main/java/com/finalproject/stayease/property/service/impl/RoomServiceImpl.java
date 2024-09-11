@@ -95,6 +95,7 @@ public class RoomServiceImpl implements RoomService {
     room.setDescription(requestDTO.getDescription());
     room.setBasePrice(requestDTO.getBasePrice());
     room.setCapacity(requestDTO.getCapacity());
+    room.setImageUrl(requestDTO.getImageUrl());
     roomRepository.save(room);
     return room;
   }
@@ -113,6 +114,7 @@ public class RoomServiceImpl implements RoomService {
     Optional.ofNullable(requestDTO.getDescription()).ifPresent(room::setDescription);
     Optional.ofNullable(requestDTO.getBasePrice()).ifPresent(room::setBasePrice);
     Optional.ofNullable(requestDTO.getCapacity()).ifPresent(room::setCapacity);
+    Optional.ofNullable(requestDTO.getImageUrl()).ifPresent(room::setImageUrl);
     roomRepository.save(room);
     return room;
   }

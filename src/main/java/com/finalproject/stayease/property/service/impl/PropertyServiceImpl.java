@@ -94,7 +94,7 @@ public class PropertyServiceImpl implements PropertyService {
     property.setCategory(category);
     property.setName(requestDTO.getName());
     property.setDescription(requestDTO.getDescription());
-    property.setPicture(requestDTO.getPicture());
+    property.setImageUrl(requestDTO.getImageUrl());
     property.setAddress(requestDTO.getAddress());
     property.setCity(requestDTO.getCity());
     property.setCountry(requestDTO.getCountry());
@@ -143,7 +143,7 @@ public class PropertyServiceImpl implements PropertyService {
     Optional.ofNullable(updatedCategory).ifPresent(existingProperty::setCategory);
     Optional.ofNullable(requestDTO.getName()).ifPresent(existingProperty::setName);
     Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingProperty::setDescription);
-    Optional.ofNullable(requestDTO.getPicture()).ifPresent(existingProperty::setPicture);
+    Optional.ofNullable(requestDTO.getImageUrl()).ifPresent(existingProperty::setImageUrl);
     propertyRepository.save(existingProperty);
     return existingProperty;
   }

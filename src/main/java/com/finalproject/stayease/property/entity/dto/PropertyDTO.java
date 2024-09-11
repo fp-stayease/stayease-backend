@@ -30,7 +30,7 @@ public class PropertyDTO {
     this.category = property.getCategory().getName();
     this.propertyName = property.getName();
     this.description = property.getDescription();
-    this.imageUrl = property.getImagesUrl();
+    this.imageUrl = property.getImageUrl();
     this.address = property.getAddress();
     this.city = property.getCity();
     this.country = property.getCountry();
