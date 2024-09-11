@@ -1,5 +1,8 @@
 package com.finalproject.stayease.users.entity;
 
+import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.PropertyCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -86,6 +89,15 @@ public class Users {
 
   @OneToOne(mappedBy = "user")
   private TenantInfo tenantInfo;
+
+  @OneToMany(mappedBy = "user")
+  private Set<Booking> bookings = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "tenant")
+  private Set<Property> properties = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "addedBy")
+  private Set<PropertyCategory> propertyCategories = new LinkedHashSet<>();
 
   public enum UserType {
     USER,

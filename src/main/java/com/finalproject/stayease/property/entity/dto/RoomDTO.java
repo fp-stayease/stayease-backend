@@ -20,7 +20,8 @@ public class RoomDTO {
    this.description = room.getDescription() != null ? room.getDescription() :  null;
    this.basePrice = room.getBasePrice();
    this.capacity = room.getCapacity();
-   this.propertySummary = new PropertySummary(room.getProperty().getId(), room.getProperty().getName());
+   this.propertySummary = new PropertySummary(room.getProperty().getId(), room.getProperty().getName(),
+       room.getImageUrl());
  }
 
  @Data
@@ -28,5 +29,6 @@ public class RoomDTO {
  private static class PropertySummary {
    private Long propertyId;
    private String propertyName;
+   private String imageUrl;
  }
 }

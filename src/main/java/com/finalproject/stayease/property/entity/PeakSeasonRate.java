@@ -59,6 +59,17 @@ public class PeakSeasonRate {
   @Column(name = "valid_to")
   private Instant validTo;
 
+  @ColumnDefault("CURRENT_TIMESTAMP")
+  @Column(name = "created_at")
+  private Instant createdAt;
+
+  @Column(name = "deleted_at")
+  private Instant deletedAt;
+
+  @ColumnDefault("CURRENT_TIMESTAMP")
+  @Column(name = "updated_at")
+  private Instant updatedAt;
+
   @PrePersist
   protected void onCreate() {
     validFrom = Instant.now();

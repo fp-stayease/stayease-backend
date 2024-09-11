@@ -12,5 +12,6 @@ public interface RoomService {
   Optional<Room> findRoomById(Long roomId);
   Room createRoom(Long propertyId, CreateRoomRequestDTO requestDTO);
   Room updateRoom(Long propertyId, Long roomId, UpdateRoomRequestDTO requestDTO);
+  Room getRoom(Long propertyId, Long roomId);
   void deleteRoom(Long propertyId, Long roomId);
 }
