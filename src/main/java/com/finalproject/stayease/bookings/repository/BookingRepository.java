@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
-    @Query("SELECT b FROM Booking b WHERE b.user.id = :userId AND b.status != 'expired'")
+    @Query("SELECT b FROM Booking b WHERE b.user.id = :userId AND b.status != 'expire'")
     Page<Booking> findByUserIdAndStatusNotExpired(@Param("userId") Long userId, Pageable pageable);
     List<Booking> findByTenantId(Long tenantId);
     @Query("SELECT b FROM Booking b WHERE b.checkInDate = :tomorrow")

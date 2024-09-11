@@ -113,7 +113,11 @@ public class TransactionServiceImpl implements TransactionService {
 
         if (failedTransactionStatuses.contains(transactionStatus)) {
             updatedPayment = paymentService.updatePaymentStatus(payment.getId(), transactionStatus);
-            updatedBooking = bookingService.updateBooking(booking.getId(), "payment failed");
+            if (Objects.equals(transactionStatus, "expire")) {
+                updatedBooking = bookingService.updateBooking(booking.getId(), "expire");
+            } else {
+                updatedBooking = bookingService.updateBooking(booking.getId(), "payment failed");
+            }
 
             var bookingItems = updatedBooking.getBookingItems();
             for (BookingItem bookingItem : bookingItems) {
@@ -197,8 +201,8 @@ public class TransactionServiceImpl implements TransactionService {
         var payments = paymentService.findExpiredPendingPayment();
 
         for (Payment payment : payments) {
-            var cancelledPayment = paymentService.updatePaymentStatus(payment.getId(), "expired");
-            var cancelledBooking = bookingService.updateBooking(payment.getBooking().getId(),"expired");
+            var cancelledPayment = paymentService.updatePaymentStatus(payment.getId(), "expire");
+            var cancelledBooking = bookingService.updateBooking(payment.getBooking().getId(),"expire");
 
             var bookingItems = cancelledBooking.getBookingItems();
             for (BookingItem bookingItem : bookingItems) {

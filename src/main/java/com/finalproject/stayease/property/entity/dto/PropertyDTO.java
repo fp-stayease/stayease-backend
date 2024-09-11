@@ -3,6 +3,7 @@ package com.finalproject.stayease.property.entity.dto;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ public class PropertyDTO {
   private String category;
   private String propertyName;
   private String description;
-  private String picture;
+  private String images;
   private String address;
   private String city;
   private String country;
@@ -30,7 +31,7 @@ public class PropertyDTO {
     this.category = property.getCategory().getName();
     this.propertyName = property.getName();
     this.description = property.getDescription();
-    this.picture = property.getPicture();
+    this.images = property.getImages();
     this.address = property.getAddress();
     this.city = property.getCity();
     this.country = property.getCountry();

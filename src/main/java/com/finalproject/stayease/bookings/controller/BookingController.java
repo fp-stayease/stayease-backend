@@ -29,15 +29,14 @@ public class BookingController {
     @GetMapping("/user")
     public ResponseEntity<?> getUserBookings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "ASC") Sort.Direction direction,
             @RequestParam(required = false) String search,
             HttpServletRequest request
     ) {
         Long userId = (Long) jwtService.extractClaimsFromToken(extractToken.extractTokenFromRequest(request)).get("userId");
-
         Sort sort = Sort.by(direction, "createdAt");
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         var bookings = bookingService.getUserBookings(userId, search, pageable);
         return Response.successfulResponse("User booking list fetched", bookings);
