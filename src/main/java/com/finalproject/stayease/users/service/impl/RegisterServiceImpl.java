@@ -69,6 +69,12 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   @Override
+  public Boolean checkToken(String token) {
+    String email = registerRedisService.getEmail(token);
+    return registerRedisService.isValid(email, token);
+  }
+
+  @Override
   public VerifyUserResponseDTO verifyRegistration(VerifyRegistrationDTO verifyRegistrationDTO, String token)
       throws RuntimeException {
     String email = registerRedisService.getEmail(token);
@@ -121,7 +127,7 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   public String generateVerificationToken() {
-    return UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
+    return UUID.randomUUID().toString().replaceAll("-", "");
   }
 
   public InitialRegistrationResponseDTO submitRegistration(String email, UserType userType)
@@ -132,6 +138,8 @@ public class RegisterServiceImpl implements RegisterService {
     pendingRegistrationService.save(registration);
 
     String token = generateAndSaveRedisToken(email);
+    log.info("New registration request for {} with email {} has been submitted.", userType, email);
+    log.info("Registration token for {} is {}", email, token);
 
     String message = "Verification link has been sent to " + email + " for registration request as a " + userType + "."
                      + " Please check your e-mail and follow the next steps to verify your account!";
@@ -143,6 +151,7 @@ public class RegisterServiceImpl implements RegisterService {
       String message) throws MessagingException, IOException {
     String email = pendingRegistration.getEmail();
     String token = registerRedisService.getToken(email);
+    log.info("Resending verification email to {}, with token {}", email, token);
     String mailBody =
         "Welcome to StayEase! You recently requested to resend the verification link for your. Click "
         + "this link "
@@ -187,7 +196,7 @@ public class RegisterServiceImpl implements RegisterService {
 
   private String buildVerificationUrl(String token) {
     // TODO : replace this with FE URL later
-    return feUrl + "/auth/register/verify?token=" + token;
+    return feUrl + "/register/verify?token=" + token;
   }
 
   public String generateAndSaveRedisToken(String email) {

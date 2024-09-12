@@ -170,21 +170,4 @@ public class JwtServiceImpl implements JwtService {
       }
     }
   }
-
-//  @Override
-//  public Authentication getAuthenticationFromToken(String token) {
-//    Jwt jwt = decodeToken(token);
-//
-//    Collection<GrantedAuthority> authorities = jwt.getClaimAsStringList("authorities")
-//        .stream()
-//        .map(SimpleGrantedAuthority::new)
-//        .collect(Collectors.toList());
-//
-//    Users principal = new Users();
-//    principal.setId(jwt.getClaim("userId"));
-//    principal.setEmail(jwt.getSubject());
-//    principal.setUserType(UserType.valueOf(jwt.getClaim("userType")));
-//
-//    return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-//  }
 }

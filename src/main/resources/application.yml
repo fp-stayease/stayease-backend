@@ -62,7 +62,7 @@ spring:
       repositories:
         enabled: false
   mail:
-    host: smtp.mailersend.net
+    host: smtp.gmail.com
     port: 587
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
@@ -101,3 +101,6 @@ pending:
 rsa:
   private-key: ${PRIVATE_KEY}
   public-key: ${PUBLIC_KEY}
+token:
+  expiration:
+    hours: 1

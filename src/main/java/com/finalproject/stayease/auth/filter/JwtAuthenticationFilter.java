@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
           log.info("Checking if access token is valid");
           if (jwtService.isAccessTokenValid(accessToken, email)) {
-            log.info("Token is valid, authenticating user");
+            log.info("Access token is valid, authenticating user");
             authenticateUser(request, email);
           } else {
             log.info("Token is invalid, handling as expired");
@@ -101,7 +101,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String email = jwtService.extractSubjectFromToken(refreshToken);
         log.info("Extracted email from refresh token: " + email);
         if (jwtService.isRefreshTokenValid(refreshToken, email)) {
-          log.info("Token is valid, authenticating user");
+          log.info("Refresh token is valid, authenticating user");
           refreshAndAuthenticateUser(request, response, email);
         }
       } catch (Exception e) {
@@ -139,9 +139,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     refreshCookie.setPath("/");
     refreshCookie.setMaxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS);
     response.addCookie(refreshCookie);
-    log.info("Header and cookie set");
-    log.info("Constant: " + REFRESH_TOKEN_EXPIRY_IN_SECONDS);
-    log.info("Cookie age: " + refreshCookie.getMaxAge());
-    log.info("Cookie: " + refreshCookie);
   }
 }
