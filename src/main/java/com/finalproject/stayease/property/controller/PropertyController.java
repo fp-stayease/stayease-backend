@@ -7,6 +7,7 @@ import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
+import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
@@ -17,11 +18,13 @@ import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateProper
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
+import com.finalproject.stayease.property.service.PropertyImageUploadService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
+import java.io.IOException;
 import java.util.List;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -34,6 +37,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/properties")
@@ -45,6 +49,7 @@ public class PropertyController {
   private final PropertyCategoryService propertyCategoryService;
   private final RoomService roomService;
   private final PeakSeasonRateService peakSeasonRateService;
+  private final PropertyImageUploadService propertyImageUploadService;
 
   @GetMapping
   public ResponseEntity<Response<List<PropertyDTO>>> getAllProperties() {
@@ -75,6 +80,12 @@ public class PropertyController {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Property added!",
         new PropertyDTO(propertyService.createProperty(tenant, requestDTO)));
+  }
+
+  @PostMapping("/{propertyId}")
+  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadRoomImage(@PathVariable Long propertyId, @RequestBody MultipartFile image) throws IOException {
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Property image uploaded!",
+        new PropertyRoomImageDTO(propertyImageUploadService.uploadImage(propertyId, image)));
   }
 
   @PutMapping("/{propertyId}")
@@ -143,6 +154,13 @@ public class PropertyController {
   public ResponseEntity<Response<RoomDTO>> getRoom(@PathVariable Long propertyId, @PathVariable Long roomId) {
     Room room = roomService.getRoom(propertyId, roomId);
     return Response.successfulResponse(200, "Listing room ID: " + roomId, new RoomDTO(room));
+  }
+
+  @PostMapping("/{propertyId}/rooms/{roomId}")
+  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadRoomImage(@PathVariable Long propertyId,
+      @PathVariable Long roomId, @RequestBody MultipartFile image) throws IOException {
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Room image uploaded!",
+        new PropertyRoomImageDTO(propertyImageUploadService.uploadRoomImage(propertyId, roomId, image)));
   }
 
   @PutMapping("/{propertyId}/rooms/{roomId}")

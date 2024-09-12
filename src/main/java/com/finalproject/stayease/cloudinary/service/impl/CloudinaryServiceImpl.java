@@ -79,6 +79,6 @@ public class CloudinaryServiceImpl implements CloudinaryService {
   }
 
   private String extractPublicIdFromUrl(String imageUrl) {
-    return imageUrl.substring(imageUrl.lastIndexOf("/") + 1, imageUrl.lastIndexOf("."));
+    return imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
   }
 }
