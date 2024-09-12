@@ -11,6 +11,7 @@ public class RoomDTO {
  private String name;
  private String description;
  private BigDecimal basePrice;
+ private String imageUrl;
  private Integer capacity;
  private PropertySummary propertySummary;
 
@@ -19,9 +20,9 @@ public class RoomDTO {
    this.name = room.getName();
    this.description = room.getDescription() != null ? room.getDescription() :  null;
    this.basePrice = room.getBasePrice();
+   this.imageUrl = room.getImageUrl();
    this.capacity = room.getCapacity();
-   this.propertySummary = new PropertySummary(room.getProperty().getId(), room.getProperty().getName(),
-       room.getImageUrl());
+   this.propertySummary = new PropertySummary(room.getProperty().getId(), room.getProperty().getName());
  }
 
  @Data
@@ -29,6 +30,5 @@ public class RoomDTO {
  private static class PropertySummary {
    private Long propertyId;
    private String propertyName;
-   private String imageUrl;
  }
 }

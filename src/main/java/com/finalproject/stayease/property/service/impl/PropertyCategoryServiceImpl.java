@@ -176,7 +176,6 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
   private PropertyCategory toPropertyCategoryEntity(Users tenant, CreateCategoryRequestDTO requestDTO) {
     PropertyCategory category = new PropertyCategory();
     category.setName(requestDTO.getName().toLowerCase());
-    category.setDescription(requestDTO.getDescription());
     category.setAddedBy(tenant);
     propertyCategoryRepository.save(category);
     return category;

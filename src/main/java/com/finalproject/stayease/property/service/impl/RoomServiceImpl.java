@@ -49,7 +49,7 @@ public class RoomServiceImpl implements RoomService {
 
   @Override
   public Room updateRoom(Long propertyId, Long roomId, UpdateRoomRequestDTO requestDTO) {
-    checkDuplicateRoom(requestDTO.getName());
+    checkDuplicateRoom(propertyId, requestDTO.getName());
     Room existingRoom = checkBelongsToProperty(propertyId, roomId);
     return update(existingRoom, requestDTO);
   }
@@ -67,13 +67,13 @@ public class RoomServiceImpl implements RoomService {
   }
 
   private Property checkDuplicate(Long propertyId, CreateRoomRequestDTO requestDTO) {
-    checkDuplicateRoom(requestDTO.getName());
+    checkDuplicateRoom(propertyId, requestDTO.getName());
     return checkProperty(propertyId);
   }
 
-  private void checkDuplicateRoom(String name) {
-    Optional<Room> checkRoom = roomRepository.findByNameIgnoreCaseAndDeletedAtIsNull(name);
-    if (checkRoom.isPresent()) {
+  private void checkDuplicateRoom(Long PropertyId, String name) {
+    List<String> roomList = roomRepository.findAllRoomNamesByPropertyId(PropertyId);
+    if (roomList.contains(name)) {
       // TODO : make new DuplicateRoomException
       throw new DuplicateEntryException("Room with name " + name + " already exists");
     }

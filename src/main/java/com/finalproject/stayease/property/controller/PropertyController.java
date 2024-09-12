@@ -176,4 +176,10 @@ public class PropertyController {
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
         new PeakSeasonRateDTO(peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO)));
   }
+
+  // Region - utilities
+  @GetMapping("/cities")
+  public ResponseEntity<Response<List<String>>> getDistinctCities() {
+    return Response.successfulResponse(200, "Listing all distinct cities", propertyService.findDistinctCities());
+  }
 }

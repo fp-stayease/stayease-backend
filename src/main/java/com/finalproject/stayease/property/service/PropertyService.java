@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface PropertyService {
     List<Property> findAll();
     List<Property> findAllByTenant(Users tenant);
+    List<String> findDistinctCities();
     Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO);
     Property updateProperty(Users tenant, Long propertyId, UpdatePropertyRequestDTO requestDTO);
     void deleteProperty(Users tenant, Long propertyId);

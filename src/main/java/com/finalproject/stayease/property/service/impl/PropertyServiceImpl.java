@@ -55,6 +55,11 @@ public class PropertyServiceImpl implements PropertyService {
   }
 
   @Override
+  public List<String> findDistinctCities() {
+    return propertyRepository.findDistinctCities();
+  }
+
+  @Override
   public Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO) {
     isTenant(tenant);
     return toPropertyEntity(tenant, requestDTO);

@@ -2,6 +2,7 @@ package com.finalproject.stayease.property.entity.dto;
 
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,8 +22,10 @@ public class PropertyDTO {
   private String address;
   private String city;
   private String country;
+  private Double latitude;
+  private Double longitude;
 
-  private Set<RoomSummary> rooms = new HashSet<>();
+  private Set<RoomDTO> rooms = new HashSet<>();
 
   public PropertyDTO(Property property) {
     this.id = property.getId();
@@ -34,18 +37,22 @@ public class PropertyDTO {
     this.address = property.getAddress();
     this.city = property.getCity();
     this.country = property.getCountry();
-    this.rooms = property.getRooms().stream().map(RoomSummary::new).collect(Collectors.toSet());
+    this.latitude = property.getLatitude();
+    this.longitude = property.getLongitude();
+    this.rooms = property.getRooms().stream().map(RoomDTO::new).collect(Collectors.toSet());
   }
 
   @Data
   static class RoomSummary {
     private Long roomId;
     private String roomName;
+    private BigDecimal roomBasePrice;
     private String roomImageUrl;
 
     public RoomSummary(Room room) {
       this.roomId = room.getId();
       this.roomName = room.getName();
+      this.roomBasePrice = room.getBasePrice();
       this.roomImageUrl = room.getImageUrl();
     }
   }
