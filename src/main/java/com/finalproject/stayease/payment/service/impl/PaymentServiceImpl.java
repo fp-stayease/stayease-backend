@@ -4,6 +4,7 @@ import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.payment.dto.PaymentResDto;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.payment.repository.PaymentRepository;
 import com.finalproject.stayease.payment.service.PaymentService;
@@ -53,12 +54,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Payment uploadPaymentProof(MultipartFile file, UUID bookingId) throws IOException {
+    public PaymentResDto uploadPaymentProof(MultipartFile file, UUID bookingId) throws IOException {
         List<String> allowedImgType = Arrays.asList("image/jpeg", "image/png", "image/jpg");
         if (!allowedImgType.contains(file.getContentType())) {
             throw new IllegalArgumentException("Image must be un JPEG, JPG, or PNG");
         }
-        if (file.getSize() > 1024) {
+        if (file.getSize() > 1024 * 1024) {
             throw new IllegalArgumentException("File size cannot be greater than 1MB");
         }
         String imageUrl = cloudinaryService.uploadFile(file, "Payment Proof");
@@ -68,7 +69,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentStatus("waiting for confirmation");
         bookingService.updateBooking(payment.getBooking().getId(), "waiting for confirmation");
 
-        return paymentRepository.save(payment);
+        return paymentRepository.save(payment).toResDto();
     }
 
     @Override
