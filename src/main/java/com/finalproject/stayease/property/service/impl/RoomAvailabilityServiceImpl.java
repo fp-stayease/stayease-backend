@@ -9,7 +9,11 @@ import com.finalproject.stayease.property.repository.RoomAvailabilityRepository;
 import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
 import jakarta.transaction.Transactional;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +34,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
     RoomAvailability roomAvailability = new RoomAvailability();
     roomAvailability.setRoom(bookedRoom);
     roomAvailability.setStartDate(checkDate(startDate));
-    roomAvailability.setEndDate(checkDate(endDate));
+    roomAvailability.setEndDate(checkDate(endDate.minusDays(1)));
     roomAvailability.setIsAvailable(false);
     return roomAvailabilityRepository.save(roomAvailability);
   }
