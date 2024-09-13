@@ -5,6 +5,7 @@ import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
+import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
@@ -216,6 +217,15 @@ public class PropertyController {
       @RequestParam LocalDate date) {
     return Response.successfulResponse(200, "Listing all adjusted rates for property ID: " + propertyId
                                             + " on date: " + date, peakSeasonRateService.findAvailableRoomRates(propertyId, date));
+  }
+
+  @GetMapping("/{propertyId}/rates/daily")
+  public ResponseEntity<Response<List<DailyPriceDTO>>> getDailyRates(@PathVariable Long propertyId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+    return Response.successfulResponse(200, "Listing all daily rates for property ID: " + propertyId
+                                            + " from date: " + startDate + " to date: " + endDate,
+        peakSeasonRateService.findLowestDailyRoomRates(propertyId, startDate, endDate));
   }
 
   @PostMapping("/{propertyId}/rates")

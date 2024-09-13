@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.repository;
 
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
 import com.finalproject.stayease.users.entity.Users;
@@ -54,8 +55,39 @@ AND NOT EXISTS (
   AND :date BETWEEN ra.startDate AND ra.endDate
   AND ra.isAvailable = false
 )
+ORDER BY r.basePrice asc
 """)
   List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
+
+@Query("""
+SELECT new com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
+  p.id,
+  p.name,
+  r.id,
+  r.name,
+  MIN(r.basePrice),
+  psr.adjustmentType,
+  psr.rateAdjustment
+  )
+FROM Property p
+JOIN Room r ON p.id = r.property.id
+LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
+AND :date BETWEEN psr.startDate AND psr.endDate
+WHERE p.id = :propertyId
+AND p.deletedAt IS NULL
+AND r.deletedAt IS NULL
+AND NOT EXISTS (
+  SELECT 1
+  FROM RoomAvailability ra
+  WHERE ra.room.id = r.id
+  AND :date BETWEEN psr.startDate AND psr.endDate
+  AND ra.isAvailable = false
+)
+GROUP BY p.id, p.name, r.id, r.name, psr.adjustmentType, psr.rateAdjustment
+ORDER BY MIN(r.basePrice) ASC
+LIMIT 1
+""")
+  RoomPriceRateDTO findLowestAvailableRoomRate(Long propertyId, LocalDate date);
 
   @Query("""
           SELECT NEW com.finalproject.stayease.property.entity.dto.PropertyListingDTO(
@@ -104,6 +136,7 @@ AND NOT EXISTS (
       @Param("categoryId") Long categoryId,
       @Param("searchTerm") String searchTerm
   );
+  
 
 
   // Quarantine

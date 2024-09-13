@@ -92,6 +92,13 @@ public class PropertyServiceImpl implements PropertyService {
   }
 
   @Override
+  public RoomPriceRateDTO findLowestRoomRate(Long propertyId, LocalDate date) {
+    return propertyRepository.findAvailableRoomRates(propertyId, date).stream().findFirst().orElseThrow(
+        () -> new DataNotFoundException("No room rates found for this property")
+    );
+  }
+
+  @Override
   public List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
     Property property = propertyRepository.findByIdAndDeletedAtIsNull(propertyId).orElseThrow(
         () -> new DataNotFoundException("Property with this ID does not exist or is deleted")

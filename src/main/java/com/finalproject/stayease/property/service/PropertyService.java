@@ -28,6 +28,8 @@ public interface PropertyService {
 
   Optional<Property> findPropertyById(Long id);
 
+  RoomPriceRateDTO findLowestRoomRate(Long propertyId, LocalDate date);
+
   List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
 
   List<PropertyListingDTO> findAvailableProperties(

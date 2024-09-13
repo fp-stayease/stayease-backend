@@ -76,13 +76,14 @@ public class SecurityConfig {
 
     // Permit all access to certain GET endpoints
     auth.requestMatchers(HttpMethod.GET,
-            API_VERSION + "/properties",
-            API_VERSION + "/properties/rooms",
+            API_VERSION + "/properties/{propertyId}",
+            API_VERSION + "/properties/{propertyId}/rooms/{roomId}",
             API_VERSION + "/properties/categories",
             API_VERSION + "/properties/images",
             API_VERSION + "/properties/cities",
             API_VERSION + "/properties/available",
-            API_VERSION + "/properties/{propertyId}/rates").permitAll();
+            API_VERSION + "/properties/{propertyId}/rates",
+            API_VERSION + "/properties/{propertyId}/rates/daily").permitAll();
 
     // Permit access to specific PUT endpoint
     auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/users/profile/email").permitAll();

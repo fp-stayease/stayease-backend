@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.service;
 
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
+import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.users.entity.Users;
@@ -14,6 +15,10 @@ public interface PeakSeasonRateService {
   PeakSeasonRate updatePeakSeasonRate(Users tenant, Long propertyId, Long rateId, SetPeakSeasonRateRequestDTO requestDTO);
 
   List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
+
+  List<DailyPriceDTO> findAvailableDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
+
+  List<DailyPriceDTO> findLowestDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
 
   // Region - price adjustments
   BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice, Instant bookingTime);

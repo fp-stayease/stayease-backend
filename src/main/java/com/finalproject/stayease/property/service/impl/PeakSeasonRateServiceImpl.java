@@ -5,6 +5,7 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
@@ -60,13 +61,45 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     List<RoomPriceRateDTO> rooms = propertyService.findAvailableRoomRates(propertyId, date);
     List<RoomAdjustedRatesDTO> adjustedPrices = new ArrayList<>();
     for (RoomPriceRateDTO room : rooms) {
-      BigDecimal adjustedPrice = applyPeakSeasonRate(propertyId, date, room.getBasePrice(), Instant.now());
+      BigDecimal adjustedPrice = applyPeakSeasonRate(room);
       adjustedPrices.add(new RoomAdjustedRatesDTO(room.getPropertyId(), room.getRoomId(), room.getRoomName(),
           room.getBasePrice(), adjustedPrice, date));
     }
-    adjustedPrices.sort(Comparator.comparing(RoomAdjustedRatesDTO::getAdjustedPrice));
     log.info("Found {} available room rates for property {} on date {}", adjustedPrices.size(), propertyId, date);
     return adjustedPrices;
+  }
+
+  @Override
+  public List<DailyPriceDTO> findAvailableDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
+    List<DailyPriceDTO> dailyPrices = new ArrayList<>();
+    for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
+      List<RoomAdjustedRatesDTO> roomRates = findAvailableRoomRates(propertyId, date);
+      BigDecimal lowestPrice = roomRates.stream()
+          .map(RoomAdjustedRatesDTO::getAdjustedPrice)
+          .min(Comparator.naturalOrder())
+          .orElse(BigDecimal.ZERO);
+      dailyPrices.add(new DailyPriceDTO(date, lowestPrice, !roomRates.isEmpty() && !roomRates.getFirst().getBasePrice().equals(lowestPrice)));
+    }
+    return dailyPrices;
+  }
+
+  @Override
+  public List<DailyPriceDTO> findLowestDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
+    List<DailyPriceDTO> dailyPrices = new ArrayList<>();
+    for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
+      RoomPriceRateDTO lowestRoomRate = propertyService.findLowestRoomRate(propertyId, date);
+      BigDecimal lowestPrice = applyPeakSeasonRate(lowestRoomRate);
+      dailyPrices.add(new DailyPriceDTO(date, lowestPrice, !lowestRoomRate.getBasePrice().equals(lowestPrice)));
+    }
+    return dailyPrices;
+  }
+
+  private BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
+    BigDecimal adjustedPrice = roomRate.getBasePrice();
+    adjustedPrice = roomRate.getAdjustmentType() == AdjustmentType.PERCENTAGE
+        ? adjustedPrice.add(adjustedPrice.multiply(roomRate.getAdjustmentRate().divide(BigDecimal.valueOf(100))))
+        : adjustedPrice.add(Optional.ofNullable(roomRate.getAdjustmentRate()).orElse(BigDecimal.ZERO));
+    return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }
 
   @Override
@@ -80,7 +113,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     for (PeakSeasonRate rate : applicableRates) {
       adjustedPrice = rate.getAdjustmentType() == AdjustmentType.PERCENTAGE
           ? adjustedPrice.add(basePrice.multiply(rate.getRateAdjustment().divide(BigDecimal.valueOf(100))))
-          : adjustedPrice.add(rate.getRateAdjustment());
+          : adjustedPrice.add(Optional.ofNullable(rate.getRateAdjustment()).orElse(BigDecimal.ZERO));
     }
     return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }
