@@ -1,5 +1,6 @@
 package com.finalproject.stayease.users.entity;
 
+import jakarta.persistence.CascadeType;
 import com.finalproject.stayease.users.dto.UsersResDto;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.property.entity.Property;
@@ -85,10 +86,10 @@ public class Users {
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<SocialLogin> socialLogins = new LinkedHashSet<>();
 
-  @OneToOne(mappedBy = "user")
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private TenantInfo tenantInfo;
 
   @OneToMany(mappedBy = "user")

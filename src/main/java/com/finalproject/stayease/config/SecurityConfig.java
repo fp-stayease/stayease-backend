@@ -48,6 +48,8 @@ public class SecurityConfig {
   private String googleClientSecret;
   @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
   private String googleRedirectUri;
+  @Value("${API_VERSION}")
+  private String API_VERSION;
 
 
 
@@ -69,25 +71,25 @@ public class SecurityConfig {
   }
 
   private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
-    auth.requestMatchers("/api/v1/role").denyAll();
-    auth.requestMatchers(HttpMethod.GET, "/api/v1/properties/**"). permitAll();
-    auth.requestMatchers("/api/v1/role/user").hasRole("USER");
-    auth.requestMatchers("/api/v1/role/tenant", "/api/v1/properties/**").hasRole("TENANT");
-    auth.requestMatchers("/api/v1/auth/**", "/login/**", "/oauth2/**").permitAll();
-    auth.requestMatchers("api/v1/role").denyAll();
-    auth.requestMatchers("api/v1/role/user").hasRole("USER");
-    auth.requestMatchers(HttpMethod.GET, "/api/v1/properties/", "/api/v1/properties/rooms/"). permitAll();
-    auth.requestMatchers("/api/v1/midtrans").permitAll();
-    auth.requestMatchers("/api/v1/payments/payment-proof/{bookingId}").hasRole("USER");
-    auth.requestMatchers(HttpMethod.GET, "/api/v1/payment/{bookingId}").permitAll();
-    auth.requestMatchers(HttpMethod.POST, "/api/v1/transactions").hasRole("USER");
-    auth.requestMatchers("/api/v1/transactions/notification-handler").permitAll();
-    auth.requestMatchers(HttpMethod.PUT, "/api/v1/transactions/user/{bookingId}").hasRole("USER");
-    auth.requestMatchers(HttpMethod.PUT, "/api/v1/transactions/{bookingId}").hasRole("TENANT");
-    auth.requestMatchers(HttpMethod.PATCH, "/api/v1/transactions/{bookingId}").hasRole("TENANT");
-    auth.requestMatchers("/api/v1/bookings/tenant").hasRole("TENANT");
-    auth.requestMatchers("/api/v1/bookings/user").hasRole("USER");
-    auth.requestMatchers("/api/v1/bookings/{bookingId}").permitAll();
+    auth.requestMatchers(API_VERSION+"/role").denyAll();
+    auth.requestMatchers(HttpMethod.GET, API_VERSION+"/properties", API_VERSION+"/properties/rooms"). permitAll();
+    auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/users/profile/email").permitAll();
+    auth.requestMatchers(API_VERSION+"/role/user").hasRole("USER");
+    auth.requestMatchers(API_VERSION+"/role/tenant", API_VERSION+"/properties/**", API_VERSION+"/profile/tenant").hasRole(
+        "TENANT");
+    auth.requestMatchers(API_VERSION+"/auth/**", API_VERSION+"/register/**", API_VERSION+"/oauth2/**", API_VERSION+"/password/**")
+     .permitAll();
+    auth.requestMatchers(API_VERSION+ "/midtrans").permitAll();
+    auth.requestMatchers(API_VERSION+"/payments/payment-proof/{bookingId}").hasRole("USER");
+    auth.requestMatchers(HttpMethod.GET, API_VERSION+"/payment/{bookingId}").permitAll();
+    auth.requestMatchers(HttpMethod.POST, API_VERSION+"/transactions").hasRole("USER");
+    auth.requestMatchers(API_VERSION+"/transactions/notification-handler").permitAll();
+    auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/transactions/user/{bookingId}").hasRole("USER");
+    auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/transactions/{bookingId}").hasRole("TENANT");
+    auth.requestMatchers(HttpMethod.PATCH, API_VERSION+"/transactions/{bookingId}").hasRole("TENANT");
+    auth.requestMatchers(API_VERSION+"/bookings/tenant").hasRole("TENANT");
+    auth.requestMatchers(API_VERSION+"/bookings/user").hasRole("USER");
+    auth.requestMatchers(API_VERSION+"/bookings/{bookingId}").permitAll();
     auth.requestMatchers("/error/**").permitAll();
     auth.anyRequest().authenticated();
   }
