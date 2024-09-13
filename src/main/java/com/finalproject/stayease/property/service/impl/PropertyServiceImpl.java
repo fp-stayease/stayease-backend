@@ -5,6 +5,7 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
+import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
@@ -99,6 +100,12 @@ public class PropertyServiceImpl implements PropertyService {
     log.info("Date validity: " + DateValidator.isValidDate(date));
     log.info("Date being passed: " + date);
     return propertyRepository.findAvailableRoomRates(propertyId, date);
+  }
+
+  @Override
+  public List<PropertyListingDTO> findAvailableProperties(LocalDate startDate, LocalDate endDate, String city,
+      Long categoryId, String searchTerm) {
+    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm);
   }
 
   private void isTenant(Users tenant) {

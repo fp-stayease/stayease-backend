@@ -81,6 +81,7 @@ public class SecurityConfig {
             API_VERSION + "/properties/categories",
             API_VERSION + "/properties/images",
             API_VERSION + "/properties/cities",
+            API_VERSION + "/properties/available",
             API_VERSION + "/properties/{propertyId}/rates").permitAll();
 
     // Permit access to specific PUT endpoint

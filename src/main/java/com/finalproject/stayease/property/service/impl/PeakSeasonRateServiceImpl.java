@@ -78,12 +78,9 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
 
     BigDecimal adjustedPrice = basePrice;
     for (PeakSeasonRate rate : applicableRates) {
-      if (rate.getAdjustmentType() == AdjustmentType.PERCENTAGE) {
-        adjustedPrice =
-            adjustedPrice.add(basePrice.multiply(rate.getRateAdjustment().divide(BigDecimal.valueOf(100))));
-      } else {
-        adjustedPrice = adjustedPrice.add(rate.getRateAdjustment());
-      }
+      adjustedPrice = rate.getAdjustmentType() == AdjustmentType.PERCENTAGE
+          ? adjustedPrice.add(basePrice.multiply(rate.getRateAdjustment().divide(BigDecimal.valueOf(100))))
+          : adjustedPrice.add(rate.getRateAdjustment());
     }
     return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }

@@ -17,4 +17,5 @@ public interface PeakSeasonRateService {
 
   // Region - price adjustments
   BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice, Instant bookingTime);
+
 }

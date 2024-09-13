@@ -7,6 +7,7 @@ import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
+import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
 import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
@@ -20,6 +21,7 @@ import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRe
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
+import com.finalproject.stayease.property.service.PropertyListingService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.responses.Response;
@@ -28,7 +30,10 @@ import com.finalproject.stayease.users.service.UsersService;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,12 +58,37 @@ public class PropertyController {
   private final RoomService roomService;
   private final PeakSeasonRateService peakSeasonRateService;
   private final PropertyImageUploadService propertyImageUploadService;
+  private final PropertyListingService propertyListingService;
 
   @GetMapping
   public ResponseEntity<Response<List<PropertyDTO>>> getAllProperties() {
     List<Property> propertyList = propertyService.findAll();
     List<PropertyDTO> propertyDTOList = propertyList.stream().map(PropertyDTO::new).toList();
     return Response.successfulResponse(200, "Listing all properties", propertyDTOList);
+  }
+
+  @GetMapping("/available")
+  public ResponseEntity<Response<Map<String, Object>>> getAvailableProperties(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) String city,
+      @RequestParam(required = false) Long categoryId,
+      @RequestParam(required = false) String searchTerm,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "name") String sortBy,
+      @RequestParam(defaultValue = "ASC") String sortDirection
+  ) {
+    Page<PropertyListingDTO> properties = propertyListingService.findAvailableProperties(
+        startDate, endDate, city, categoryId, searchTerm,
+        page, size, sortBy, sortDirection
+    );
+
+    return Response.responseMapper(
+        HttpStatus.OK.value(),
+        "Listing available properties",
+        properties
+    );
   }
 
   @GetMapping("/{propertyId}")
@@ -184,8 +214,8 @@ public class PropertyController {
   @GetMapping("/{propertyId}/rates")
   public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(@PathVariable Long propertyId,
       @RequestParam LocalDate date) {
-    return Response.successfulResponse(200, "Listing all adjusted rates",
-        peakSeasonRateService.findAvailableRoomRates(propertyId, date));
+    return Response.successfulResponse(200, "Listing all adjusted rates for property ID: " + propertyId
+                                            + " on date: " + date, peakSeasonRateService.findAvailableRoomRates(propertyId, date));
   }
 
   @PostMapping("/{propertyId}/rates")
