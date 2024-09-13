@@ -5,6 +5,8 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
+import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
@@ -15,6 +17,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -50,9 +55,26 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   @Override
+  public List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
+    log.info("Finding available room rates for property {} on date {}", propertyId, date);
+    List<RoomPriceRateDTO> rooms = propertyService.findAvailableRoomRates(propertyId, date);
+    List<RoomAdjustedRatesDTO> adjustedPrices = new ArrayList<>();
+    for (RoomPriceRateDTO room : rooms) {
+      BigDecimal adjustedPrice = applyPeakSeasonRate(propertyId, date, room.getBasePrice(), Instant.now());
+      adjustedPrices.add(new RoomAdjustedRatesDTO(room.getPropertyId(), room.getRoomId(), room.getRoomName(),
+          room.getBasePrice(), adjustedPrice, date));
+    }
+    adjustedPrices.sort(Comparator.comparing(RoomAdjustedRatesDTO::getAdjustedPrice));
+    log.info("Found {} available room rates for property {} on date {}", adjustedPrices.size(), propertyId, date);
+    return adjustedPrices;
+  }
+
+  @Override
   public BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice, Instant bookingTime) {
+    Instant futureDate = LocalDate.now().plusYears(10).atStartOfDay().toInstant(ZoneOffset.UTC);
+
     List<PeakSeasonRate> applicableRates = peakSeasonRateRepository
-        .findValidRatesByPropertyAndDate(propertyId, date, bookingTime, Instant.MAX);
+        .findValidRatesByPropertyAndDate(propertyId, date, bookingTime, futureDate);
 
     BigDecimal adjustedPrice = basePrice;
     for (PeakSeasonRate rate : applicableRates) {

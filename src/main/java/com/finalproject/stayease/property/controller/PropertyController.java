@@ -8,6 +8,7 @@ import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
+import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
@@ -25,6 +26,7 @@ import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -36,6 +38,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -178,6 +181,13 @@ public class PropertyController {
 
   // Region - PeakSeasonRate
 
+  @GetMapping("/{propertyId}/rates")
+  public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(@PathVariable Long propertyId,
+      @RequestParam LocalDate date) {
+    return Response.successfulResponse(200, "Listing all adjusted rates",
+        peakSeasonRateService.findAvailableRoomRates(propertyId, date));
+  }
+
   @PostMapping("/{propertyId}/rates")
   public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
       @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
@@ -199,5 +209,11 @@ public class PropertyController {
   @GetMapping("/cities")
   public ResponseEntity<Response<List<String>>> getDistinctCities() {
     return Response.successfulResponse(200, "Listing all distinct cities", propertyService.findDistinctCities());
+  }
+
+  @GetMapping("/images")
+  public ResponseEntity<Response<List<String>>> getAllPropertyRoomImageUrls() {
+    return Response.successfulResponse(200, "Listing all property and room image URLs",
+        propertyService.findAllPropertyRoomImageUrls());
   }
 }

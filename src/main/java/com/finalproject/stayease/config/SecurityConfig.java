@@ -71,16 +71,36 @@ public class SecurityConfig {
   }
 
   private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
-    auth.requestMatchers(API_VERSION+"/role").denyAll();
-    auth.requestMatchers(HttpMethod.GET, API_VERSION+"/properties", API_VERSION+"/properties/rooms"). permitAll();
-    auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/users/profile/email").permitAll();
-    auth.requestMatchers(API_VERSION+"/role/user").hasRole("USER");
-    auth.requestMatchers(API_VERSION+"/role/tenant", API_VERSION+"/properties/**", API_VERSION+"/profile/tenant").hasRole(
-        "TENANT");
-    auth.requestMatchers(API_VERSION+"/auth/**", API_VERSION+"/register/**", API_VERSION+"/oauth2/**", API_VERSION+"/password/**")
-     .permitAll();
+    // Deny all access to the role endpoint
+    auth.requestMatchers(API_VERSION + "/role").denyAll();
+
+    // Permit all access to certain GET endpoints
+    auth.requestMatchers(HttpMethod.GET,
+            API_VERSION + "/properties",
+            API_VERSION + "/properties/rooms",
+            API_VERSION + "/properties/categories",
+            API_VERSION + "/properties/images",
+            API_VERSION + "/properties/cities",
+            API_VERSION + "/properties/{propertyId}/rates").permitAll();
+
+    // Permit access to specific PUT endpoint
+    auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/users/profile/email").permitAll();
+
+    // Role-based access control
+    auth.requestMatchers(API_VERSION + "/role/user").hasRole("USER");
+    auth.requestMatchers(API_VERSION + "/role/tenant",
+            API_VERSION + "/properties/**",
+            API_VERSION + "/profile/tenant").hasRole("TENANT");
+
+    // Permit all access to authentication and registration endpoints
+    auth.requestMatchers(API_VERSION + "/auth/**",
+            API_VERSION + "/register/**",
+            API_VERSION + "/oauth2/**",
+            API_VERSION + "/password/**").permitAll();
+
+    // Authenticate any other request
     auth.anyRequest().authenticated();
-  }
+}
 
   private void configureOAuth2Login(OAuth2LoginConfigurer<HttpSecurity> oauth2) {
     oauth2

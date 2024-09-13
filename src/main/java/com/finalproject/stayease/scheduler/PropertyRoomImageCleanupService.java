@@ -19,23 +19,22 @@ public class PropertyRoomImageCleanupService {
 
   private final CloudinaryService cloudinaryService;
   private final PropertyService propertyService;
-  private final RoomService roomService;
 
   @SneakyThrows
   @Scheduled(cron = "0 0 2 * * ?") // Run at 2 AM every day
   public void cleanupOrphanedImages() {
-    Set<String> allUsersImages = getAllUsersImages();
+    Set<String> allPropertyAndRoomImages = getAllPropertyAndRoomImages();
     Set<String> allImagesInCloudinary = new HashSet<>(cloudinaryService.findAllImagesFromFolder("/users/*"));
 
-    allImagesInCloudinary.removeAll(allUsersImages);
+    allImagesInCloudinary.removeAll(allPropertyAndRoomImages);
 
     for (String imageUrl : allImagesInCloudinary) {
       cloudinaryService.deleteImage(imageUrl);
     }
   }
 
-  private Set<String> getAllUsersImages() {
-    return new HashSet<>(usersService.findAllAvatars());
+  private Set<String> getAllPropertyAndRoomImages() {
+    return new HashSet<>(propertyService.findAllPropertyRoomImageUrls());
   }
 
 }
