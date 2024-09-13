@@ -18,7 +18,9 @@ import org.springframework.stereotype.Repository;
 public interface PropertyRepository extends JpaRepository<Property, Long> {
 
   Optional<Property> findByLocationAndDeletedAtIsNull(Point location);
+
   Optional<Property> findByIdAndDeletedAtIsNull(Long id);
+
   List<Property> findByTenantAndDeletedAtIsNull(Users tenant);
 
   @Query("SELECT DISTINCT p.city FROM Property p")
@@ -32,62 +34,92 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   List<String> findAllPropertyRoomImageUrls();
 
   @Query("""
-SELECT new com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
-  p.id,
-  p.name,
-  r.id,
-  r.name,
-  r.basePrice,
-  psr.adjustmentType,
-  psr.rateAdjustment
-  )
-FROM Property p
-JOIN Room r ON p.id = r.property.id
-LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
-AND :date BETWEEN psr.startDate AND psr.endDate
-WHERE p.id = :propertyId
-AND p.deletedAt IS NULL
-AND r.deletedAt IS NULL
-AND NOT EXISTS (
-  SELECT 1
-  FROM RoomAvailability ra
-  WHERE ra.room.id = r.id
-  AND :date BETWEEN ra.startDate AND ra.endDate
-  AND ra.isAvailable = false
-)
-ORDER BY r.basePrice asc
-""")
+      SELECT new com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
+        p.id,
+        p.name,
+        r.id,
+        r.name,
+        r.basePrice,
+        psr.adjustmentType,
+        psr.rateAdjustment
+        )
+      FROM Property p
+      JOIN Room r ON p.id = r.property.id
+      LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
+      AND :date BETWEEN psr.startDate AND psr.endDate
+      WHERE p.id = :propertyId
+      AND p.deletedAt IS NULL
+      AND r.deletedAt IS NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM RoomAvailability ra
+        WHERE ra.room.id = r.id
+        AND :date BETWEEN ra.startDate AND ra.endDate
+        AND ra.isAvailable = false
+      )
+      ORDER BY r.basePrice asc
+      """)
   List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
 
-@Query("""
-SELECT new com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
-  p.id,
-  p.name,
-  r.id,
-  r.name,
-  MIN(r.basePrice),
-  psr.adjustmentType,
-  psr.rateAdjustment
-  )
-FROM Property p
-JOIN Room r ON p.id = r.property.id
-LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
-AND :date BETWEEN psr.startDate AND psr.endDate
-WHERE p.id = :propertyId
-AND p.deletedAt IS NULL
-AND r.deletedAt IS NULL
-AND NOT EXISTS (
-  SELECT 1
-  FROM RoomAvailability ra
-  WHERE ra.room.id = r.id
-  AND :date BETWEEN psr.startDate AND psr.endDate
-  AND ra.isAvailable = false
-)
-GROUP BY p.id, p.name, r.id, r.name, psr.adjustmentType, psr.rateAdjustment
-ORDER BY MIN(r.basePrice) ASC
-LIMIT 1
-""")
+  @Query("""
+      SELECT new com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
+        p.id,
+        p.name,
+        r.id,
+        r.name,
+        MIN(r.basePrice),
+        psr.adjustmentType,
+        psr.rateAdjustment
+        )
+      FROM Property p
+      JOIN Room r ON p.id = r.property.id
+      LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
+      AND :date BETWEEN psr.startDate AND psr.endDate
+      WHERE p.id = :propertyId
+      AND p.deletedAt IS NULL
+      AND r.deletedAt IS NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM RoomAvailability ra
+        WHERE ra.room.id = r.id
+        AND :date BETWEEN psr.startDate AND psr.endDate
+        AND ra.isAvailable = false
+      )
+      GROUP BY p.id, p.name, r.id, r.name, psr.adjustmentType, psr.rateAdjustment
+      ORDER BY MIN(r.basePrice) ASC
+      LIMIT 1
+      """)
   RoomPriceRateDTO findLowestAvailableRoomRate(Long propertyId, LocalDate date);
+
+  @Query("""
+          SELECT NEW com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
+              p.id,
+              p.name,
+              r.id,
+              r.name,
+              MIN(r.basePrice),
+              psr.adjustmentType,
+              psr.rateAdjustment
+          )
+          FROM Property p
+          JOIN Room r ON p.id = r.property.id
+          LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
+              AND :date BETWEEN psr.startDate AND psr.endDate
+          LEFT JOIN RoomAvailability ra ON r.id = ra.room.id
+              AND ra.startDate <= :endDate AND ra.endDate >= :startDate
+          WHERE p.id = :propertyId
+          AND p.deletedAt IS NULL
+          AND r.deletedAt IS NULL
+          AND (ra IS NULL OR ra.isAvailable = true)
+          GROUP BY p.id, p.name, r.id, r.name, psr.adjustmentType, psr.rateAdjustment
+          ORDER BY MIN(r.basePrice) ASC
+          """)
+  List<RoomPriceRateDTO> findRoomRatesForDateRange(
+      @Param("propertyId") Long propertyId,
+      @Param("startDate") LocalDate startDate,
+      @Param("endDate") LocalDate endDate,
+      @Param("date") LocalDate date
+  );
 
   @Query("""
           SELECT NEW com.finalproject.stayease.property.entity.dto.PropertyListingDTO(
@@ -136,8 +168,6 @@ LIMIT 1
       @Param("categoryId") Long categoryId,
       @Param("searchTerm") String searchTerm
   );
-  
-
 
   // Quarantine
 //  @Query("""

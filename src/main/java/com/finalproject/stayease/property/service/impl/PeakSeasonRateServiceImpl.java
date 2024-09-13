@@ -94,6 +94,20 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return dailyPrices;
   }
 
+  @Override
+  public List<DailyPriceDTO> findCumulativeRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
+    List<DailyPriceDTO> cumulativeDailyPrice = new ArrayList<>();
+    for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
+      List<DailyPriceDTO> lowestDailyRoomRates = findLowestDailyRoomRates(propertyId, startDate, date.plusDays(1));
+      BigDecimal cumulativePrice = lowestDailyRoomRates.stream()
+          .map(DailyPriceDTO::getLowestPrice)
+          .reduce(BigDecimal.ZERO, BigDecimal::add);
+      cumulativeDailyPrice.add(new DailyPriceDTO(date, cumulativePrice, lowestDailyRoomRates.getLast()
+          .isHasAdjustment()));
+    }
+    return cumulativeDailyPrice;
+  }
+
   private BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
     BigDecimal adjustedPrice = roomRate.getBasePrice();
     adjustedPrice = roomRate.getAdjustmentType() == AdjustmentType.PERCENTAGE

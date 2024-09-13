@@ -12,6 +12,7 @@ import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
 import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
+import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
@@ -19,6 +20,8 @@ import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeaso
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
+import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
+import com.finalproject.stayease.property.repository.PropertyRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
@@ -35,6 +38,7 @@ import java.util.Map;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -60,6 +64,7 @@ public class PropertyController {
   private final PeakSeasonRateService peakSeasonRateService;
   private final PropertyImageUploadService propertyImageUploadService;
   private final PropertyListingService propertyListingService;
+
 
   @GetMapping
   public ResponseEntity<Response<List<PropertyDTO>>> getAllProperties() {
@@ -214,7 +219,7 @@ public class PropertyController {
 
   @GetMapping("/{propertyId}/rates")
   public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(@PathVariable Long propertyId,
-      @RequestParam LocalDate date) {
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
     return Response.successfulResponse(200, "Listing all adjusted rates for property ID: " + propertyId
                                             + " on date: " + date, peakSeasonRateService.findAvailableRoomRates(propertyId, date));
   }
@@ -223,9 +228,18 @@ public class PropertyController {
   public ResponseEntity<Response<List<DailyPriceDTO>>> getDailyRates(@PathVariable Long propertyId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-    return Response.successfulResponse(200, "Listing all daily rates for property ID: " + propertyId
+    return Response.successfulResponse(200, "Listing all lowest daily rates for property ID: " + propertyId
                                             + " from date: " + startDate + " to date: " + endDate,
         peakSeasonRateService.findLowestDailyRoomRates(propertyId, startDate, endDate));
+  }
+
+  @GetMapping("/{propertyId}/rates/daily/cumulative")
+  public ResponseEntity<Response<List<DailyPriceDTO>>> getLowestCumulativeRates(@PathVariable Long propertyId,
+      @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate startDate,
+      @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate endDate) {
+    return Response.successfulResponse(200, "Listing all lowest cumulative rates for property ID: " + propertyId
+                                            + " from date: " + startDate + " to date: " + endDate,
+        peakSeasonRateService.findCumulativeRoomRates(propertyId, startDate, endDate));
   }
 
   @PostMapping("/{propertyId}/rates")

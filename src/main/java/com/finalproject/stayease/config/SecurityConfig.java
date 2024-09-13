@@ -83,7 +83,8 @@ public class SecurityConfig {
             API_VERSION + "/properties/cities",
             API_VERSION + "/properties/available",
             API_VERSION + "/properties/{propertyId}/rates",
-            API_VERSION + "/properties/{propertyId}/rates/daily").permitAll();
+            API_VERSION + "/properties/{propertyId}/rates/daily",
+            API_VERSION + "/properties/{propertyId}/rates/daily/cumulative").permitAll();
 
     // Permit access to specific PUT endpoint
     auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/users/profile/email").permitAll();
