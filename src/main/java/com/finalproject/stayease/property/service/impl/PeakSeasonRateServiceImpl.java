@@ -70,20 +70,6 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   @Override
-  public List<DailyPriceDTO> findAvailableDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
-    List<DailyPriceDTO> dailyPrices = new ArrayList<>();
-    for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
-      List<RoomAdjustedRatesDTO> roomRates = findAvailableRoomRates(propertyId, date);
-      BigDecimal lowestPrice = roomRates.stream()
-          .map(RoomAdjustedRatesDTO::getAdjustedPrice)
-          .min(Comparator.naturalOrder())
-          .orElse(BigDecimal.ZERO);
-      dailyPrices.add(new DailyPriceDTO(date, lowestPrice, !roomRates.isEmpty() && !roomRates.getFirst().getBasePrice().equals(lowestPrice)));
-    }
-    return dailyPrices;
-  }
-
-  @Override
   public List<DailyPriceDTO> findLowestDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
     List<DailyPriceDTO> dailyPrices = new ArrayList<>();
     for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {

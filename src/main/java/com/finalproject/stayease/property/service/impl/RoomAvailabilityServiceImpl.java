@@ -30,7 +30,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
     RoomAvailability roomAvailability = new RoomAvailability();
     roomAvailability.setRoom(bookedRoom);
     roomAvailability.setStartDate(checkDate(startDate));
-    roomAvailability.setEndDate(checkDate(endDate));
+    roomAvailability.setEndDate(checkDate(endDate).minusDays(1));
     roomAvailability.setIsAvailable(false);
     return roomAvailabilityRepository.save(roomAvailability);
   }

@@ -16,8 +16,6 @@ public interface PeakSeasonRateService {
 
   List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
 
-  List<DailyPriceDTO> findAvailableDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
-
   List<DailyPriceDTO> findLowestDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
 
   List<DailyPriceDTO> findCumulativeRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
