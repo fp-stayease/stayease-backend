@@ -1,22 +1,14 @@
 package com.finalproject.stayease.bookings.entity;
 
 import com.finalproject.stayease.bookings.dto.BookingItemResDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreRemove;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import java.time.Instant;
-import java.util.Date;
+import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.RoomDTO;
+import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
+
+import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @Data
@@ -32,29 +24,12 @@ public class BookingItem {
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    @Column(name = "room_id")
-    private Long roomId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
 
-    @Column(name = "checkin_date")
-    private Date checkInDate;
-
-    @Column(name = "checkout_date")
-    private Date checkOutDate;
-
-    @Column(name = "price")
-    private Double price;
-
-    @Column(name = "total_adults")
-    private int totalAdults;
-
-    @Column(name = "total_children")
-    private int totalChildren;
-
-    @Column(name = "total_infants")
-    private int totalInfants;
-
-    @Column(name = "is_extending")
-    private boolean isExtending;
+    @Column(name = "extending_until")
+    private LocalDate extendingUntil;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
@@ -86,14 +61,8 @@ public class BookingItem {
 
     public BookingItemResDto toResDto() {
         BookingItemResDto resDto = new BookingItemResDto();
-        resDto.setBasePrice(this.price);
-        resDto.setRoomId(this.roomId);
-        resDto.setCheckInDate(this.checkInDate);
-        resDto.setCheckOutDate(this.checkOutDate);
-        resDto.setTotalAdults(this.totalAdults);
-        resDto.setTotalChildren(this.totalChildren);
-        resDto.setTotalInfants(this.totalInfants);
-        resDto.setExtending(this.isExtending);
+        resDto.setRoom(new RoomDTO(this.room));
+        resDto.setExtendingUntil(this.extendingUntil);
         return resDto;
     }
 }

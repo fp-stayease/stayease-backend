@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.service.impl;
 
+import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.PropertyCategory;
@@ -63,6 +64,16 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     synonymMap.put("farmhouse", new HashSet<>(Arrays.asList("farmhouse", "ranch house", "country house")));
     synonymMap.put("townhouse", new HashSet<>(Arrays.asList("townhouse", "row house", "terraced house")));
     return synonymMap;
+  }
+
+  @Override
+  public List<PropertyCategory> findAll() {
+    List<PropertyCategory> categoryList = propertyCategoryRepository.findAll();
+    if (categoryList.isEmpty()) {
+      // TODO: make PropertyCategoryNotFoundException
+      throw new DataNotFoundException("No PropertyCategory found");
+    }
+    return categoryList;
   }
 
   @Override

@@ -2,15 +2,15 @@ package com.finalproject.stayease.property.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,30 +45,39 @@ public class PeakSeasonRate {
   @Column(name = "rate_adjustment", nullable = false, precision = 10, scale = 2)
   private BigDecimal rateAdjustment;
 
-  @Size(max = 10)
+  @Enumerated(EnumType.STRING)
   @Column(name = "adjustment_type", length = 10)
-  private String adjustmentType;
+  private AdjustmentType adjustmentType;
+
+  @Column(name = "reason", length = Integer.MAX_VALUE)
+  private String reason;
+
+  @ColumnDefault("CURRENT_TIMESTAMP")
+  @Column(name = "valid_from")
+  private Instant validFrom;
+
+  @Column(name = "valid_to")
+  private Instant validTo;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "created_at")
   private Instant createdAt;
 
+  @Column(name = "deleted_at")
+  private Instant deletedAt;
+
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "updated_at")
   private Instant updatedAt;
 
-  @Column(name = "deleted_at")
-  private Instant deletedAt;
-
   @PrePersist
   protected void onCreate() {
-    createdAt = Instant.now();
-    updatedAt = Instant.now();
+    validFrom = Instant.now();
   }
 
-  @PreUpdate
-  protected void onUpdate() {
-    updatedAt = Instant.now();
+  public enum AdjustmentType {
+    PERCENTAGE,
+    FIXED
   }
 
 }

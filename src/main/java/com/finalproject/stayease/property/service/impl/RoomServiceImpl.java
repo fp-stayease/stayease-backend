@@ -11,6 +11,8 @@ import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.Data;
 import org.springframework.stereotype.Service;
@@ -25,31 +27,56 @@ public class RoomServiceImpl implements RoomService {
 
 
   @Override
-  public Room createRoom(CreateRoomRequestDTO requestDTO) {
-    Property property = checkDuplicate(requestDTO);
+  public List<Room> getRoomsOfProperty(Long propertyId) {
+    Property property = checkProperty(propertyId);
+    List<Room> roomList = roomRepository.findAllByPropertyAndDeletedAtIsNull(property);
+    if (roomList.isEmpty()) {
+      throw new InvalidRequestException("No room found for property id " + propertyId);
+    }
+    return roomList;
+  }
+
+  @Override
+  public Optional<Room> findRoomById(Long roomId) {
+    return roomRepository.findByIdAndDeletedAtIsNull(roomId);
+  }
+
+  @Override
+  public Room createRoom(Long propertyId, CreateRoomRequestDTO requestDTO) {
+    Property property = checkDuplicate(propertyId, requestDTO);
     return toRoomEntity(property, requestDTO);
   }
 
   @Override
-  public Room updateRoom(Long roomId, UpdateRoomRequestDTO requestDTO) {
-    Room existingRoom = checkRoom(roomId);
+  public Room updateRoom(Long propertyId, Long roomId, UpdateRoomRequestDTO requestDTO) {
+    checkDuplicateRoom(requestDTO.getName());
+    Room existingRoom = checkBelongsToProperty(propertyId, roomId);
     return update(existingRoom, requestDTO);
   }
 
   @Override
-  public void deleteRoom(Long roomId) {
-    Room existingRoom = checkRoom(roomId);
+  public Room getRoom(Long propertyId, Long roomId) {
+    return checkBelongsToProperty(propertyId, roomId);
+  }
+
+  @Override
+  public void deleteRoom(Long propertyId, Long roomId) {
+    Room existingRoom = checkBelongsToProperty(propertyId, roomId);
     existingRoom.setDeletedAt(Instant.now());
     roomRepository.save(existingRoom);
   }
 
-  private Property checkDuplicate(CreateRoomRequestDTO requestDTO) {
-    Optional<Room> checkRoom = roomRepository.findByNameIgnoreCaseAndDeletedAtIsNull(requestDTO.getName());
+  private Property checkDuplicate(Long propertyId, CreateRoomRequestDTO requestDTO) {
+    checkDuplicateRoom(requestDTO.getName());
+    return checkProperty(propertyId);
+  }
+
+  private void checkDuplicateRoom(String name) {
+    Optional<Room> checkRoom = roomRepository.findByNameIgnoreCaseAndDeletedAtIsNull(name);
     if (checkRoom.isPresent()) {
       // TODO : make new DuplicateRoomException
-      throw new DuplicateEntryException("Room with name " + requestDTO.getName() + " already exists");
+      throw new DuplicateEntryException("Room with name " + name + " already exists");
     }
-    return checkProperty(requestDTO.getPropertyId());
   }
 
   private Property checkProperty(Long propertyId) {
@@ -88,5 +115,15 @@ public class RoomServiceImpl implements RoomService {
     Optional.ofNullable(requestDTO.getCapacity()).ifPresent(room::setCapacity);
     roomRepository.save(room);
     return room;
+  }
+
+  private Room checkBelongsToProperty(Long propertyId, Long roomId) {
+    checkProperty(propertyId);
+    Room checkRoom = checkRoom(roomId);
+    if (!Objects.equals(checkRoom.getProperty().getId(), propertyId)) {
+      throw new InvalidRequestException("Property and room does not match! Please enter a valid property ID and room "
+                                        + "ID that correlate to each other");
+    }
+    return checkRoom;
   }
 }

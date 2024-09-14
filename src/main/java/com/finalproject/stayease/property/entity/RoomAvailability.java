@@ -1,19 +1,7 @@
 package com.finalproject.stayease.property.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import lombok.Getter;
@@ -48,10 +36,6 @@ public class RoomAvailability {
   @Column(name = "is_available")
   private Boolean isAvailable;
 
-  @ColumnDefault("0")
-  @Column(name = "price_adjustment", precision = 10, scale = 2)
-  private BigDecimal priceAdjustment;
-
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "created_at")
   private Instant createdAt;
@@ -72,6 +56,11 @@ public class RoomAvailability {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = Instant.now();
+  }
+
+  @PreRemove
+  public void preRemove() {
+    this.deletedAt = Instant.now();
   }
 
 }

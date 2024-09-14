@@ -1,6 +1,10 @@
 package com.finalproject.stayease.users.entity;
 
 import jakarta.persistence.CascadeType;
+import com.finalproject.stayease.users.dto.UsersResDto;
+import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.PropertyCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -58,6 +62,7 @@ public class Users {
   @Column(name = "phone_number", length = 20)
   private String phoneNumber;
 
+  @Size(max = 255)
   @Column(name = "avatar")
   private String avatar;
 
@@ -87,6 +92,15 @@ public class Users {
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private TenantInfo tenantInfo;
 
+  @OneToMany(mappedBy = "user")
+  private Set<Booking> bookings = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "tenant")
+  private Set<Property> properties = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "addedBy")
+  private Set<PropertyCategory> propertyCategories = new LinkedHashSet<>();
+
   public enum UserType {
     USER,
     TENANT
@@ -101,5 +115,17 @@ public class Users {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = Instant.now();
+  }
+
+  public UsersResDto toResDto() {
+    var resDto = new UsersResDto();
+    resDto.setId(this.id);
+    resDto.setEmail(this.email);
+    resDto.setFirstName(this.firstName);
+    resDto.setLastName(this.lastName);
+    resDto.setPhoneNumber(this.phoneNumber);
+    resDto.setUserType(this.userType);
+    resDto.setCreatedAt(this.createdAt);
+    return resDto;
   }
 }

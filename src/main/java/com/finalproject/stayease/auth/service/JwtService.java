@@ -1,7 +1,10 @@
 package com.finalproject.stayease.auth.service;
 
+import io.jsonwebtoken.Claims;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+
+import java.util.Map;
 
 public interface JwtService {
 
@@ -9,6 +12,7 @@ public interface JwtService {
   String generateAccessTokenFromEmail(String email);
   String generateRefreshToken(String email);
   String extractSubjectFromToken(String token);
+  Map<String, Object> extractClaimsFromToken(String token);
   void invalidateToken(String email);
   boolean isRefreshTokenValid(String refreshToken, String email);
   boolean isAccessTokenValid(String token, String email);

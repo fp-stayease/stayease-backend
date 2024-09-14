@@ -3,6 +3,7 @@ package com.finalproject.stayease.bookings.service.impl;
 import com.finalproject.stayease.bookings.dto.BookingItemReqDto;
 import com.finalproject.stayease.bookings.dto.BookingReqDto;
 import com.finalproject.stayease.bookings.dto.BookingRequestReqDto;
+import com.finalproject.stayease.bookings.dto.BookingResDto;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.bookings.entity.BookingItem;
 import com.finalproject.stayease.bookings.entity.BookingRequest;
@@ -11,37 +12,66 @@ import com.finalproject.stayease.bookings.repository.BookingRepository;
 import com.finalproject.stayease.bookings.repository.BookingRequestRepository;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.mail.model.MailTemplate;
+import com.finalproject.stayease.mail.service.MailService;
+import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.service.RoomAvailabilityService;
+import com.finalproject.stayease.property.service.RoomService;
+import com.finalproject.stayease.property.service.impl.RoomAvailabilityServiceImpl;
+import com.finalproject.stayease.users.dto.TenantInfoResDto;
+import com.finalproject.stayease.users.entity.TenantInfo;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.service.TenantInfoService;
+import com.finalproject.stayease.users.service.UsersService;
+import lombok.Data;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Data
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingItemRepository bookingItemRepository;
     private final BookingRequestRepository bookingRequestRepository;
-
-    public BookingServiceImpl(BookingRepository bookingRepository, BookingItemRepository bookingItemRepository, BookingRequestRepository bookingRequestRepository) {
-        this.bookingRepository = bookingRepository;
-        this.bookingItemRepository = bookingItemRepository;
-        this.bookingRequestRepository = bookingRequestRepository;
-    }
+    private final UsersService usersService;
+    private final TenantInfoService tenantInfoService;
+    private final RoomService roomService;
+    private final MailService mailService;
+    private final RoomAvailabilityService roomAvailabilityService;
 
     @Override
     @Transactional
-    public Booking createBooking(BookingReqDto reqDto, Long userId) {
+    public Booking createBooking(BookingReqDto reqDto, Long userId, Long roomId, Double amount) {
         Booking newBooking = new Booking();
-        // TO DO: Search and validate user
+        var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+        var room = roomService.findRoomById(roomId).orElseThrow(() -> new DataNotFoundException("Room not found"));
+        var property = room.getProperty();
+        var tenantAccount = room.getProperty().getTenant();
+        var tenant = tenantInfoService.findTenantByUserId(tenantAccount.getId());
 
-        newBooking.setUserId(userId);
-        newBooking.setTotalPrice(reqDto.getPrice());
+        var availableRoom = roomAvailabilityService.setUnavailability(room.getId(), reqDto.getCheckInDate(), reqDto.getCheckOutDate());
+
+        newBooking.setUser(user);
+        newBooking.setTotalPrice(amount);
         newBooking.setStatus("In progress");
+        newBooking.setCheckInDate(reqDto.getCheckInDate());
+        newBooking.setCheckOutDate(reqDto.getCheckOutDate());
+        newBooking.setTotalAdults(reqDto.getTotalAdults());
+        newBooking.setTotalChildren(reqDto.getTotalChildren());
+        newBooking.setTotalInfants(reqDto.getTotalInfants());
+        newBooking.setTenant(tenant);
+        newBooking.setProperty(property);
 
         bookingRepository.save(newBooking);
 
-        createBookingItem(reqDto.getBookingItem(), newBooking);
+        createBookingItem(reqDto.getBookingItem(), newBooking, availableRoom.getRoom());
 
         if (reqDto.getBookingRequest() != null) {
             createBookingRequest(reqDto.getBookingRequest(), newBooking);
@@ -51,16 +81,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public void createBookingItem(BookingItemReqDto bookingItemDto, Booking newBooking) {
+    public void createBookingItem(BookingItemReqDto bookingItemDto, Booking newBooking, Room room) {
         BookingItem bookingItem = new BookingItem();
         bookingItem.setBooking(newBooking);
-        bookingItem.setRoomId(bookingItemDto.getRoomId());
-        bookingItem.setCheckInDate(bookingItemDto.getCheckInDate());
-        bookingItem.setCheckOutDate(bookingItemDto.getCheckOutDate());
-        bookingItem.setPrice(bookingItemDto.getPrice());
-        bookingItem.setTotalAdults(bookingItemDto.getTotalAdults());
-        bookingItem.setTotalChildren(bookingItemDto.getTotalChildren());
-        bookingItem.setTotalInfants(bookingItemDto.getTotalInfants());
+        bookingItem.setRoom(room);
+        if (bookingItemDto.getExtendingUntil() != null) {
+            bookingItem.setExtendingUntil(bookingItemDto.getExtendingUntil());
+        }
 
         bookingItemRepository.save(bookingItem);
     }
@@ -83,28 +110,54 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking getBookingDetail(UUID bookingId) {
+    public Booking findById(UUID bookingId) {
         return bookingRepository.findById(bookingId).
                 orElseThrow(() -> new DataNotFoundException("Booking not found"));
     }
 
     @Override
-    public List<Booking> getUserBookings(Long userId) {
+    public BookingResDto getBookingById(UUID bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new DataNotFoundException("Booking not found"));
+        return booking.toResDto();
+    }
+
+    @Override
+    public Page<BookingResDto> getUserBookings(Long userId, String search, Pageable pageable) {
         // TO DO: find and validate user
-        return bookingRepository.findByUserId(userId);
+        var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+
+        return bookingRepository.findByUserIdAndStatusNotExpired(user.getId(), pageable).map(Booking::toResDto);
     }
 
     @Override
     public Booking updateBooking(UUID bookingId, String bookingStatus) {
-        Booking booking = getBookingDetail(bookingId);
+        Booking booking = findById(bookingId);
         booking.setStatus(bookingStatus);
         return bookingRepository.save(booking);
     }
 
     @Override
-    public void deleteBooking(UUID bookingId) {
-        Booking booking = getBookingDetail(bookingId);
-        booking.preRemove();
-        bookingRepository.save(booking);
+    public List<BookingResDto> getTenantBookings(Long userId) {
+        Users user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
+
+        return bookingRepository.findByTenantId(tenant.getId()).stream().map(Booking::toResDto).toList();
+    }
+
+    @Override
+    @Scheduled(cron = "0 0 7 * * ?")
+    public void userBookingReminder() {
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        List<Booking> bookings = bookingRepository.findBookingsWithCheckInTomorrow(tomorrow);
+        for (Booking booking : bookings) {
+            Users user = usersService.findById(booking.getUser().getId()).orElseThrow(() -> new DataNotFoundException("User not found"));
+            String message = "Dear " + user.getFirstName() + "\n" +
+                    "Don't forget about your booking to stay at " + booking.getProperty().getName() + ", tomorrow is the day for you to refresh your soul! \n" +
+                    "Thank you very much for trusting Stay Ease \n" +
+                    "Stay Ease Admin";
+            MailTemplate template = new MailTemplate(user.getEmail(), "Booking Reminder", message);
+            mailService.sendMail(template);
+        }
     }
 }
