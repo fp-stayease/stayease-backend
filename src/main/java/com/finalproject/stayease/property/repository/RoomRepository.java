@@ -2,6 +2,7 @@ package com.finalproject.stayease.property.repository;
 
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,5 +22,19 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
       AND r.deletedAt IS NULL
       """)
   List<String> findAllRoomNamesByPropertyId(Long propertyId);
+
+  @Query("""
+      SELECT r FROM Room r
+      WHERE r.property.id = :propertyId
+      AND r.deletedAt IS NULL
+      AND EXISTS (
+        SELECT 1
+        FROM RoomAvailability ra
+        WHERE ra.room.id = r.id
+        AND :date BETWEEN ra.startDate AND ra.endDate
+        AND ra.isAvailable = false
+      )
+      """)
+  List<Room> findUnavailableRoomsByPropertyIdAndDate(Long propertyId, LocalDate date);
 
 }

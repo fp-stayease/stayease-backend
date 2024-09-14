@@ -5,13 +5,15 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
-import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
-import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
-import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
+import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
@@ -20,7 +22,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -63,6 +64,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     for (RoomPriceRateDTO room : rooms) {
       BigDecimal adjustedPrice = applyPeakSeasonRate(room);
       adjustedPrices.add(new RoomAdjustedRatesDTO(room.getPropertyId(), room.getRoomId(), room.getRoomName(),
+          room.getImageUrl(), room.getRoomCapacity(),
           room.getBasePrice(), adjustedPrice, date));
     }
     log.info("Found {} available room rates for property {} on date {}", adjustedPrices.size(), propertyId, date);

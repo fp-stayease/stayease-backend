@@ -4,7 +4,7 @@ import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.RoomAvailability;
-import com.finalproject.stayease.property.entity.dto.RoomAvailabilityDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAvailabilityDTO;
 import com.finalproject.stayease.property.repository.RoomAvailabilityRepository;
 import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;

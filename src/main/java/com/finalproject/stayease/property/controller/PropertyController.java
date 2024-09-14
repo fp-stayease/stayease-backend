@@ -5,23 +5,21 @@ import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
-import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
-import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
-import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
-import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
-import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
-import com.finalproject.stayease.property.repository.PropertyRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
@@ -106,6 +104,13 @@ public class PropertyController {
     return Response.successfulResponse(200, "Listing property ID: " + propertyId, new PropertyDTO(property));
   }
 
+  @GetMapping("{propertyId}/available")
+   public ResponseEntity<Response<PropertyAvailableOnDateDTO>> getAvailablePropertyOnDate(@PathVariable Long propertyId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    return Response.successfulResponse(200, "Listing available property for today",
+        propertyListingService.findAvailablePropertyOnDate(propertyId, date));
+  }
+
   @GetMapping("/tenant")
   public ResponseEntity<Response<List<PropertyDTO>>> getAllTenantProperties() {
     Users tenant = usersService.getLoggedUser();
@@ -122,7 +127,8 @@ public class PropertyController {
   }
 
   @PostMapping("/{propertyId}")
-  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadRoomImage(@PathVariable Long propertyId, @RequestBody MultipartFile image) throws IOException {
+  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadRoomImage(@PathVariable Long propertyId,
+      @RequestBody MultipartFile image) throws IOException {
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Property image uploaded!",
         new PropertyRoomImageDTO(propertyImageUploadService.uploadImage(propertyId, image)));
   }

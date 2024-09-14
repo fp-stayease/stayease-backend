@@ -1,9 +1,8 @@
 package com.finalproject.stayease.property.repository;
 
 import com.finalproject.stayease.property.entity.Property;
-import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
-import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
-import com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.users.entity.Users;
 import java.time.LocalDate;
 import java.util.List;
@@ -34,11 +33,13 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   List<String> findAllPropertyRoomImageUrls();
 
   @Query("""
-      SELECT new com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
+      SELECT new com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO(
         p.id,
         p.name,
         r.id,
         r.name,
+        r.imageUrl,
+        r.capacity,
         r.basePrice,
         psr.adjustmentType,
         psr.rateAdjustment
@@ -62,11 +63,13 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
 
   @Query("""
-      SELECT new com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
+      SELECT new com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO(
         p.id,
         p.name,
         r.id,
         r.name,
+        r.imageUrl,
+        r.capacity,
         MIN(r.basePrice),
         psr.adjustmentType,
         psr.rateAdjustment
@@ -92,11 +95,13 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   RoomPriceRateDTO findLowestAvailableRoomRate(Long propertyId, LocalDate date);
 
   @Query("""
-          SELECT NEW com.finalproject.stayease.property.entity.dto.RoomPriceRateDTO(
+          SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO(
               p.id,
               p.name,
               r.id,
               r.name,
+              r.imageUrl,
+              r.capacity,
               MIN(r.basePrice),
               psr.adjustmentType,
               psr.rateAdjustment
@@ -122,7 +127,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   );
 
   @Query("""
-          SELECT NEW com.finalproject.stayease.property.entity.dto.PropertyListingDTO(
+          SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
               p.id, p.name, p.description, p.imageUrl, p.city, pc.name,
               p.longitude, p.latitude,
               (SELECT MIN(r.basePrice)
@@ -171,7 +176,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
   // Quarantine
 //  @Query("""
-//    SELECT NEW com.finalproject.stayease.property.entity.dto.PropertyListingDTO(
+//    SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
 //        p.id, p.name, p.description, p.imageUrl, p.city, pc.name,
 //        p.longitude, p.latitude,
 //        (SELECT MIN(r.basePrice)

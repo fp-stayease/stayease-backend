@@ -11,6 +11,7 @@ import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,6 +35,11 @@ public class RoomServiceImpl implements RoomService {
       throw new InvalidRequestException("No room found for property id " + propertyId);
     }
     return roomList;
+  }
+
+  @Override
+  public List<Room> getUnavailableRoomsByPropertyIdAndDate(Long propertyId, LocalDate date) {
+    return roomRepository.findUnavailableRoomsByPropertyIdAndDate(propertyId, date);
   }
 
   @Override

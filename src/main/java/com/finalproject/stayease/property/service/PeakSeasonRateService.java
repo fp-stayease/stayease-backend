@@ -1,8 +1,8 @@
 package com.finalproject.stayease.property.service;
 
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
-import com.finalproject.stayease.property.entity.dto.DailyPriceDTO;
-import com.finalproject.stayease.property.entity.dto.RoomAdjustedRatesDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.users.entity.Users;
 import java.math.BigDecimal;

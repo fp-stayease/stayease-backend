@@ -1,4 +1,4 @@
-package com.finalproject.stayease.property.entity.dto;
+package com.finalproject.stayease.property.entity.dto.listingDTOs;
 
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import java.math.BigDecimal;
@@ -14,6 +14,8 @@ public class RoomPriceRateDTO {
   private String propertyName;
   private Long roomId;
   private String roomName;
+  private String imageUrl;
+  private Integer roomCapacity;
   private BigDecimal basePrice;
   private AdjustmentType adjustmentType;
   private BigDecimal adjustmentRate; 

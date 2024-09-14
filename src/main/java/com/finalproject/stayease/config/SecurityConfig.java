@@ -77,6 +77,7 @@ public class SecurityConfig {
     // Permit all access to certain GET endpoints
     auth.requestMatchers(HttpMethod.GET,
             API_VERSION + "/properties/{propertyId}",
+            API_VERSION + "/properties/{propertyId}/available",
             API_VERSION + "/properties/{propertyId}/rooms/{roomId}",
             API_VERSION + "/properties/categories",
             API_VERSION + "/properties/images",

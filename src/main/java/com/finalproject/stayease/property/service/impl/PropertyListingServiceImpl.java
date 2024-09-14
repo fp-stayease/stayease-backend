@@ -1,9 +1,15 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.property.entity.dto.PropertyListingDTO;
+import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyListingService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.RoomService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,6 +30,7 @@ public class PropertyListingServiceImpl implements PropertyListingService {
 
   private final PropertyService propertyService;
   private final PeakSeasonRateService peakSeasonRateService;
+  private final RoomService roomService;
 
   @Override
   public Page<PropertyListingDTO> findAvailableProperties(
@@ -35,6 +42,15 @@ public class PropertyListingServiceImpl implements PropertyListingService {
     applyPeakSeasonRates(properties, checkDate);
     sortProperties(properties, sortBy, sortDirection);
     return createPage(properties, page, size, sortBy, sortDirection);
+  }
+
+  @Override
+  public PropertyAvailableOnDateDTO findAvailablePropertyOnDate(Long propertyId, LocalDate date) {
+    Property property = propertyService.findPropertyById(propertyId)
+        .orElseThrow(() -> new DataNotFoundException("Property not found"));
+    List<RoomAdjustedRatesDTO> rooms = peakSeasonRateService.findAvailableRoomRates(propertyId, date);
+    List<Room> unavailableRooms = roomService.getUnavailableRoomsByPropertyIdAndDate(propertyId, date);
+    return new PropertyAvailableOnDateDTO(property, rooms, unavailableRooms);
   }
 
   private List<PropertyListingDTO> fetchProperties(

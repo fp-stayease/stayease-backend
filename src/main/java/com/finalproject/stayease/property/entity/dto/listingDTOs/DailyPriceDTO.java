@@ -1,4 +1,4 @@
-package com.finalproject.stayease.property.entity.dto;
+package com.finalproject.stayease.property.entity.dto.listingDTOs;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

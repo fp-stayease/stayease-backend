@@ -1,4 +1,4 @@
-package com.finalproject.stayease.property.entity.dto;
+package com.finalproject.stayease.property.entity.dto.listingDTOs;
 
 import com.finalproject.stayease.property.entity.RoomAvailability;
 import java.time.LocalDate;
