@@ -5,7 +5,6 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
-import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
@@ -13,7 +12,6 @@ import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeaso
 import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
-import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
@@ -64,8 +62,8 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     for (RoomPriceRateDTO room : rooms) {
       BigDecimal adjustedPrice = applyPeakSeasonRate(room);
       adjustedPrices.add(new RoomAdjustedRatesDTO(room.getPropertyId(), room.getRoomId(), room.getRoomName(),
-          room.getImageUrl(), room.getRoomCapacity(),
-          room.getBasePrice(), adjustedPrice, date));
+          room.getImageUrl(), room.getRoomCapacity(), room.getRoomDescription(),
+          room.getBasePrice(), adjustedPrice, date, room.getIsAvailable()));
     }
     log.info("Found {} available room rates for property {} on date {}", adjustedPrices.size(), propertyId, date);
     return adjustedPrices;
@@ -96,7 +94,8 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return cumulativeDailyPrice;
   }
 
-  private BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
+  @Override
+  public BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
     BigDecimal adjustedPrice = roomRate.getBasePrice();
     adjustedPrice = roomRate.getAdjustmentType() == AdjustmentType.PERCENTAGE
         ? adjustedPrice.add(adjustedPrice.multiply(roomRate.getAdjustmentRate().divide(BigDecimal.valueOf(100))))

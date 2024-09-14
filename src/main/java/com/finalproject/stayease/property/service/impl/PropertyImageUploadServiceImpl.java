@@ -1,7 +1,6 @@
 package com.finalproject.stayease.property.service.impl;
 
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
-import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
@@ -32,10 +31,10 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
 
 
   @Override
-  public String uploadImage(Long propertyId, MultipartFile image) throws IOException {
+  public String uploadImage(Long tenantId, MultipartFile image) throws IOException {
     log.info("Validating file: {}", image.getOriginalFilename());
     validateFile(image);
-    String folderName = "properties/id-" + propertyId;
+    String folderName = "tenants/id-" + tenantId;
     log.info("Uploading image: {} to folder: {}", image.getOriginalFilename(), folderName);
     return cloudinaryService.uploadFile(image, folderName);
   }

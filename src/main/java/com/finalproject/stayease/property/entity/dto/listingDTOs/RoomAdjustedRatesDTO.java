@@ -16,8 +16,10 @@ public class RoomAdjustedRatesDTO {
   private String roomName;
   private String imageUrl;
   private Integer roomCapacity;
+  private String roomDescription;
   private BigDecimal basePrice;
   private BigDecimal adjustedPrice;
   private LocalDate date;
+  private Boolean isAvailable;
 
 }

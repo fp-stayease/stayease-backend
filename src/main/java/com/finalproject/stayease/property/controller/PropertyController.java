@@ -126,11 +126,12 @@ public class PropertyController {
         new PropertyDTO(propertyService.createProperty(tenant, requestDTO)));
   }
 
-  @PostMapping("/{propertyId}")
-  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadRoomImage(@PathVariable Long propertyId,
-      @RequestBody MultipartFile image) throws IOException {
+  @PostMapping("/upload-image")
+  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadPropertyImage(@RequestBody MultipartFile image) throws IOException {
+    Users tenant = usersService.getLoggedUser();
+    Long id = tenant.getId();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Property image uploaded!",
-        new PropertyRoomImageDTO(propertyImageUploadService.uploadImage(propertyId, image)));
+        new PropertyRoomImageDTO(propertyImageUploadService.uploadImage(id, image)));
   }
 
   @PutMapping("/{propertyId}")
@@ -199,6 +200,14 @@ public class PropertyController {
   public ResponseEntity<Response<RoomDTO>> getRoom(@PathVariable Long propertyId, @PathVariable Long roomId) {
     Room room = roomService.getRoom(propertyId, roomId);
     return Response.successfulResponse(200, "Listing room ID: " + roomId, new RoomDTO(room));
+  }
+
+  @GetMapping("/{propertyId}/rooms/{roomId}/available")
+  public ResponseEntity<Response<RoomAdjustedRatesDTO>> getRoom(@PathVariable Long propertyId,
+      @PathVariable Long roomId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    Room room = roomService.getRoom(propertyId, roomId);
+    return Response.successfulResponse(200, "Listing room ID: " + roomId, roomService.getRoomRateAndAvailability(roomId, date));
   }
 
   @PostMapping("/{propertyId}/rooms/{roomId}")

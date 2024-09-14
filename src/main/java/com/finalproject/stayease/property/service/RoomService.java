@@ -2,6 +2,8 @@ package com.finalproject.stayease.property.service;
 
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
 import java.time.LocalDate;
 import java.util.List;
@@ -16,4 +18,6 @@ public interface RoomService {
   Room updateRoom(Long propertyId, Long roomId, UpdateRoomRequestDTO requestDTO);
   Room getRoom(Long propertyId, Long roomId);
   void deleteRoom(Long propertyId, Long roomId);
+
+  RoomAdjustedRatesDTO getRoomRateAndAvailability(Long roomId, LocalDate date);
 }
