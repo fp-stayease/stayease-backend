@@ -5,9 +5,9 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
+import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
-import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyRepository;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
@@ -92,7 +92,19 @@ public class PropertyServiceImpl implements PropertyService {
   }
 
   @Override
+  public List<Property> getAllAvailablePropertiesOnDate(LocalDate date) {
+    validateDate(date);
+    // Properties with at least one room available
+    List<Property> availableProperties = propertyRepository.findAvailablePropertiesOnDate(date);
+    if (availableProperties.isEmpty()) {
+      throw new DataNotFoundException("No properties found for this date");
+    }
+    return availableProperties;
+  }
+
+  @Override
   public RoomPriceRateDTO findLowestRoomRate(Long propertyId, LocalDate date) {
+    validateDate(date);
     return propertyRepository.findAvailableRoomRates(propertyId, date).stream().findFirst().orElseThrow(
         () -> new DataNotFoundException("No room rates found for this property")
     );
@@ -100,18 +112,17 @@ public class PropertyServiceImpl implements PropertyService {
 
   @Override
   public List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
+    validateDate(date);
     Property property = propertyRepository.findByIdAndDeletedAtIsNull(propertyId).orElseThrow(
         () -> new DataNotFoundException("Property with this ID does not exist or is deleted")
     );
-    log.info("Finding available room rates for property with ID: {}", propertyId);
-    log.info("Date validity: " + DateValidator.isValidDate(date));
-    log.info("Date being passed: " + date);
     return propertyRepository.findAvailableRoomRates(propertyId, date);
   }
 
   @Override
   public List<PropertyListingDTO> findAvailableProperties(LocalDate startDate, LocalDate endDate, String city,
       Long categoryId, String searchTerm) {
+    validateDate(startDate, endDate);
     return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm);
   }
 
@@ -194,6 +205,19 @@ public class PropertyServiceImpl implements PropertyService {
       }
     }
     return null;
+  }
+
+  private void validateDate(LocalDate date) {
+    if (date.isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("Date is out of valid range: " + date);
+    }
+  }
+
+  private void validateDate(LocalDate startDate, LocalDate endDate) {
+    validateDate(startDate);
+    if (startDate.isAfter(endDate)) {
+      throw new IllegalArgumentException("Start date cannot be after end date");
+    }
   }
 
   // Region - quarantine

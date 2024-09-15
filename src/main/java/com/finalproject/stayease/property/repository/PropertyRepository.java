@@ -65,8 +65,26 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
 
   @Query("""
+      SELECT DISTINCT p
+      FROM Property p
+      WHERE EXISTS (
+          SELECT 1
+          FROM Room r
+          WHERE r.property = p
+            AND NOT EXISTS (
+              SELECT 1
+              FROM RoomAvailability ra
+              WHERE ra.room = r
+                AND :date BETWEEN ra.startDate AND ra.endDate
+                AND ra.isAvailable = false
+          )
+      )
+     """)
+  List<Property> findAvailablePropertiesOnDate(@Param("date") LocalDate date);
+
+  @Query("""
           SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
-              p.id, p.name, p.description, p.imageUrl, p.city, pc.name,
+              p.id, p.tenant.tenantInfo.businessName, p.name, p.description, p.imageUrl, p.address, p.city, p.country, pc.name,
               p.longitude, p.latitude,
               (SELECT MIN(r.basePrice)
                FROM Room r

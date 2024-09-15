@@ -77,6 +77,7 @@ public class SecurityConfig {
     // Permit all access to certain GET endpoints
     auth.requestMatchers(HttpMethod.GET,
             API_VERSION + "/properties/{propertyId}",
+            API_VERSION + "/properties/{propertyId}/listings",
             API_VERSION + "/properties/{propertyId}/available/**",
             API_VERSION + "/properties/{propertyId}/rooms/{roomId}",
             API_VERSION + "/properties/{propertyId}/rooms/{roomId}/available",
@@ -94,7 +95,7 @@ public class SecurityConfig {
     // Role-based access control
     auth.requestMatchers(API_VERSION + "/role/user").hasRole("USER");
     auth.requestMatchers(API_VERSION + "/role/tenant",
-//            API_VERSION + "/properties/**",
+            API_VERSION + "/properties/**",
             API_VERSION + "/profile/tenant").hasRole("TENANT");
 
     // Permit all access to authentication and registration endpoints
@@ -105,6 +106,7 @@ public class SecurityConfig {
 
     // Authenticate any other request
     auth.anyRequest().authenticated();
+
 //    auth.anyRequest().permitAll();
     // TODO !! THIS IS STILL FOR TESTING, PLEASE SECURE THE ENDPOINTS
 }

@@ -71,8 +71,8 @@ public class PropertyController {
     return Response.successfulResponse(200, "Listing all properties", propertyDTOList);
   }
 
-  @GetMapping("/available")
-  public ResponseEntity<Response<Map<String, Object>>> getAvailableProperties(
+  @GetMapping("/listings")
+  public ResponseEntity<Response<Map<String, Object>>> getPropertiesListings(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
       @RequestParam(required = false) String city,
@@ -93,6 +93,14 @@ public class PropertyController {
         "Listing available properties",
         properties
     );
+  }
+
+  @GetMapping("/available")
+  public ResponseEntity<Response<List<PropertyListingDTO>>> getAvailableProperties(
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+  ) {
+    List<PropertyListingDTO> properties = propertyListingService.findPropertiesWithLowestRoomRate(date);
+    return Response.successfulResponse(200, "Listing available properties", properties);
   }
 
   @GetMapping("/{propertyId}")

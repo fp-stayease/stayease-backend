@@ -12,13 +12,6 @@ import org.springframework.data.repository.query.Param;
 public interface PeakSeasonRateRepository extends JpaRepository<PeakSeasonRate, Long> {
   Optional<PeakSeasonRate> findByStartDateAndEndDate(LocalDate startDate, LocalDate endDate);
 
-//  @Query("""
-//  SELECT psr
-//  FROM PeakSeasonRate psr
-//  WHERE psr.property.id = :propertyId AND :date BETWEEN psr.startDate AND psr.endDate
-//  """)
-//  List<PeakSeasonRate> findApplicablePeakSeasonRates(@Param("propertyId") Long propertyId, @Param("date") LocalDate date);
-
   @Query("""
    SELECT psr
    FROM PeakSeasonRate psr
