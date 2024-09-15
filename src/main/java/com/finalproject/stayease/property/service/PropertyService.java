@@ -6,6 +6,7 @@ import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListing
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.users.entity.Users;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +40,9 @@ public interface PropertyService {
       LocalDate endDate,
       String city,
       Long categoryId,
-      String searchTerm
+      String searchTerm,
+      BigDecimal minPrice,
+      BigDecimal maxPrice
   );
 
 }

@@ -36,12 +36,15 @@ public class PropertyListingServiceImpl implements PropertyListingService {
   @Override
   public Page<PropertyListingDTO> findAvailableProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
-      String searchTerm, int page, int size, String sortBy, String sortDirection
+      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, int page, int size, String sortBy, String sortDirection
   ) {
-    validateDate(startDate, endDate);
-    LocalDate checkDate = startDate != null ? startDate : LocalDate.now();
-    List<PropertyListingDTO> properties = fetchProperties(startDate, endDate, city, categoryId, searchTerm);
-    applyPeakSeasonRates(properties, checkDate);
+    LocalDate checkInDate = startDate != null ? startDate : LocalDate.now();
+    LocalDate checkOutDate = endDate != null ? endDate : checkInDate.plusYears(100);
+    validateDate(checkInDate, checkOutDate);
+    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
+        minPrice,
+        maxPrice);
+    applyPeakSeasonRates(properties, checkInDate);
     sortProperties(properties, sortBy, sortDirection);
     return createPage(properties, page, size, sortBy, sortDirection);
   }
@@ -72,11 +75,12 @@ public class PropertyListingServiceImpl implements PropertyListingService {
 
   private List<PropertyListingDTO> fetchProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
-      String searchTerm
+      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice
   ) {
     String lowerCaseSearchTerm = searchTerm != null ? searchTerm.toLowerCase() : null;
+    String lowerCaseCity = city != null ? city.toLowerCase() : null;
     return propertyService.findAvailableProperties(
-        startDate, endDate, city, categoryId, lowerCaseSearchTerm);
+        startDate, endDate, lowerCaseCity, categoryId, lowerCaseSearchTerm, minPrice, maxPrice);
   }
 
   private void applyPeakSeasonRates(List<PropertyListingDTO> properties, LocalDate checkDate) {

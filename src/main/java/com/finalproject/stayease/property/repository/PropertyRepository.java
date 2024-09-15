@@ -4,6 +4,7 @@ import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.users.entity.Users;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -65,70 +66,154 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
 
   @Query("""
-      SELECT DISTINCT p
-      FROM Property p
-      WHERE EXISTS (
-          SELECT 1
-          FROM Room r
-          WHERE r.property = p
-            AND NOT EXISTS (
-              SELECT 1
-              FROM RoomAvailability ra
-              WHERE ra.room = r
-                AND :date BETWEEN ra.startDate AND ra.endDate
-                AND ra.isAvailable = false
-          )
-      )
-     """)
+       SELECT DISTINCT p
+       FROM Property p
+       WHERE EXISTS (
+           SELECT 1
+           FROM Room r
+           WHERE r.property = p
+             AND NOT EXISTS (
+               SELECT 1
+               FROM RoomAvailability ra
+               WHERE ra.room = r
+                 AND :date BETWEEN ra.startDate AND ra.endDate
+                 AND ra.isAvailable = false
+           )
+       )
+      """)
   List<Property> findAvailablePropertiesOnDate(@Param("date") LocalDate date);
 
   @Query("""
-          SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
-              p.id, p.tenant.tenantInfo.businessName, p.name, p.description, p.imageUrl, p.address, p.city, p.country, pc.name,
-              p.longitude, p.latitude,
-              (SELECT MIN(r.basePrice)
-               FROM Room r
-               WHERE r.property = p
-               AND r.deletedAt IS NULL
-               AND NOT EXISTS (
-                   SELECT 1
-                   FROM RoomAvailability ra
-                   WHERE ra.room = r
-                   AND ra.startDate <= :endDate
-                   AND ra.endDate >= :startDate
-                   AND ra.isAvailable = false
-               )
-               ),
-              NULL
-              )
-          FROM Property p
-          JOIN p.category pc
-          WHERE p.deletedAt IS NULL
-          AND (:city IS NULL OR p.city = :city)
-          AND (:categoryId IS NULL OR pc.id = :categoryId)
-          AND (:searchTerm IS NULL OR CAST(LOWER(p.name) AS string) LIKE CONCAT('%', CAST(:searchTerm AS string), '%'))
-          AND EXISTS (
+            SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
+          p.id, p.tenant.tenantInfo.businessName, p.name, p.description, p.imageUrl, p.address, p.city, p.country, pc.name,
+          p.longitude, p.latitude,
+          (SELECT MIN(r.basePrice)
+           FROM Room r
+           WHERE r.property = p
+           AND r.deletedAt IS NULL
+          ),
+          NULL
+      )
+      FROM Property p
+      JOIN p.category pc
+      JOIN p.tenant t
+      JOIN t.tenantInfo ti
+      WHERE p.deletedAt IS NULL
+      AND (:city IS NULL OR LOWER(CAST(p.city AS string)) = LOWER(CAST(:city AS string)))
+      AND (:categoryId IS NULL OR pc.id = :categoryId)
+      AND (:minPrice IS NULL OR
+          EXISTS (
               SELECT 1
               FROM Room r
               WHERE r.property = p
               AND r.deletedAt IS NULL
+              AND r.basePrice >= :minPrice
               AND NOT EXISTS (
                   SELECT 1
                   FROM RoomAvailability ra
                   WHERE ra.room = r
-                  AND ra.startDate <= :endDate
+                  AND ra.startDate <= :startDate
                   AND ra.endDate >= :startDate
                   AND ra.isAvailable = false
               )
           )
+      )
+      AND (:maxPrice IS NULL OR\s
+          EXISTS (
+              SELECT 1
+              FROM Room r
+              WHERE r.property = p
+              AND r.deletedAt IS NULL
+              AND r.basePrice <= :maxPrice
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM RoomAvailability ra
+                  WHERE ra.room = r
+                  AND ra.startDate <= :startDate
+                  AND ra.endDate >= :startDate
+                  AND ra.isAvailable = false
+              )
+          )
+      )
+      AND (:searchTerm IS NULL OR
+          LOWER(CAST(p.name AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
+          LOWER(CAST(pc.name AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
+          LOWER(CAST(p.address AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
+          LOWER(CAST(p.city AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
+          LOWER(CAST(p.country AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
+          LOWER(CAST(ti.businessName AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')))
+      AND EXISTS (
+          SELECT 1
+          FROM Room r
+          WHERE r.property = p
+          AND r.deletedAt IS NULL
+          AND NOT EXISTS (
+              SELECT 1
+              FROM RoomAvailability ra
+              WHERE ra.room = r
+              AND ra.startDate <= :endDate
+              AND ra.endDate >= :startDate
+              AND ra.isAvailable = false
+          )
+      )
       """)
   List<PropertyListingDTO> findAvailableProperties(
       @Param("startDate") LocalDate startDate,
       @Param("endDate") LocalDate endDate,
       @Param("city") String city,
       @Param("categoryId") Long categoryId,
-      @Param("searchTerm") String searchTerm
+      @Param("searchTerm") String searchTerm,
+      @Param("minPrice") BigDecimal minPrice,
+      @Param("maxPrice") BigDecimal maxPrice
   );
+
+//  @Query("""
+//          SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
+//              p.id, p.tenant.tenantInfo.businessName, p.name, p.description, p.imageUrl, p.address, p.city, p.country, pc.name,
+//              p.longitude, p.latitude,
+//              (SELECT MIN(r.basePrice)
+//               FROM Room r
+//               WHERE r.property = p
+//               AND r.deletedAt IS NULL
+//               AND NOT EXISTS (
+//                   SELECT 1
+//                   FROM RoomAvailability ra
+//                   WHERE ra.room = r
+//                   AND ra.startDate <= :endDate
+//                   AND ra.endDate >= :startDate
+//                   AND ra.isAvailable = false
+//               )
+//               ),
+//              NULL
+//              )
+//          FROM Property p
+//          JOIN p.category pc
+//          WHERE p.deletedAt IS NULL
+//          AND (:city IS NULL OR p.city = :city)
+//          AND (:categoryId IS NULL OR pc.id = :categoryId)
+//          AND (:searchTerm IS NULL OR CAST(LOWER(p.name) AS string) LIKE CONCAT('%', CAST(:searchTerm AS string), '%'))
+//          AND EXISTS (
+//              SELECT 1
+//              FROM Room r
+//              WHERE r.property = p
+//              AND r.deletedAt IS NULL
+//              AND NOT EXISTS (
+//                  SELECT 1
+//                  FROM RoomAvailability ra
+//                  WHERE ra.room = r
+//                  AND ra.startDate <= :endDate
+//                  AND ra.endDate >= :startDate
+//                  AND ra.isAvailable = false
+//              )
+//          )
+//      """)
+//  List<PropertyListingDTO> findAvailableProperties(
+//      @Param("startDate") LocalDate startDate,
+//      @Param("endDate") LocalDate endDate,
+//      @Param("city") String city,
+//      @Param("categoryId") Long categoryId,
+//      @Param("searchTerm") String searchTerm
+//  );
 
   // Quarantine
 //  @Query("""

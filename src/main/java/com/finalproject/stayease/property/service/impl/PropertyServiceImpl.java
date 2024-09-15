@@ -15,6 +15,7 @@ import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import jakarta.transaction.Transactional;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -120,10 +121,15 @@ public class PropertyServiceImpl implements PropertyService {
   }
 
   @Override
-  public List<PropertyListingDTO> findAvailableProperties(LocalDate startDate, LocalDate endDate, String city,
-      Long categoryId, String searchTerm) {
+  public List<PropertyListingDTO> findAvailableProperties(LocalDate startDate,
+      LocalDate endDate,
+      String city,
+      Long categoryId,
+      String searchTerm,
+      BigDecimal minPrice,
+      BigDecimal maxPrice) {
     validateDate(startDate, endDate);
-    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm);
+    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm, minPrice, maxPrice);
   }
 
   private void isTenant(Users tenant) {

@@ -12,7 +12,7 @@ import lombok.Setter;
 public class PropertyListingDTO {
 
   private Long propertyId;
-  private String businessName;
+  private String tenant;
   private String propertyName;
   private String description;
   private String imageUrl;
@@ -27,7 +27,7 @@ public class PropertyListingDTO {
 
   public PropertyListingDTO(Property property, RoomAdjustedRatesDTO adjustedRate) {
     this.propertyId = property.getId();
-    this.businessName = property.getTenant().getTenantInfo().getBusinessName();
+    this.tenant = property.getTenant().getTenantInfo().getBusinessName();
     this.propertyName = property.getName();
     this.description = property.getDescription();
     this.imageUrl = property.getImageUrl();

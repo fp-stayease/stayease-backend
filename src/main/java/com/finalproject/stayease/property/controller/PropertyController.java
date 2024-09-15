@@ -30,6 +30,7 @@ import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -78,15 +79,17 @@ public class PropertyController {
       @RequestParam(required = false) String city,
       @RequestParam(required = false) Long categoryId,
       @RequestParam(required = false) String searchTerm,
+      @RequestParam(required = false) BigDecimal minPrice,
+      @RequestParam(required = false) BigDecimal maxPrice,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
       @RequestParam(defaultValue = "name") String sortBy,
       @RequestParam(defaultValue = "ASC") String sortDirection
   ) {
     Page<PropertyListingDTO> properties = propertyListingService.findAvailableProperties(
-        startDate, endDate, city, categoryId, searchTerm,
-        page, size, sortBy, sortDirection
-    );
+        startDate, endDate, city, categoryId, searchTerm, minPrice,
+        maxPrice, page, size,
+        sortBy, sortDirection);
 
     return Response.responseMapper(
         HttpStatus.OK.value(),
