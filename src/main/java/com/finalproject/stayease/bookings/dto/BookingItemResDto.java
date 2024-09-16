@@ -1,17 +1,13 @@
 package com.finalproject.stayease.bookings.dto;
 
+import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
+
 
 @Data
 public class BookingItemResDto {
-    private Long roomId;
-    private Date checkInDate;
-    private Date checkOutDate;
-    private Double basePrice;
-    private int totalAdults;
-    private int totalChildren;
-    private int totalInfants;
-    private boolean isExtending;
+    private RoomDTO room;
+    private LocalDate extendingUntil;
 }

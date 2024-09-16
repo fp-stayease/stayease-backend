@@ -1,20 +1,28 @@
 package com.finalproject.stayease.mail.service;
 
 import com.finalproject.stayease.mail.model.MailTemplate;
+import com.finalproject.stayease.pdf.PdfService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
+@Log
 public class MailService {
 
   private final JavaMailSender mailSender;
+  private final PdfService pdfService;
 
   @Value("${spring.mail.username}")
   private String MAIL_USERNAME;
@@ -61,5 +69,25 @@ public class MailService {
     helper.setSubject(subject);
 
     mailSender.send(mimeMessage);
+  }
+
+  public void sendMailWithPdf(String to, String subject, String templateName, Map<String, String> templateData, String message) throws MessagingException, IOException {
+    String htmlTemplate = pdfService.loadHtmlTemplate(templateName);
+    String filledHtmlTemplate = pdfService.fillTemplate(htmlTemplate, templateData);
+    byte[] pdfBytes = pdfService.generatePdfFromHtml(filledHtmlTemplate);
+
+    MimeMessage mimeMessage = mailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+    helper.setFrom(MAIL_USERNAME);
+    helper.setTo(to);
+    helper.setSubject(subject);
+    helper.setText(message);
+
+    // Attach PDF directly without Base64 encoding
+    helper.addAttachment("Stay_Ease_Booking_Invoice.pdf", new ByteArrayResource(pdfBytes));
+
+    mailSender.send(mimeMessage);
+
+    log.info("Email with attached pdf file sent");
   }
 }

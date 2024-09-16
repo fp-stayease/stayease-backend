@@ -6,7 +6,7 @@ import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
-import java.util.Date;
+import java.time.LocalTime;
 
 @Entity
 @Data
@@ -23,10 +23,10 @@ public class BookingRequest {
     private Booking booking;
 
     @Column(name = "checkin_time")
-    private Date checkInTime;
+    private LocalTime checkInTime;
 
     @Column(name = "checkout_time")
-    private Date checkOutTime;
+    private LocalTime checkOutTime;
 
     @Column(name = "non_smoking")
     private boolean nonSmoking;

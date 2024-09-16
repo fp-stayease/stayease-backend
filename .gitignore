@@ -37,4 +37,3 @@ src/main/resources/.env.properties
 *.pem
 
 .env
-*.pem

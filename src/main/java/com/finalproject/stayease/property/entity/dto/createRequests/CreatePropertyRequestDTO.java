@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,7 +14,7 @@ public class CreatePropertyRequestDTO {
   private Long categoryId;
   private String name;
   private String description;
-  private String picture;
+  private String images;
   private String address;
   private String city;
   private String country;
