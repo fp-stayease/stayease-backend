@@ -72,13 +72,11 @@ public class SecurityConfig {
 
   private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
     auth.requestMatchers(API_VERSION+"/role").denyAll();
-    auth.requestMatchers(HttpMethod.GET, API_VERSION+"/properties", API_VERSION+"/properties/rooms"). permitAll();
+    auth.requestMatchers(HttpMethod.GET, API_VERSION+"/properties", API_VERSION+"/properties/rooms").permitAll();
     auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/users/profile/email").permitAll();
     auth.requestMatchers(API_VERSION+"/role/user").hasRole("USER");
-    auth.requestMatchers(API_VERSION+"/role/tenant", API_VERSION+"/properties/**", API_VERSION+"/profile/tenant").hasRole(
-        "TENANT");
-    auth.requestMatchers(API_VERSION+"/auth/**", API_VERSION+"/register/**", API_VERSION+"/oauth2/**", API_VERSION+"/password/**")
-     .permitAll();
+    auth.requestMatchers(API_VERSION+"/role/tenant", API_VERSION+"/properties/**", API_VERSION+"/profile/tenant").hasRole("TENANT");
+    auth.requestMatchers(API_VERSION+"/auth/**", API_VERSION+"/register/**", API_VERSION+"/oauth2/**", API_VERSION+"/password/**").permitAll();
     auth.requestMatchers(API_VERSION+ "/midtrans").permitAll();
     auth.requestMatchers(API_VERSION+"/payments/payment-proof/{bookingId}").hasRole("USER");
     auth.requestMatchers(HttpMethod.GET, API_VERSION+"/payment/{bookingId}").permitAll();

@@ -1,4 +1,4 @@
-package com.finalproject.stayease.bookings.dto;
+package com.finalproject.stayease.bookings.entity.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -6,9 +6,9 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class BookingReqDto {
-    private BookingItemReqDto bookingItem;
-    private BookingRequestReqDto bookingRequest;
+public class BookingReqDTO {
+    private BookingItemReqDTO bookingItem;
+    private BookingRequestReqDTO bookingRequest;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate checkInDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")

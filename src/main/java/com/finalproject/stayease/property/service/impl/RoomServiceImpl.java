@@ -66,6 +66,16 @@ public class RoomServiceImpl implements RoomService {
     roomRepository.save(existingRoom);
   }
 
+  @Override
+  public List<Room> getTenantRooms(Long tenantId) {
+    return roomRepository.findRoomByTenantIdAndDeletedAtIsNull(tenantId);
+  }
+
+  @Override
+  public List<Room> getRoomsAvailability(Long tenantId) {
+    return roomRepository.findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(tenantId);
+  }
+
   private Property checkDuplicate(Long propertyId, CreateRoomRequestDTO requestDTO) {
     checkDuplicateRoom(requestDTO.getName());
     return checkProperty(propertyId);

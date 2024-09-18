@@ -1,11 +1,11 @@
-package com.finalproject.stayease.bookings.dto;
+package com.finalproject.stayease.bookings.entity.dto;
 
 import lombok.Data;
 
 import java.time.LocalTime;
 
 @Data
-public class BookingRequestResDto {
+public class BookingRequestDTO {
     private LocalTime checkInTime;
     private LocalTime checkOutTime;
     private boolean nonSmoking;

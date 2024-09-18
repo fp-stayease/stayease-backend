@@ -4,10 +4,8 @@ import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
-import com.finalproject.stayease.property.entity.dto.CategoryDTO;
-import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
-import com.finalproject.stayease.property.entity.dto.PropertyDTO;
-import com.finalproject.stayease.property.entity.dto.RoomDTO;
+import com.finalproject.stayease.property.entity.RoomAvailability;
+import com.finalproject.stayease.property.entity.dto.*;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
@@ -23,6 +21,8 @@ import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,6 +68,14 @@ public class PropertyController {
     List<Property> tenantsProperties = propertyService.findAllByTenant(tenant);
     List<PropertyDTO> propertyDTOList = tenantsProperties.stream().map(PropertyDTO::new).toList();
     return Response.successfulResponse(200, "Listing tenant properties", propertyDTOList);
+  }
+
+  @GetMapping("/tenant/rooms")
+  public ResponseEntity<Response<List<RoomDTO>>> getAllTenantRooms() {
+    Users tenant = usersService.getLoggedUser();
+    List<Room> tenantRooms = roomService.getTenantRooms(tenant.getId());
+    List<RoomDTO> roomDTOList = tenantRooms.stream().map(RoomDTO::new).toList();
+    return Response.successfulResponse(200, "Listing tenant rooms", roomDTOList);
   }
 
   @PostMapping
@@ -175,5 +183,15 @@ public class PropertyController {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
         new PeakSeasonRateDTO(peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO)));
+  }
+
+  // Region - RoomAvailability
+
+  @GetMapping("/tenant/availability")
+  public ResponseEntity<Response<List<RoomWithRoomAvailabilityDTO>>> getTenantRoomAvailability() {
+    Users tenant = usersService.getLoggedUser();
+    List<Room> availabilities = roomService.getRoomsAvailability(tenant.getId());
+    List<RoomWithRoomAvailabilityDTO> response = availabilities.stream().map(RoomWithRoomAvailabilityDTO::new).toList();
+    return Response.successfulResponse(200, "Listing availability for tenant ID: " + tenant.getId(), response);
   }
 }

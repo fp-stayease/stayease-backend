@@ -78,6 +78,8 @@ midtrans:
     key: ${MIDTRANS_SERVER_KEY}
   client:
     key: ${MIDTRANS_CLIENT_KEY}
+  secret:
+    key: ${MIDTRANS_SECRET_KEY}
   is:
     production: false
 
