@@ -1,6 +1,5 @@
 package com.finalproject.stayease.auth.repository;
 
-import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import jakarta.transaction.Transactional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;

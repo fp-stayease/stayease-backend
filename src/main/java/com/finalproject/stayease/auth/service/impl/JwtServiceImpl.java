@@ -2,7 +2,6 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
 import com.finalproject.stayease.auth.service.JwtService;
-import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import io.jsonwebtoken.ExpiredJwtException;

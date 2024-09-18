@@ -1,8 +1,6 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
-import com.finalproject.stayease.auth.model.dto.SocialLoginResponse;
-import com.finalproject.stayease.exceptions.NoLinkedSocialLoginException;
 import com.finalproject.stayease.users.entity.SocialLogin;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;

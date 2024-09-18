@@ -1,10 +1,8 @@
 package com.finalproject.stayease.users.service;
 
 import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
-import com.finalproject.stayease.auth.model.dto.SocialLoginResponse;
 import com.finalproject.stayease.users.entity.SocialLogin;
 import com.finalproject.stayease.users.entity.Users;
-import com.finalproject.stayease.users.entity.Users.UserType;
 import java.util.Optional;
 
 public interface SocialLoginService {

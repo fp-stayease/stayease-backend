@@ -2,7 +2,6 @@ package com.finalproject.stayease.auth.service;
 
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
-import io.jsonwebtoken.Claims;
 
 public interface AuthService {
 

@@ -12,7 +12,6 @@ import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

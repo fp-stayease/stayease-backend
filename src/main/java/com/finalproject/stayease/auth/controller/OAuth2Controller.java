@@ -1,26 +1,15 @@
 package com.finalproject.stayease.auth.controller;
 
 import com.finalproject.stayease.auth.model.dto.AuthResponseDto;
-import com.finalproject.stayease.auth.model.dto.CodeExchangeRequestDTO;
 import com.finalproject.stayease.auth.model.dto.OAuth2RegisterRequestDTO;
-import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
-import com.finalproject.stayease.auth.model.dto.SocialSelectUserTypeDTO;
-import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.impl.GoogleVerifierService;
 import com.finalproject.stayease.auth.service.impl.OneTimeCodeService;
-import com.finalproject.stayease.auth.service.impl.OneTimeCodeService.UserTokenPair;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
-import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
-import com.finalproject.stayease.users.entity.Users.UserType;
-import com.finalproject.stayease.users.entity.dto.UsersProfileDTO;
 import com.finalproject.stayease.users.service.SocialLoginService;
 import com.finalproject.stayease.users.service.UsersService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -28,16 +17,11 @@ import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/v1/oauth2")
