@@ -10,6 +10,11 @@ public interface JwtService {
 
   String generateAccessToken(Authentication authentication);
   String generateAccessTokenFromEmail(String email);
+
+//  Claims validateToken(String token);
+
+  Long getExpiresAt(String token);
+
   String generateRefreshToken(String email);
   String extractSubjectFromToken(String token);
   Map<String, Object> extractClaimsFromToken(String token);

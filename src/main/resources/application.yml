@@ -104,3 +104,5 @@ rsa:
 token:
   expiration:
     hours: 1
+    access: 3600 # 1 hour
+    refresh: 2592000 # 30 days

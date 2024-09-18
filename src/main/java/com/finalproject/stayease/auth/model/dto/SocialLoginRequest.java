@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class SocialLoginRequest {
   @NotEmpty(message = "Please provide a valid provider")
@@ -22,7 +21,7 @@ public class SocialLoginRequest {
   private Users.UserType userType;
   private String firstName;
   private String lastName;
-  private String pictureUrl;
+  private String avatar;
 
   // Optional fields for tenant registration
   private String businessName;
@@ -30,13 +29,27 @@ public class SocialLoginRequest {
 
   public SocialLoginRequest(String provider, String providerUserId, String email, UserType userType, String firstName,
       String lastName,
-      String pictureUrl) {
+      String avatar) {
     this.provider = provider;
     this.providerUserId = providerUserId;
     this.email = email;
     this.userType = userType;
     this.firstName = firstName;
     this.lastName = lastName;
-    this.pictureUrl = pictureUrl;
+    this.avatar= avatar;
+  }
+
+  // for tenants
+  public SocialLoginRequest(String provider, String providerUserId, String email, UserType userType, String firstName,
+      String lastName, String avatar, String businessName, String taxId) {
+    this.provider = provider;
+    this.providerUserId = providerUserId;
+    this.email = email;
+    this.userType = userType;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.avatar = avatar;
+    this.businessName = businessName;
+    this.taxId = taxId;
   }
 }

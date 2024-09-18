@@ -43,22 +43,6 @@ public class SocialLoginServiceImpl implements SocialLoginService {
   }
 
   @Override
-  public void changeUserType(UserType userType) {
-    Users existingUser = usersService.getLoggedUser();
-    Optional<SocialLogin> socialLoginOptional = socialLoginRepository.findByUser(existingUser);
-    if (socialLoginOptional.isEmpty()) {
-      throw new NoLinkedSocialLoginException("Account not linked to any social login");
-    }
-
-    existingUser.setUserType(userType);
-    usersService.save(existingUser);
-
-    TenantInfo newTenant = new TenantInfo();
-    newTenant.setUser(existingUser);
-    tenantInfoService.save(newTenant);
-  }
-
-  @Override
   public Optional<SocialLogin> findByUser(Users user) {
     return socialLoginRepository.findByUser(user);
   }
@@ -70,6 +54,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     user.setUserType(request.getUserType());
     user.setFirstName(request.getFirstName());
     user.setLastName(request.getLastName());
+    user.setAvatar(request.getAvatar());
     user.setIsVerified(true);
     usersService.save(user);
     log.info("user registered: " + request.getEmail());
@@ -82,7 +67,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     socialLogin.setProvider(provider);
     socialLogin.setProviderUserId(providerUserId);
     socialLoginRepository.save(socialLogin);
-    log.info("link social login: " + socialLogin.getProvider());
+    log.info("link social login: {}", socialLogin.getProvider());
   }
 
   private TenantInfo createTenantInfo(Users user, SocialLoginRequest request) {
@@ -95,38 +80,6 @@ public class SocialLoginServiceImpl implements SocialLoginService {
   }
 
   // Region - Quarantine
-
-  @Override
-  public SocialLoginResponse socialLogin(SocialLoginRequest request, UserType userType) {
-    String provider = request.getProvider();
-    String providerUserId = request.getProviderUserId();
-    String email = request.getEmail();
-
-    Optional<SocialLogin> existingSocialLogin = socialLoginRepository.findByProviderAndProviderUserId(provider, providerUserId);
-
-    if (existingSocialLogin.isPresent()) {
-      Users user = existingSocialLogin.get().getUser();
-      return new SocialLoginResponse(user, null); // Add JWT token generation here
-    }
-
-    Optional<Users> existingUser = usersService.findByEmail(email);
-
-    if (existingUser.isPresent()) {
-      Users user = existingUser.get();
-      linkSocialLogin(user, provider, providerUserId);
-      return new SocialLoginResponse(user, null); // Add JWT token generation here
-    }
-
-    Users newUser = createNewUser(request);
-    linkSocialLogin(newUser, provider, providerUserId);
-
-    if (userType == UserType.TENANT) {
-      TenantInfo tenantInfo = createTenantInfo(newUser, request);
-      return new SocialLoginResponse(newUser, tenantInfo, null); // Add JWT token generation here
-    }
-
-    return new SocialLoginResponse(newUser, null); // Add JWT token generation here
-  }
 
   @Override
   public Optional<SocialLogin> findByKey(String provider, String providerUserId) {

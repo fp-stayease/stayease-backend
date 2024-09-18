@@ -35,10 +35,11 @@ public class AuthServiceImpl implements AuthService {
     // ! 2: generate token
     String accessToken = jwtService.generateAccessToken(authentication);
     String refreshToken = jwtService.generateRefreshToken(authentication.getName());
+    Long expiresAt = jwtService.getExpiresAt(refreshToken);
 
     // * 3: generate response, set headers(cookie)
     SecurityContextHolder.getContext().setAuthentication(authentication);
-    return new TokenResponseDto(accessToken, refreshToken);
+    return new TokenResponseDto(accessToken, refreshToken, expiresAt);
   }
 
   private Authentication authenticateUser(LoginRequestDTO loginRequestDTO) {
@@ -58,8 +59,28 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public TokenResponseDto generateTokenFromEmail(String email) {
+    String UUID =  java.util.UUID.randomUUID().toString();
+    log.info("UUID request for refreshBOTH tokens:1 " + UUID);
     String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
     String newRefreshToken = jwtService.generateRefreshToken(email);
-    return new TokenResponseDto(newAccessToken, newRefreshToken);
+    Long expiresAt = jwtService.getExpiresAt(newRefreshToken);
+    return new TokenResponseDto(newAccessToken, newRefreshToken, expiresAt);
+  }
+
+  @Override
+  public TokenResponseDto refreshAccessToken(String refreshToken) {
+    String UUID =  java.util.UUID.randomUUID().toString();
+    log.info("UUID request for refresh access token: " + UUID);
+    String email = jwtService.extractSubjectFromToken(refreshToken);
+    if (!jwtService.isRefreshTokenValid(refreshToken, email)) {
+      log.error("Refresh token is invalid. Please sign in again!");
+      throw new IllegalArgumentException("Refresh token is invalid. Please sign in again!");
+    }
+    log.info("Refreshing access token for email: " + email);
+    String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
+    Long expiresAt = jwtService.getExpiresAt(refreshToken);
+    log.info("New access token: " + newAccessToken);
+    log.info("Expires at: " + expiresAt);
+    return new TokenResponseDto(newAccessToken, refreshToken, expiresAt);
   }
 }
