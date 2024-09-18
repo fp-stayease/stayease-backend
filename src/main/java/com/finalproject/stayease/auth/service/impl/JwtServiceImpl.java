@@ -2,7 +2,6 @@ package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
 import com.finalproject.stayease.auth.service.JwtService;
-import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -38,6 +37,9 @@ public class JwtServiceImpl implements JwtService {
   private final UsersService usersService;
   private final UserDetailsServiceImpl userDetailsService;
 
+  @Value("${NEXTAUTH_SECRET}")
+  private String NEXTAUTH_SECRET;
+
   public JwtServiceImpl(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, AuthRedisRepository authRedisRepository,
       UsersService usersService, UserDetailsServiceImpl userDetailsService) {
     this.jwtEncoder = jwtEncoder;
@@ -47,9 +49,9 @@ public class JwtServiceImpl implements JwtService {
     this.userDetailsService = userDetailsService;
   }
 
-  @Value("${ACCESS_TOKEN_EXPIRY_IN_SECONDS:300}")
+  @Value("${token.expiration.access:3600}")
   private int ACCESS_TOKEN_EXPIRY_IN_SECONDS;
-  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
+  @Value("${token.expiration.refresh:2592000}")
   private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
   @Override
@@ -84,6 +86,20 @@ public class JwtServiceImpl implements JwtService {
     return jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
   }
 
+  @Override
+  public Long getExpiresAt(String token) {
+    return Objects.requireNonNull(jwtDecoder.decode(token).getExpiresAt()).toEpochMilli();
+  }
+
+//  @Override
+//public Claims validateToken(String token) {
+//  return Jwts.parser()
+//      .setSigningKey(NEXTAUTH_SECRET.getBytes())
+//      .build()
+//      .parseClaimsJws(token)
+//      .getBody();
+//}
+
   private JwtClaimsSet buildAccessTokenClaimsSet(Users user, List<String> authorities, String subject) {
     Instant now = Instant.now();
     return JwtClaimsSet.builder()
@@ -117,11 +133,7 @@ public class JwtServiceImpl implements JwtService {
     String refreshToken = jwtEncoder.encode(JwtEncoderParameters.from(claimsSet)).getTokenValue();
 
     // Store the refresh token in Redis
-    try {
-      invalidateToken(user.getEmail());
-    } catch (TokenDoesNotExistException e) {
-      // intentionally left empty to ignore the exception
-    }
+    authRedisRepository.blacklistKey(user.getEmail());
     authRedisRepository.saveJwtKey(user.getEmail(), refreshToken);
 
     return refreshToken;

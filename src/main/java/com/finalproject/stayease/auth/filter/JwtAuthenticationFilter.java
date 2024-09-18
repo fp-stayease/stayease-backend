@@ -5,11 +5,9 @@ import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +29,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtService jwtService;
   private final UserDetailsServiceImpl userDetailsService;
 
-  private int REFRESH_TOKEN_EXPIRY_IN_SECONDS = 7 * 24 * 60 * 60;
-
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     // to make sure it doesn't loop
-    if (request.getAttribute("tokenProcessed") != null || request.getRequestURI().equals("/api/v1/auth/refresh")) {
+    if (request.getAttribute("tokenProcessed") != null || request.getRequestURI().equals("/api/v1/auth/refresh") ||
+        request.getRequestURI().equals("/api/v1/auth/refresh-access")) {
       filterChain.doFilter(request, response);
       return;
     }
@@ -57,14 +54,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.info("Access token is valid, authenticating user");
             authenticateUser(request, email);
           } else {
-            log.info("Token is invalid, handling as expired");
-            handleExpiredAccessToken(request, response);
+            log.info("Token is invalid or expired");
+            filterChain.doFilter(request, response);
           }
         } catch (ExpiredJwtException e) {
           log.info("Caught ExpiredJwtException, handling as expired token", e);
-          handleExpiredAccessToken(request, response);
+          filterChain.doFilter(request, response);
         } catch (BadJwtException e) {
           logger.error("Caught BadJwtException: Token is malformed", e);
+          filterChain.doFilter(request, response);
         }
       }
     } catch (Exception e) {
@@ -90,54 +88,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
     SecurityContextHolder.getContext().setAuthentication(authentication);
     log.info("Authenticated user: " + userDetails.getUsername());
-  }
-
-  private void handleExpiredAccessToken(HttpServletRequest request, HttpServletResponse response) {
-    log.info("Handling expired access token");
-    String refreshToken = extractRefreshTokenFromCookie(request);
-    log.info("Refresh token: " + refreshToken);
-    if (refreshToken != null) {
-      try {
-        String email = jwtService.extractSubjectFromToken(refreshToken);
-        log.info("Extracted email from refresh token: " + email);
-        if (jwtService.isRefreshTokenValid(refreshToken, email)) {
-          log.info("Refresh token is valid, authenticating user");
-          refreshAndAuthenticateUser(request, response, email);
-        }
-      } catch (Exception e) {
-        log.error("(JwtAuthenticationFilter) Invalid refresh token: {}", e.getLocalizedMessage());
-      }
-    }
-  }
-
-  private String extractRefreshTokenFromCookie(HttpServletRequest request) {
-    if (request.getCookies() != null) {
-      Cookie[] cookies = request.getCookies();
-      return Arrays.stream(cookies)
-          .filter(cookie -> "refresh_token".equals(cookie.getName()))
-          .map(Cookie::getValue)
-          .findFirst()
-          .orElse(null);
-    }
-    return null;
-  }
-
-  private void refreshAndAuthenticateUser(HttpServletRequest request, HttpServletResponse response, String email) {
-    String newAccessToken = jwtService.generateAccessTokenFromEmail(email);
-    String newRefreshToken = jwtService.generateRefreshToken(email);
-    log.info("New refresh token: " + newRefreshToken);
-    log.info("New access token: " + newAccessToken);
-    updateTokensInResponse(response, newAccessToken, newRefreshToken);
-    authenticateUser(request, email);
-  }
-
-  private void updateTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
-    response.setHeader("Authorization", "Bearer " + accessToken);
-    Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
-    refreshCookie.setHttpOnly(true);
-    refreshCookie.setSecure(true);
-    refreshCookie.setPath("/");
-    refreshCookie.setMaxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS);
-    response.addCookie(refreshCookie);
   }
 }

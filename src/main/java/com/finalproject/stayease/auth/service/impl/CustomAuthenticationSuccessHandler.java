@@ -29,7 +29,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
   private final OneTimeCodeService oneTimeCodeService;
 
 
-  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
+  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:2592000}")
   private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
   @Value("${FE_URL}")
   private String FE_URL;

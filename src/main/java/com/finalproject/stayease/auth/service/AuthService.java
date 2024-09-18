@@ -10,4 +10,6 @@ public interface AuthService {
   void logout(String email);
 
   TokenResponseDto generateTokenFromEmail(String email);
+
+  TokenResponseDto refreshAccessToken(String refreshToken);
 }

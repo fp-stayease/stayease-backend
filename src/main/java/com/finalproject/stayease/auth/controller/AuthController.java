@@ -41,14 +41,17 @@ public class AuthController {
   private final JwtService jwtService;
   private final HttpSession session;
 
-  @Value("${REFRESH_TOKEN_EXPIRY_IN_SECONDS:604800}")
+  @Value("${token.expiration.refresh:2592000}")
   private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
   @GetMapping("/status")
   public ResponseEntity<Response<AuthResponseDto>> getLoggedInUser(HttpServletRequest request) {
     try {
       Users loggedInUser = usersService.getLoggedUser();
-      TokenResponseDto tokenResponseDto = new TokenResponseDto(extractTokenFromRequest(request), extractRefreshToken(request));
+      String refreshToken = extractRefreshToken(request);
+      Long expiresAt = jwtService.getExpiresAt(refreshToken);
+      TokenResponseDto tokenResponseDto = new TokenResponseDto(extractTokenFromRequest(request),
+         refreshToken, expiresAt);
       if (loggedInUser.getEmail().equals("anonymousUser")) {
         return Response.failedResponse(401, "No logged in user");
       }
@@ -69,24 +72,43 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
-  public ResponseEntity<Response<String>> logout(HttpServletRequest request, HttpServletResponse response) {
-    String email = jwtService.extractSubjectFromToken(extractRefreshToken(request));
+  public ResponseEntity<Response<String>> logout(HttpServletRequest request, HttpServletResponse response,
+      @RequestBody String email) {
+    log.info("Logging out user");
     authService.logout(email);
     invalidateSessionAndCookie(request, response);
+    log.info("Logged out successfully!");
     return Response.successfulResponse("Logged out successfully!");
   }
 
   @PostMapping("/refresh")
-  public ResponseEntity<Response<TokenResponseDto>> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletRequest request, HttpServletResponse response) {
+  public ResponseEntity<Response<TokenResponseDto>> refreshTokens(@RequestBody String refreshToken, HttpServletResponse response) {
     if (refreshToken == null) {
       throw new TokenDoesNotExistException("No refresh token found!");
     }
     String email = jwtService.extractSubjectFromToken(refreshToken);
     if (jwtService.isRefreshTokenValid(refreshToken, email)) {
+      log.info("Refreshing token for email: " + email);
       TokenResponseDto tokenResponseDto = authService.generateTokenFromEmail(email);
       addRefreshTokenCookie(response, tokenResponseDto);
-      authenticateUser(request, email);
+      log.info("Successfully refreshed token!");
       return Response.successfulResponse(HttpStatus.OK.value(), "Successfully refreshed token!", tokenResponseDto);
+    } else {
+      return Response.failedResponse(401, "Invalid refresh token!");
+    }
+  }
+
+  @PostMapping("/refresh-access")
+  public ResponseEntity<Response<TokenResponseDto>> refreshAccessToken(@RequestBody String refreshToken
+  , HttpServletResponse response) {
+    String email = jwtService.extractSubjectFromToken(refreshToken);
+    if (jwtService.isRefreshTokenValid(refreshToken, email)) {
+      log.info("Refreshing access token for email: " + email);
+      TokenResponseDto tokenResponseDto = authService.refreshAccessToken(refreshToken);
+      addRefreshTokenCookie(response, tokenResponseDto);
+      log.info("Successfully refreshed access token!");
+      return Response.successfulResponse(HttpStatus.OK.value(), "Successfully refreshed access token!",
+          tokenResponseDto);
     } else {
       return Response.failedResponse(401, "Invalid refresh token!");
     }

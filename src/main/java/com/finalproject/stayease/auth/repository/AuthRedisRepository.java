@@ -1,6 +1,5 @@
 package com.finalproject.stayease.auth.repository;
 
-import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
 import jakarta.transaction.Transactional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -39,13 +38,14 @@ public class AuthRedisRepository {
   }
 
   public void blacklistKey(String email) {
-    if (getJwtKey(email) == null) {
-      throw new TokenDoesNotExistException("Token does not exist");
+    String oldToken = getJwtKey(email);
+    if (oldToken != null) {
+      String key = STRING_KEY_PREFIX + BLACKLIST_KEY_PREFIX + oldToken;
+      Long remainingTTL = redisTemplate.getExpire(STRING_KEY_PREFIX + email, TimeUnit.SECONDS);
+      valueOperations.set(key, "true", remainingTTL, TimeUnit.SECONDS);
     }
-    String tokenFromEmail = getJwtKey(email);
-    String key = STRING_KEY_PREFIX + BLACKLIST_KEY_PREFIX + tokenFromEmail;
-    Long remainingTTL = redisTemplate.getExpire(STRING_KEY_PREFIX + email, TimeUnit.SECONDS);
-    valueOperations.set(key, "true", remainingTTL, TimeUnit.SECONDS);
+    // Remove the old token from the main storage
+    redisTemplate.delete(STRING_KEY_PREFIX + email);
   }
 
   public String getJwtKey(String email) {
@@ -54,15 +54,20 @@ public class AuthRedisRepository {
 
   public boolean isValid (String jwtKey, String email) {
     String storedKey = valueOperations.get(STRING_KEY_PREFIX + email);
+    String normalizedToken = normalizeToken(jwtKey);
     log.info("Validating refresh token for email: {}", email);
     log.info("Stored token: {}", storedKey);
-    log.info("Provided token: {}", jwtKey);
+    log.info("Normalized token: {}", normalizedToken);
     log.info("blacklist? " + isRefreshTokenBlacklisted(jwtKey));
-    return storedKey != null && storedKey.equals(jwtKey) && !isRefreshTokenBlacklisted(jwtKey);
+    return storedKey != null && storedKey.equals(normalizedToken) && !isRefreshTokenBlacklisted(normalizedToken);
   }
 
   public boolean isRefreshTokenBlacklisted(String refreshToken) {
     String key = STRING_KEY_PREFIX + BLACKLIST_KEY_PREFIX + refreshToken;
     return getJwtKey(key) != null;
+  }
+
+  private String normalizeToken(String token) {
+    return token.replaceAll("=+$", "");
   }
 }
