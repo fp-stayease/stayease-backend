@@ -1,9 +1,9 @@
 package com.finalproject.stayease.bookings.service.impl;
 
-import com.finalproject.stayease.bookings.dto.BookingItemReqDto;
-import com.finalproject.stayease.bookings.dto.BookingReqDto;
-import com.finalproject.stayease.bookings.dto.BookingRequestReqDto;
-import com.finalproject.stayease.bookings.dto.BookingResDto;
+import com.finalproject.stayease.bookings.entity.dto.request.BookingItemReqDTO;
+import com.finalproject.stayease.bookings.entity.dto.request.BookingReqDTO;
+import com.finalproject.stayease.bookings.entity.dto.request.BookingRequestReqDTO;
+import com.finalproject.stayease.bookings.entity.dto.BookingDTO;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.bookings.entity.BookingItem;
 import com.finalproject.stayease.bookings.entity.BookingRequest;
@@ -17,8 +17,6 @@ import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
-import com.finalproject.stayease.property.service.impl.RoomAvailabilityServiceImpl;
-import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.TenantInfoService;
@@ -26,6 +24,7 @@ import com.finalproject.stayease.users.service.UsersService;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public Booking createBooking(BookingReqDto reqDto, Long userId, Long roomId, Double amount) {
+    public Booking createBooking(BookingReqDTO reqDto, Long userId, Long roomId, Double amount) {
         Booking newBooking = new Booking();
         var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
         var room = roomService.findRoomById(roomId).orElseThrow(() -> new DataNotFoundException("Room not found"));
@@ -81,7 +80,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public void createBookingItem(BookingItemReqDto bookingItemDto, Booking newBooking, Room room) {
+    public void createBookingItem(BookingItemReqDTO bookingItemDto, Booking newBooking, Room room) {
         BookingItem bookingItem = new BookingItem();
         bookingItem.setBooking(newBooking);
         bookingItem.setRoom(room);
@@ -93,7 +92,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public void createBookingRequest(BookingRequestReqDto reqDto, Booking newBooking) {
+    public void createBookingRequest(BookingRequestReqDTO reqDto, Booking newBooking) {
         BookingRequest bookingRequest = new BookingRequest();
         bookingRequest.setBooking(newBooking);
         if (reqDto.getCheckInTime() != null) {
@@ -116,14 +115,14 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingResDto getBookingById(UUID bookingId) {
+    public BookingDTO getBookingById(UUID bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new DataNotFoundException("Booking not found"));
         return booking.toResDto();
     }
 
     @Override
-    public Page<BookingResDto> getUserBookings(Long userId, String search, Pageable pageable) {
+    public Page<BookingDTO> getUserBookings(Long userId, String search, Pageable pageable) {
         // TO DO: find and validate user
         var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
 
@@ -138,11 +137,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResDto> getTenantBookings(Long userId) {
+    public List<BookingDTO> getTenantBookings(Long userId) {
         Users user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
         TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
 
-        return bookingRepository.findByTenantId(tenant.getId()).stream().map(Booking::toResDto).toList();
+        return bookingRepository.findByTenantId(tenant.getId(), sort).stream().map(Booking::toResDto).toList();
     }
 
     @Override

@@ -6,10 +6,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-public class TransactionResDto {
+public class TransactionDTO {
     private UUID bookingId;
     private String bookingStatus;
     private String paymentMethod;
-    private String paymentStaus;
+    private String paymentStatus;
     private Instant paymentExpiredAt;
 }

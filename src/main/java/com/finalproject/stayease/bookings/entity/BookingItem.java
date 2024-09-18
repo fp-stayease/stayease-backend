@@ -1,6 +1,6 @@
 package com.finalproject.stayease.bookings.entity;
 
-import com.finalproject.stayease.bookings.dto.BookingItemResDto;
+import com.finalproject.stayease.bookings.entity.dto.BookingItemDTO;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import jakarta.persistence.*;
@@ -59,8 +59,8 @@ public class BookingItem {
         this.deletedAt = Instant.now();
     }
 
-    public BookingItemResDto toResDto() {
-        BookingItemResDto resDto = new BookingItemResDto();
+    public BookingItemDTO toResDto() {
+        BookingItemDTO resDto = new BookingItemDTO();
         resDto.setRoom(new RoomDTO(this.room));
         resDto.setExtendingUntil(this.extendingUntil);
         return resDto;

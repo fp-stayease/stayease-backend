@@ -8,6 +8,7 @@ import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.payment.entity.Payment;
+import com.finalproject.stayease.payment.entity.dto.PaymentDTO;
 import com.finalproject.stayease.payment.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -134,7 +135,7 @@ public class PaymentServiceImplTest {
         when(paymentRepository.findByBookingId(bookingId)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
 
-        Payment updatedPayment = paymentServiceImpl.uploadPaymentProof(file, bookingId);
+        PaymentDTO updatedPayment = paymentServiceImpl.uploadPaymentProof(file, bookingId);
 
         assertEquals(cloudinaryUrl, updatedPayment.getPaymentProof());
         assertEquals("waiting for confirmation", updatedPayment.getPaymentStatus());

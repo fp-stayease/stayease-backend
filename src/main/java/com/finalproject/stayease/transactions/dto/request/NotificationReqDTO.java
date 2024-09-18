@@ -1,9 +1,9 @@
-package com.finalproject.stayease.transactions.dto;
+package com.finalproject.stayease.transactions.dto.request;
 
 import lombok.Data;
 
 @Data
-public class NotificationReqDto {
+public class NotificationReqDTO {
     private String transaction_time;
 
     private String transaction_status;
