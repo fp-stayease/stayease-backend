@@ -1,8 +1,8 @@
 package com.finalproject.stayease.midtrans.service;
 
-import com.finalproject.stayease.midtrans.dto.MidtransReqDto;
+import com.finalproject.stayease.midtrans.dto.MidtransReqDTO;
 import org.json.JSONObject;
 
 public interface MidtransService {
-    JSONObject createTransaction(MidtransReqDto reqDto);
+    JSONObject createTransaction(MidtransReqDTO reqDto);
 }

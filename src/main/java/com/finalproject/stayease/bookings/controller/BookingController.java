@@ -1,10 +1,8 @@
 package com.finalproject.stayease.bookings.controller;
 
-import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.bookings.service.BookingService;
-import com.finalproject.stayease.helpers.ExtractToken;
 import com.finalproject.stayease.responses.Response;
-import jakarta.servlet.http.HttpServletRequest;
+import com.finalproject.stayease.users.service.UsersService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,13 +15,11 @@ import java.util.UUID;
 @RequestMapping("/api/v1/bookings")
 public class BookingController {
     private final BookingService bookingService;
-    private final JwtService jwtService;
-    private final ExtractToken extractToken;
+    private final UsersService usersService;
 
-    public BookingController(BookingService bookingService, JwtService jwtService, ExtractToken extractToken) {
+    public BookingController(BookingService bookingService, UsersService usersService) {
         this.bookingService = bookingService;
-        this.jwtService = jwtService;
-        this.extractToken = extractToken;
+        this.usersService = usersService;
     }
 
     @GetMapping("/user")
@@ -31,10 +27,9 @@ public class BookingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "ASC") Sort.Direction direction,
-            @RequestParam(required = false) String search,
-            HttpServletRequest request
+            @RequestParam(required = false) String search
     ) {
-        Long userId = (Long) jwtService.extractClaimsFromToken(extractToken.extractTokenFromRequest(request)).get("userId");
+        Long userId = usersService.getLoggedUser().getId();
         Sort sort = Sort.by(direction, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -49,11 +44,8 @@ public class BookingController {
     }
 
     @GetMapping("/tenant")
-    public ResponseEntity<?> getTenantBookings(
-            HttpServletRequest request
-    ) {
-        Long userId = (Long) jwtService.extractClaimsFromToken(extractToken.extractTokenFromRequest(request)).get("userId");
-//        Long userId = 18L;
+    public ResponseEntity<?> getTenantBookings() {
+        Long userId = usersService.getLoggedUser().getId();
 
         var bookings = bookingService.getTenantBookings(userId);
         return Response.successfulResponse("User booking list fetched", bookings);

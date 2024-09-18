@@ -1,11 +1,11 @@
-package com.finalproject.stayease.payment.dto;
+package com.finalproject.stayease.payment.entity.dto;
 
 import lombok.Data;
 
 import java.time.Instant;
 
 @Data
-public class PaymentResDto {
+public class PaymentDTO {
     private Long id;
     private Double amount;
     private String paymentMethod;

@@ -1,6 +1,6 @@
 package com.finalproject.stayease.midtrans.controller;
 
-import com.finalproject.stayease.midtrans.dto.MidtransReqDto;
+import com.finalproject.stayease.midtrans.dto.MidtransReqDTO;
 import com.finalproject.stayease.midtrans.service.MidtransService;
 import com.finalproject.stayease.responses.Response;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ public class MidtransController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createTransaction(@RequestBody MidtransReqDto reqDto) {
+    public ResponseEntity<?> createTransaction(@RequestBody MidtransReqDTO reqDto) {
         var response = paymentService.createTransaction(reqDto);
         return Response.successfulResponse(HttpStatus.CREATED.value(), "Transaction created successfully", response.toMap());
     }

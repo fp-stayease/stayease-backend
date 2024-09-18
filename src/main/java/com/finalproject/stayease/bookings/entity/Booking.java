@@ -1,7 +1,7 @@
 package com.finalproject.stayease.bookings.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.finalproject.stayease.bookings.dto.BookingResDto;
+import com.finalproject.stayease.bookings.entity.dto.BookingDTO;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
@@ -97,8 +97,8 @@ public class Booking {
         this.deletedAt = Instant.now();
     }
 
-    public BookingResDto toResDto() {
-        BookingResDto resDto = new BookingResDto();
+    public BookingDTO toResDto() {
+        BookingDTO resDto = new BookingDTO();
         resDto.setId(this.id);
         resDto.setUser(this.user.toResDto());
         resDto.setTenant(this.tenant.toResDto());
