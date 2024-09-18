@@ -4,12 +4,16 @@ import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.RoomAvailability;
-import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAvailabilityDTO;
+import com.finalproject.stayease.property.entity.dto.RoomAvailabilityDTO;
 import com.finalproject.stayease.property.repository.RoomAvailabilityRepository;
 import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
 import jakarta.transaction.Transactional;
+
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,9 +34,19 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
     RoomAvailability roomAvailability = new RoomAvailability();
     roomAvailability.setRoom(bookedRoom);
     roomAvailability.setStartDate(checkDate(startDate));
-    roomAvailability.setEndDate(checkDate(endDate).minusDays(1));
+    roomAvailability.setEndDate(checkDate(endDate.minusDays(1)));
     roomAvailability.setIsAvailable(false);
     return roomAvailabilityRepository.save(roomAvailability);
+  }
+
+  @Override
+  public void removeUnavailability(Long roomId, LocalDate startDate, LocalDate endDate) {
+    RoomAvailability roomAvailability = roomAvailabilityRepository.findByRoomIdAndDates(roomId, startDate, endDate)
+            .orElseThrow(() -> new DataNotFoundException("Data not exist"));
+
+    roomAvailability.preRemove();
+
+    roomAvailabilityRepository.save(roomAvailability);
   }
 
   private LocalDate checkDate(LocalDate date) {

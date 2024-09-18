@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface RoomAvailabilityService {
   RoomAvailability setUnavailability(Long roomId, LocalDate startDate, LocalDate endDate);
+  void removeUnavailability(Long roomId, LocalDate startDate, LocalDate endDate);
 }

@@ -1,12 +1,12 @@
 package com.finalproject.stayease.bookings.entity;
 
-import com.finalproject.stayease.bookings.dto.BookingRequestResDto;
+import com.finalproject.stayease.bookings.entity.dto.BookingRequestDTO;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
-import java.util.Date;
+import java.time.LocalTime;
 
 @Entity
 @Data
@@ -23,10 +23,10 @@ public class BookingRequest {
     private Booking booking;
 
     @Column(name = "checkin_time")
-    private Date checkInTime;
+    private LocalTime checkInTime;
 
     @Column(name = "checkout_time")
-    private Date checkOutTime;
+    private LocalTime checkOutTime;
 
     @Column(name = "non_smoking")
     private boolean nonSmoking;
@@ -62,8 +62,8 @@ public class BookingRequest {
         this.deletedAt = Instant.now();
     }
 
-    public BookingRequestResDto toResDto() {
-        BookingRequestResDto resDto = new BookingRequestResDto();
+    public BookingRequestDTO toResDto() {
+        BookingRequestDTO resDto = new BookingRequestDTO();
         resDto.setCheckInTime(this.checkInTime);
         resDto.setCheckOutTime(this.checkOutTime);
         resDto.setNonSmoking(this.nonSmoking);

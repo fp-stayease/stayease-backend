@@ -14,6 +14,7 @@ public class AuthResponseDto {
   private Boolean isVerified;
   private String firstName;
   private String lastName;
+  private String avatar;
   private Boolean isOAuth2;
   private TokenResponseDto token;
 
@@ -24,6 +25,7 @@ public class AuthResponseDto {
     this.isVerified = user.getIsVerified();
     this.firstName = user.getFirstName();
     this.lastName = user.getLastName();
+    this.avatar = user.getAvatar();
     this.isOAuth2 = !user.getSocialLogins().isEmpty();
     this.token = token;
   }

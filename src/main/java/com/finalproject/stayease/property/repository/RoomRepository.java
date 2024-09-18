@@ -17,7 +17,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
   Optional<Room> findByNameIgnoreCaseAndDeletedAtIsNull(String roomName);
 
   Optional<Room> findByIdAndDeletedAtIsNull(Long id);
-
   List<Room> findAllByPropertyAndDeletedAtIsNull(Property propertyId);
 
   @Query("""

@@ -1,6 +1,6 @@
 package com.finalproject.stayease.midtrans.service.impl;
 
-import com.finalproject.stayease.midtrans.dto.MidtransReqDto;
+import com.finalproject.stayease.midtrans.dto.MidtransReqDTO;
 import com.finalproject.stayease.midtrans.service.MidtransService;
 import com.midtrans.httpclient.error.MidtransError;
 import com.midtrans.service.MidtransCoreApi;
@@ -21,7 +21,7 @@ public class MidtransServiceImpl implements MidtransService {
     }
 
     @Override
-    public JSONObject createTransaction(MidtransReqDto reqDto) {
+    public JSONObject createTransaction(MidtransReqDTO reqDto) {
         try {
             Map<String, Object> transactionDetails = new HashMap<>();
             transactionDetails.put("order_id", reqDto.getTransaction_details().getOrder_id());

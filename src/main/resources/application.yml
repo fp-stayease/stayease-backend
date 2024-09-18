@@ -78,6 +78,8 @@ midtrans:
     key: ${MIDTRANS_SERVER_KEY}
   client:
     key: ${MIDTRANS_CLIENT_KEY}
+  secret:
+    key: ${MIDTRANS_SECRET_KEY}
   is:
     production: false
 
@@ -105,3 +107,5 @@ rsa:
 token:
   expiration:
     hours: 1
+    access: 3600 # 1 hour
+    refresh: 2592000 # 30 days

@@ -24,4 +24,10 @@ public class PaymentController {
         var response = paymentService.uploadPaymentProof(file, UUID.fromString(bookingId));
         return Response.successfulResponse(HttpStatus.CREATED.value(), "Payment proof uploaded", response);
     }
+
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<?> getPaymentByBookingId(@PathVariable String bookingId) {
+        var response = paymentService.findPaymentByBookingId(UUID.fromString(bookingId)).toResDto();
+        return Response.successfulResponse(HttpStatus.OK.value(), "Payment found", response);
+    }
 }

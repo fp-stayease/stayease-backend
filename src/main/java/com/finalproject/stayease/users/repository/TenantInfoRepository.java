@@ -6,6 +6,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TenantInfoRepository extends JpaRepository<TenantInfo, Long> {
-
   Optional<TenantInfo> findByUser(Users user);
+  Optional<TenantInfo> findByUserId(Long userId);
 }

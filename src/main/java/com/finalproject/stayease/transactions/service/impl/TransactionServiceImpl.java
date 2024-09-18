@@ -3,55 +3,67 @@ package com.finalproject.stayease.transactions.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.bookings.entity.BookingItem;
 import com.finalproject.stayease.bookings.service.BookingService;
-import com.finalproject.stayease.midtrans.dto.BankTransfer;
-import com.finalproject.stayease.midtrans.dto.MidtransReqDto;
-import com.finalproject.stayease.midtrans.dto.TransactionDetail;
+import com.finalproject.stayease.helpers.HtmlDataMap;
+import com.finalproject.stayease.mail.service.MailService;
+import com.finalproject.stayease.midtrans.dto.BankTransferDTO;
+import com.finalproject.stayease.midtrans.dto.MidtransReqDTO;
+import com.finalproject.stayease.midtrans.dto.TransactionDetailDTO;
 import com.finalproject.stayease.midtrans.service.MidtransService;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.payment.service.PaymentService;
-import com.finalproject.stayease.transactions.dto.NotificationReqDto;
-import com.finalproject.stayease.transactions.dto.TransactionReqDto;
-import com.finalproject.stayease.transactions.dto.TransactionResDto;
+import com.finalproject.stayease.property.service.RoomAvailabilityService;
+import com.finalproject.stayease.transactions.dto.request.NotificationReqDTO;
+import com.finalproject.stayease.transactions.dto.request.TransactionReqDTO;
+import com.finalproject.stayease.transactions.dto.TransactionDTO;
 import com.finalproject.stayease.transactions.service.TransactionService;
+import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.service.UsersService;
+import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Instant;
-import java.util.Objects;
-import java.util.UUID;
-import lombok.extern.java.Log;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 @Log
 public class TransactionServiceImpl implements TransactionService {
     private final BookingService bookingService;
     private final PaymentService paymentService;
     private final MidtransService midtransService;
+    private final UsersService usersService;
+    private final MailService mailService;
+    private final HtmlDataMap htmlDataMap;
+    private final RoomAvailabilityService roomAvailabilityService;
 
-    public TransactionServiceImpl(BookingService bookingService, PaymentService paymentService, MidtransService midtransService) {
-        this.bookingService = bookingService;
-        this.paymentService = paymentService;
-        this.midtransService = midtransService;
-    }
+    @Value("${midtrans.secret.key}")
+    private String midtransSecret;
 
     @Override
     @Transactional
-    public TransactionResDto createTransaction(TransactionReqDto reqDto, Long userId) {
-        Booking newBooking = bookingService.createBooking(reqDto.getBooking(), userId);
+    public TransactionDTO createTransaction(TransactionReqDTO reqDto, Long userId, Long roomId) {
+        Booking newBooking = bookingService.createBooking(reqDto.getBooking(), userId, roomId, reqDto.getAmount());
 
         if (Objects.equals(reqDto.getPaymentMethod(), "bank_transfer")){
-            var transactionDetail = new TransactionDetail();
+            var transactionDetail = new TransactionDetailDTO();
             transactionDetail.setOrder_id(String.valueOf(newBooking.getId()));
             transactionDetail.setGross_amount(reqDto.getAmount());
 
-            var bankTransfer = new BankTransfer();
+            var bankTransfer = new BankTransferDTO();
             bankTransfer.setBank(reqDto.getBank());
 
             var midtransReqDto = toMidtransReqDto(transactionDetail, bankTransfer, reqDto.getPaymentMethod());
@@ -71,22 +83,27 @@ public class TransactionServiceImpl implements TransactionService {
             return toResDto(newBooking.getId(), newBooking.getStatus(), newPayment.getPaymentMethod(), newPayment.getPaymentStatus(), newPayment.getPaymentExpirationAt());
         }
 
-        Payment newPayment = paymentService.createPayment(reqDto.getAmount(), reqDto.getPaymentMethod(), newBooking, "Waiting for payment");
+        Payment newPayment = paymentService.createPayment(reqDto.getAmount(), reqDto.getPaymentMethod(), newBooking, "pending");
 
         return toResDto(newBooking.getId(), newBooking.getStatus(), newPayment.getPaymentMethod(), newPayment.getPaymentStatus(), newPayment.getPaymentExpirationAt());
     }
 
     @Override
-    public TransactionResDto notificationHandler(NotificationReqDto reqDto) throws IOException, InterruptedException {
+    @Transactional
+    public TransactionDTO notificationHandler(NotificationReqDTO reqDto) throws IOException, InterruptedException, MessagingException {
+        List<String> failedTransactionStatuses = List.of("expire", "cancel", "deny", "failure");
+        Payment updatedPayment;
+        Booking updatedBooking;
+
         Payment payment = paymentService.findPaymentByBookingId(UUID.fromString(reqDto.getOrder_id()));
-        Booking booking = bookingService.getBookingDetail(UUID.fromString(reqDto.getOrder_id()));
+        Booking booking = bookingService.findById(UUID.fromString(reqDto.getOrder_id()));
 
         log.info("Incoming notif from -> " + reqDto.getOrder_id());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.sandbox.midtrans.com/v2/" + reqDto.getOrder_id() + "/status"))
                 .header("accept", "application/json")
-                .header("authorization", "Basic U0ItTWlkLXNlcnZlci1xSzlJVjh6WUF4NERWcU9jeDY2R2wtVl86UnVreXkwMTA2IQ==")
+                .header("authorization", midtransSecret)
                 .method("GET", HttpRequest.BodyPublishers.noBody())
                 .build();
 
@@ -97,75 +114,150 @@ public class TransactionServiceImpl implements TransactionService {
         JsonNode jsonNode = mapper.readTree(responseBody);
         String transactionStatus = jsonNode.get("transaction_status").asText();
 
-        paymentService.updatePaymentStatus(payment.getId(), transactionStatus);
-        bookingService.updateBooking(booking.getId(), "paid");
+        if (failedTransactionStatuses.contains(transactionStatus)) {
+            updatedPayment = paymentService.updatePaymentStatus(payment.getId(), transactionStatus);
+            if (Objects.equals(transactionStatus, "expire")) {
+                updatedBooking = bookingService.updateBooking(booking.getId(), "expire");
+            } else {
+                updatedBooking = bookingService.updateBooking(booking.getId(), "payment failed");
+            }
 
-        return toResDto(booking.getId(), booking.getStatus(), payment.getPaymentMethod(), payment.getPaymentStatus());
+            var bookingItems = updatedBooking.getBookingItems();
+            for (BookingItem bookingItem : bookingItems) {
+                roomAvailabilityService.removeUnavailability(bookingItem.getRoom().getId(), updatedBooking.getCheckInDate(), updatedBooking.getCheckOutDate());
+            }
+            return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
+        }
+
+        Users user = booking.getUser();
+        if (Objects.equals(transactionStatus, "settlement")) {
+            var data = htmlDataMap.dataGenerator(booking);
+            String message = """
+                    Dear Guest,\s
+                    Thank you for trusting us to be your trusted accommodation finder and booking!\s
+                    We have received your payment and you have complete your transaction.\s
+                    Enjoy your trip!\s
+                    Sincerely,\s
+                    Stay Ease Admin""";
+            updatedPayment = paymentService.updatePaymentStatus(payment.getId(), "paid");
+            updatedBooking = bookingService.updateBooking(booking.getId(), "payment complete");
+            mailService.sendMailWithPdf(user.getEmail(), "Booking Invoice", "booking-invoice.html", data, message);
+
+            return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
+        }
+
+        updatedPayment = paymentService.updatePaymentStatus(payment.getId(), transactionStatus);
+        updatedBooking = bookingService.updateBooking(booking.getId(), transactionStatus);
+
+        return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
     }
 
     @Override
-    public TransactionResDto userCancelTransaction(UUID bookingId, Long userId) {
-        Booking booking = bookingService.getBookingDetail(bookingId);
+    @Transactional
+    public TransactionDTO userCancelTransaction(UUID bookingId, Long userId) {
+        Booking booking = bookingService.findById(bookingId);
         Payment payment = paymentService.findPaymentByBookingId(bookingId);
 
-        if (!Objects.equals(booking.getUserId(), userId)) {
+        if (!Objects.equals(booking.getUser().getId(), userId)) {
             throw new RuntimeException("This is not your booking");
         }
         if (payment.getPaymentProof() != null) {
             throw new RuntimeException("You have paid your booking, you cannot cancel this transaction");
         }
 
-        bookingService.updateBooking(bookingId, "cancelled");
-        paymentService.updatePaymentStatus(payment.getId(), "cancelled");
+        var cancelledBooking = bookingService.updateBooking(bookingId, "cancelled");
+        var cancelledPayment = paymentService.updatePaymentStatus(payment.getId(), "cancelled");
 
-        return toResDto(booking.getId(), booking.getStatus(), payment.getPaymentMethod(), payment.getPaymentStatus());
+        var bookingItems = cancelledBooking.getBookingItems();
+        for (BookingItem bookingItem : bookingItems) {
+            roomAvailabilityService.removeUnavailability(bookingItem.getRoom().getId(), cancelledBooking.getCheckInDate(), cancelledBooking.getCheckOutDate());
+        }
+
+        return toResDto(cancelledBooking.getId(), cancelledBooking.getStatus(), cancelledPayment.getPaymentMethod(), cancelledPayment.getPaymentStatus());
     }
 
     @Override
-    public TransactionResDto tenantCancelTransaction(UUID bookingId, Long tenantId) {
-        Booking booking = bookingService.getBookingDetail(bookingId);
+    @Transactional
+    public TransactionDTO tenantRejectTransaction(UUID bookingId, Long userId) {
+        Booking booking = bookingService.findById(bookingId);
         Payment payment = paymentService.findPaymentByBookingId(bookingId);
+        Users user = usersService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!Objects.equals(booking.getTenantId(), tenantId)) {
+        if (!Objects.equals(booking.getTenant().getUser().getId(), user.getId())) {
             throw new RuntimeException("This booking does not belong to this tenant");
         }
         if (payment.getPaymentProof() != null) {
             throw new RuntimeException("This booking already has a payment proof");
         }
 
-        bookingService.updateBooking(bookingId, "cancelled");
-        paymentService.updatePaymentStatus(payment.getId(), "cancelled");
+        var rejectedBooking = bookingService.updateBooking(bookingId, "pending");
+        var rejectedPayment = paymentService.updatePaymentStatus(payment.getId(), "pending");
+        paymentService.tenantRejectPayment(payment.getId());
 
-        return toResDto(booking.getId(), booking.getStatus(), payment.getPaymentMethod(), payment.getPaymentStatus());
+        return toResDto(rejectedBooking.getId(), rejectedBooking.getStatus(), rejectedPayment.getPaymentMethod(), rejectedPayment.getPaymentStatus());
     }
 
-    public TransactionResDto toResDto(
+    @Override
+    @Transactional
+    @Scheduled(cron = "*/30 * * * * *")
+    public void autoCancelTransaction() {
+        var payments = paymentService.findExpiredPendingPayment();
+
+        for (Payment payment : payments) {
+            var cancelledPayment = paymentService.updatePaymentStatus(payment.getId(), "expire");
+            var cancelledBooking = bookingService.updateBooking(payment.getBooking().getId(),"expire");
+
+            var bookingItems = cancelledBooking.getBookingItems();
+            for (BookingItem bookingItem : bookingItems) {
+                roomAvailabilityService.removeUnavailability(bookingItem.getRoom().getId(), cancelledBooking.getCheckInDate(), cancelledBooking.getCheckOutDate());
+            }
+
+            log.info("Payment with id -> " + cancelledPayment.getId() + " and booking id " + cancelledBooking.getId() + " has been cancelled due to expiration time.");
+        }
+    }
+
+    @Override
+    @Transactional
+    public TransactionDTO approveTransaction(UUID bookingId) {
+        Booking booking = bookingService.findById(bookingId);
+        Payment payment = paymentService.findPaymentByBookingId(booking.getId());
+        if (payment.getPaymentProof() == null) {
+            throw new RuntimeException("This booking does not have a payment proof, you cannot approve this booking");
+        }
+
+        var updatedBooking = bookingService.updateBooking(bookingId, "paid");
+        var updatedPayment = paymentService.updatePaymentStatus(payment.getId(), "paid");
+
+        return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
+    }
+
+    private TransactionDTO toResDto(
             UUID bookingId, String bookingStatus, String paymentMethod, String paymentStatus, Instant paymentExpiredAt
     ) {
-        var response = new TransactionResDto();
+        var response = new TransactionDTO();
         response.setBookingId(bookingId);
         response.setBookingStatus(bookingStatus);
         response.setPaymentMethod(paymentMethod);
-        response.setPaymentStaus(paymentStatus);
+        response.setPaymentStatus(paymentStatus);
         response.setPaymentExpiredAt(paymentExpiredAt);
 
         return response;
     }
 
-    public TransactionResDto toResDto(
+    private TransactionDTO toResDto(
             UUID bookingId, String bookingStatus, String paymentMethod, String paymentStatus
     ) {
-        var response = new TransactionResDto();
+        var response = new TransactionDTO();
         response.setBookingId(bookingId);
         response.setBookingStatus(bookingStatus);
         response.setPaymentMethod(paymentMethod);
-        response.setPaymentStaus(paymentStatus);
+        response.setPaymentStatus(paymentStatus);
 
         return response;
     }
 
-    public MidtransReqDto toMidtransReqDto(TransactionDetail transactionDetail, BankTransfer bankTransfer, String paymentMethod) {
-        MidtransReqDto midtransReqDto = new MidtransReqDto();
+    private MidtransReqDTO toMidtransReqDto(TransactionDetailDTO transactionDetail, BankTransferDTO bankTransfer, String paymentMethod) {
+        MidtransReqDTO midtransReqDto = new MidtransReqDTO();
         midtransReqDto.setTransaction_details(transactionDetail);
         midtransReqDto.setBank_transfer(bankTransfer);
 
