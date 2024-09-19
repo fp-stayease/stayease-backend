@@ -19,7 +19,6 @@ public interface RoomService {
   void deleteRoom(Long propertyId, Long roomId);
   List<Room>getTenantRooms(Long tenantId);
   List<Room> getRoomsAvailability(Long tenantId);
-}
 
   RoomAdjustedRatesDTO getRoomRateAndAvailability(Long roomId, LocalDate date);
 }

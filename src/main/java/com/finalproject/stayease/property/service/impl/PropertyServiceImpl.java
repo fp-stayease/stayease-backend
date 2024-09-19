@@ -132,6 +132,16 @@ public class PropertyServiceImpl implements PropertyService {
     return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm, minPrice, maxPrice);
   }
 
+  @Override
+  public boolean isTenantPropertyOwner(Users tenant, Long propertyId) {
+    try {
+    checkIfValid(tenant, propertyId);
+    } catch (RuntimeException e) {
+      return false;
+    }
+    return true;
+  }
+
   private void isTenant(Users tenant) {
     if (tenant.getUserType() != UserType.TENANT) {
       throw new InvalidRequestException("Only Tenants can create properties");

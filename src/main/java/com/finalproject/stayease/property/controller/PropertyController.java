@@ -9,12 +9,7 @@ import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.property.entity.Property;
-import com.finalproject.stayease.property.entity.PropertyCategory;
-import com.finalproject.stayease.property.entity.Room;
-import com.finalproject.stayease.property.entity.RoomAvailability;
-import com.finalproject.stayease.property.entity.dto.*;
+import com.finalproject.stayease.property.entity.dto.RoomWithRoomAvailabilityDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
@@ -23,7 +18,6 @@ import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
-import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
@@ -36,16 +30,13 @@ import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
@@ -65,6 +56,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/properties")
 @Data
+@Slf4j
 public class PropertyController {
 
   private final UsersService usersService;
@@ -324,5 +316,14 @@ public class PropertyController {
   public ResponseEntity<Response<List<String>>> getAllPropertyRoomImageUrls() {
     return Response.successfulResponse(200, "Listing all property and room image URLs",
         propertyService.findAllPropertyRoomImageUrls());
+  }
+
+  @GetMapping("/{propertyId}/check-ownership")
+  public ResponseEntity<Response<Boolean>> checkOwnership(@PathVariable Long propertyId) {
+    Users tenant = usersService.getLoggedUser();
+    Boolean isOwner = propertyService.isTenantPropertyOwner(tenant, propertyId);
+    log.info("Checking if tenant is owner of property ID: " + isOwner);
+    return Response.successfulResponse(200, "Checking if tenant is owner of property ID: " + propertyId,
+        isOwner);
   }
 }

@@ -20,6 +20,27 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
   List<Room> findAllByPropertyAndDeletedAtIsNull(Property propertyId);
 
   @Query("""
+    SELECT r FROM Room r
+    JOIN r.property p
+    WHERE r.deletedAt IS NULL
+    AND p.tenant.id = :tenantId
+    ORDER BY p.name
+    """)
+  List<Room> findRoomByTenantIdAndDeletedAtIsNull(@Param("tenantId") Long tenantId);
+
+  @Query("""
+    SELECT r FROM Room r
+    JOIN r.property p
+    JOIN r.roomAvailabilities ra
+    WHERE r.deletedAt IS NULL
+    AND r.deletedAt IS NULL
+    AND p.deletedAt IS NULL
+    AND ra.deletedAt IS NULL
+    AND p.tenant.id = :tenantId
+    """)
+  List<Room> findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(@Param("tenantId") Long tenantId);
+
+  @Query("""
       SELECT r.name FROM Room r
       WHERE r.property.id = :propertyId
       AND r.deletedAt IS NULL

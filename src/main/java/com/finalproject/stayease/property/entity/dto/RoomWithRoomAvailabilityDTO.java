@@ -17,7 +17,7 @@ public class RoomWithRoomAvailabilityDTO {
     public RoomWithRoomAvailabilityDTO(Room room) {
         this.id = room.getId();
         this.name = room.getName();
-        this.propertySummary = new PropertySummary(room.getProperty().getId(), room.getProperty().getName(), room.getProperty().getImagesUrl());
+        this.propertySummary = new PropertySummary(room.getProperty().getId(), room.getProperty().getName(), room.getProperty().getImageUrl());
         this.roomAvailability = room.getRoomAvailabilities().stream().map(RoomAvailabilityDTO::new).collect(Collectors.toSet());
     }
 

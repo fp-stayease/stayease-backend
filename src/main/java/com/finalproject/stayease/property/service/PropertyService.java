@@ -45,4 +45,6 @@ public interface PropertyService {
       BigDecimal maxPrice
   );
 
+  boolean isTenantPropertyOwner(Users tenant, Long propertyId);
+
 }

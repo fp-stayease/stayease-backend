@@ -80,6 +80,16 @@ public class RoomServiceImpl implements RoomService {
   }
 
   @Override
+  public List<Room> getTenantRooms(Long tenantId) {
+    return roomRepository.findRoomByTenantIdAndDeletedAtIsNull(tenantId);
+  }
+
+  @Override
+  public List<Room> getRoomsAvailability(Long tenantId) {
+    return roomRepository.findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(tenantId);
+  }
+
+  @Override
   public RoomAdjustedRatesDTO getRoomRateAndAvailability(Long roomId, LocalDate date) {
     RoomPriceRateDTO rateAndAvailability = roomRepository.findRoomRateAndAvailability(roomId, date);
     log.info("Room rate and availability for room {} on date {} is {}", roomId, date, rateAndAvailability);

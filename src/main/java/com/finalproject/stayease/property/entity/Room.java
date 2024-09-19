@@ -73,9 +73,6 @@ public class Room {
   @Column(name = "image_url", length = Integer.MAX_VALUE)
   private String imageUrl;
 
-  @Column(name = "imageUrl", length = Integer.MAX_VALUE)
-  private String imageUrl;
-
   @OneToMany(mappedBy = "room")
   private Set<BookingItem> bookingItems = new LinkedHashSet<>();
 
