@@ -1,9 +1,11 @@
 package com.finalproject.stayease.property.service.impl;
 
+import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
@@ -62,7 +64,6 @@ public class RoomServiceImpl implements RoomService {
 
   @Override
   public Room updateRoom(Long propertyId, Long roomId, UpdateRoomRequestDTO requestDTO) {
-    checkDuplicateRoom(propertyId, requestDTO.getName());
     Room existingRoom = checkBelongsToProperty(propertyId, roomId);
     return update(existingRoom, requestDTO);
   }
@@ -87,6 +88,15 @@ public class RoomServiceImpl implements RoomService {
   @Override
   public List<Room> getRoomsAvailability(Long tenantId) {
     return roomRepository.findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(tenantId);
+  }
+
+  @Override
+  public PropertyCurrentDTO getPropertyCurrent(Long id) {
+    Property property = propertyService.findPropertyById(id).orElseThrow(
+        () -> new DataNotFoundException("Property with this ID does not exist or is deleted")
+    );
+    List<Room> availableRooms = getRoomsOfProperty(id);
+    return new PropertyCurrentDTO(property, availableRooms);
   }
 
   @Override

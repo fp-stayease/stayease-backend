@@ -1,6 +1,8 @@
 package com.finalproject.stayease.property.service;
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;

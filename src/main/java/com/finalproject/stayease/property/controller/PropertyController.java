@@ -6,6 +6,7 @@ import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
+import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
@@ -110,12 +111,8 @@ public class PropertyController {
   }
 
   @GetMapping("/{propertyId}")
-  public ResponseEntity<Response<PropertyDTO>> getProperty(@PathVariable Long propertyId) {
-    // TODO : PropertyNotFoundException
-    Property property = propertyService.findPropertyById(propertyId).orElseThrow(() -> new DataNotFoundException("No property "
-                                                                                                       + "is found "
-                                                                                                       + "with ID: " + propertyId));
-    return Response.successfulResponse(200, "Listing property ID: " + propertyId, new PropertyDTO(property));
+  public ResponseEntity<Response<PropertyCurrentDTO>> getProperty(@PathVariable Long propertyId) {
+    return Response.successfulResponse(200, "Listing property ID: " + propertyId, roomService.getPropertyCurrent(propertyId));
   }
 
   @GetMapping("{propertyId}/available")
