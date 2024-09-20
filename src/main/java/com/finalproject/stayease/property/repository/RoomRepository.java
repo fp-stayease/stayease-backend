@@ -30,9 +30,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     JOIN r.property p
     JOIN r.roomAvailabilities ra
     WHERE r.deletedAt IS NULL
-    AND r.deletedAt IS NULL
     AND p.deletedAt IS NULL
     AND ra.deletedAt IS NULL
+    AND ra.isAvailable = FALSE
     AND p.tenant.id = :tenantId
     """)
   List<Room> findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(@Param("tenantId") Long tenantId);
