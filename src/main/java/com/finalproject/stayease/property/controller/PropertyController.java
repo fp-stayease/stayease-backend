@@ -1,11 +1,9 @@
 package com.finalproject.stayease.property.controller;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
-import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
@@ -14,8 +12,6 @@ import com.finalproject.stayease.property.entity.dto.RoomWithRoomAvailabilityDTO
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
-import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
-import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
@@ -40,7 +36,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -247,50 +242,6 @@ public class PropertyController {
   public ResponseEntity<Response<Object>> deleteRoom(@PathVariable Long propertyId, @PathVariable Long roomId) {
     roomService.deleteRoom(propertyId, roomId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Room successfully deleted!", null);
-  }
-
-  // Region - PeakSeasonRate
-
-  @GetMapping("/{propertyId}/rates")
-  public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(@PathVariable Long propertyId,
-      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-    return Response.successfulResponse(200, "Listing all adjusted rates for property ID: " + propertyId
-                                            + " on date: " + date, peakSeasonRateService.findAvailableRoomRates(propertyId, date));
-  }
-
-  @GetMapping("/{propertyId}/rates/daily")
-  public ResponseEntity<Response<List<DailyPriceDTO>>> getDailyRates(@PathVariable Long propertyId,
-      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-    return Response.successfulResponse(200, "Listing all lowest daily rates for property ID: " + propertyId
-                                            + " from date: " + startDate + " to date: " + endDate,
-        peakSeasonRateService.findLowestDailyRoomRates(propertyId, startDate, endDate));
-  }
-
-  @GetMapping("/{propertyId}/rates/daily/cumulative")
-  public ResponseEntity<Response<List<DailyPriceDTO>>> getLowestCumulativeRates(@PathVariable Long propertyId,
-      @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate startDate,
-      @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate endDate) {
-    return Response.successfulResponse(200, "Listing all lowest cumulative rates for property ID: " + propertyId
-                                            + " from date: " + startDate + " to date: " + endDate,
-        peakSeasonRateService.findCumulativeRoomRates(propertyId, startDate, endDate));
-  }
-
-  @PostMapping("/{propertyId}/rates")
-  public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
-      @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
-    Users tenant = usersService.getLoggedUser();
-    return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Set!",
-        new PeakSeasonRateDTO(peakSeasonRateService.setPeakSeasonRate(tenant, propertyId, requestDTO)));
-  }
-
-  @PostMapping("/{propertyId}/rates/{rateId}")
-  public ResponseEntity<Response<PeakSeasonRateDTO>> updatePeakSeasonRate(@PathVariable Long propertyId,
-      @PathVariable Long rateId,
-      @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
-    Users tenant = usersService.getLoggedUser();
-    return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
-        new PeakSeasonRateDTO(peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO)));
   }
 
   // Region - RoomAvailability

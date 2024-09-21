@@ -43,15 +43,16 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   @Override
-  public PeakSeasonRate updatePeakSeasonRate(Users tenant, Long propertyId, Long rateId, SetPeakSeasonRateRequestDTO requestDTO) {
-    Property property = getProperty(tenant, propertyId);
-
+  public PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO) {
     // TODO PeakSeasonRateNotFoundException
     PeakSeasonRate existingRate = peakSeasonRateRepository.findById(rateId).orElseThrow(() -> new DataNotFoundException("Peak Season Rate Not Found"));
     existingRate.setValidTo(Instant.now());
     peakSeasonRateRepository.save(existingRate);
 
-    return updateRate(property, existingRate, requestDTO);
+    // Get property while also checking ownership of property and rate
+    Property property = getProperty(tenant, existingRate.getProperty().getId());
+
+   return updateRate(property, existingRate, requestDTO);
   }
 
   @Override
@@ -136,28 +137,28 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   private PeakSeasonRate setRate(Property property, SetPeakSeasonRateRequestDTO requestDTO) {
-    isDateRangeValid(requestDTO.getStartDate(), requestDTO.getEndDate());
+    checkDateRangeValid(property.getId(), requestDTO.getStartDate(), requestDTO.getEndDate());
     PeakSeasonRate peakSeasonRate = new PeakSeasonRate();
     peakSeasonRate.setProperty(property);
     peakSeasonRate.setStartDate(requestDTO.getStartDate());
     peakSeasonRate.setEndDate(requestDTO.getEndDate());
-    peakSeasonRate.setRateAdjustment(requestDTO.getRateAdjustment());
+    peakSeasonRate.setRateAdjustment(requestDTO.getAdjustmentRate());
     peakSeasonRate.setAdjustmentType(requestDTO.getAdjustmentType());
     peakSeasonRateRepository.save(peakSeasonRate);
     return peakSeasonRate;
   }
 
-  private void isDateRangeValid(LocalDate startDate, LocalDate endDate) {
-    Optional<PeakSeasonRate> rangeOptional = peakSeasonRateRepository.findByStartDateAndEndDate(startDate, endDate);
-    if (rangeOptional.isPresent()) {
-      throw new DuplicateEntryException("Rate for this range of date for your property is already set");
+  private void checkDateRangeValid(Long propertyId, LocalDate startDate, LocalDate endDate) {
+    boolean existsConflictingRate = peakSeasonRateRepository.existsConflictingRate(propertyId, startDate, endDate);
+    if (existsConflictingRate) {
+      throw new DuplicateEntryException("Rates for this date range already set");
     }
   }
 
   private LocalDate isUpdateDateValid(SetPeakSeasonRateRequestDTO requestDTO) {
     LocalDate startDate = requestDTO.getStartDate();
     if (startDate != null) {
-      if (startDate.isAfter(LocalDate.now())) {
+      if (LocalDate.now().isAfter(startDate)) {
         // TODO InvalidDateException
         throw new BadCredentialsException("Start date cannot be changed");
       } else {
@@ -177,7 +178,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     updatedRate.setEndDate(Optional.ofNullable(requestDTO.getEndDate())
         .orElse(existingRate.getEndDate()));
 
-    updatedRate.setRateAdjustment(Optional.ofNullable(requestDTO.getRateAdjustment())
+    updatedRate.setRateAdjustment(Optional.ofNullable(requestDTO.getAdjustmentRate())
         .orElse(existingRate.getRateAdjustment()));
 
     updatedRate.setAdjustmentType(Optional.ofNullable(requestDTO.getAdjustmentType())

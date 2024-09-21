@@ -59,7 +59,7 @@ public class RatesController {
         rateService.findCumulativeRoomRates(propertyId, startDate, endDate));
   }
 
-  @PostMapping("/{propertyId}")
+  @PostMapping("/properties/{propertyId}")
   public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
       @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
@@ -68,12 +68,12 @@ public class RatesController {
   }
 
   @PutMapping("/{rateId}")
-  public ResponseEntity<Response<PeakSeasonRateDTO>> updatePeakSeasonRate(@PathVariable Long propertyId,
+  public ResponseEntity<Response<PeakSeasonRateDTO>> updatePeakSeasonRate(
       @PathVariable Long rateId,
       @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
-        new PeakSeasonRateDTO(rateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO)));
+        new PeakSeasonRateDTO(rateService.updatePeakSeasonRate(tenant, rateId, requestDTO)));
   }
 
 }

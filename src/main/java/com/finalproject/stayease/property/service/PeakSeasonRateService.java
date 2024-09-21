@@ -14,7 +14,7 @@ import java.util.List;
 public interface PeakSeasonRateService {
   PeakSeasonRate setPeakSeasonRate(Users tenant, Long propertyId, SetPeakSeasonRateRequestDTO requestDTO);
 
-  PeakSeasonRate updatePeakSeasonRate(Users tenant, Long propertyId, Long rateId, SetPeakSeasonRateRequestDTO requestDTO);
+  PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO);
 
   List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
 
