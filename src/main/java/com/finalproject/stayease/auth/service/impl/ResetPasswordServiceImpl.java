@@ -194,6 +194,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     Resource resource = new ClassPathResource("templates/password-reset.html");
     String htmlTemplate = Files.readString(resource.getFile().toPath());
     String url = buildUrl(randomKey);
+    log.info("Reset URL: " + url);
 
     // Replace placeholders with actual values
     String htmlContent = htmlTemplate

@@ -59,6 +59,11 @@ public class UsersServiceImpl implements UsersService {
   }
 
   @Override
+  public int hardDeleteStaleUsers(Instant timestamp) {
+    return usersRepository.hardDeleteStaleUsers(timestamp);
+  }
+
+  @Override
   public Users save(Users user) {
     return usersRepository.save(user);
   }

@@ -29,7 +29,8 @@ public class PasswordController {
   @PostMapping("/forgot")
   public ResponseEntity<Response<ForgotPasswordResponseDTO>> forgotPassword(@RequestParam(required = false) boolean loggedIn, @Valid @RequestBody ForgotPasswordRequestDTO requestDTO) throws MessagingException, IOException {
     if (loggedIn) {
-      return Response.successfulResponse(HttpStatus.OK.value(), "Reset password requested!", resetPasswordService.requestResetTokenLoggedIn(requestDTO));
+      return Response.successfulResponse(HttpStatus.OK.value(), "Reset password requested for logged in user!",
+          resetPasswordService.requestResetTokenLoggedIn(requestDTO));
     } else {
       return Response.successfulResponse(HttpStatus.OK.value(), "Reset password requested!", resetPasswordService.requestResetToken(requestDTO));
     }
