@@ -4,6 +4,7 @@ import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.repository.UsersRepository;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -39,6 +40,12 @@ public class UsersServiceImpl implements UsersService {
     }
     String email = authentication.getName();
     return findByEmail(email).orElseThrow(() -> new AccessDeniedException("You must be logged in to access this resource"));
+  }
+
+  @Override
+  public void deleteUser(Users user) {
+    user.setDeletedAt(Instant.now());
+    usersRepository.save(user);
   }
 
   @Override

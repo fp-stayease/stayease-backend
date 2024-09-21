@@ -9,9 +9,11 @@ public interface UsersService {
   Optional<Users> findByEmail(String email);
   Users getLoggedUser();
 
+  void deleteUser(Users user);
+
   // Region - Helpers
   List<String> findAllAvatars();
+  Optional<Users> findById(Long id);
 
   // Region - Quarantine
-  Optional<Users> findById(Long id);
 }

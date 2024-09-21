@@ -156,7 +156,7 @@ public class RegisterServiceImpl implements RegisterService {
         "Welcome to StayEase! You recently requested to resend the verification link for your. Click "
         + "this link "
         + "to "
-        + "verify your " + pendingRegistration.getUserType() + " account! " + buildVerificationUrl(token);
+        + "verify your " + pendingRegistration.getUserType() + " account! " + buildVerificationUrl(pendingRegistration.getUserType(), token);
 
     sendVerificationEmail(pendingRegistration, token, mailBody);
 
@@ -181,9 +181,16 @@ public class RegisterServiceImpl implements RegisterService {
     Resource resource = new ClassPathResource("templates/verification-email.html");
     String htmlTemplate = Files.readString(resource.getFile().toPath());
 
+    // Get user type
+    UserType userType = pendingRegistration.getUserType();
+
+    //Build url
+    String url = buildVerificationUrl(userType, token);
+    log.info("Verification URL: {}", url);
+
     // Replace placeholders with actual values
     String htmlContent = htmlTemplate
-        .replace("${verificationUrl}", buildVerificationUrl(token))
+        .replace("${verificationUrl}", url)
         // TODO : Replace with FE URL
         .replace("${feURL}", feUrl);
 
@@ -194,9 +201,10 @@ public class RegisterServiceImpl implements RegisterService {
     return registerResponse(message, token);
   }
 
-  private String buildVerificationUrl(String token) {
+  private String buildVerificationUrl(UserType userType, String token) {
     // TODO : replace this with FE URL later
-    return feUrl + "/register/verify?token=" + token;
+    String t = userType == UserType.TENANT ? "t" : "u";
+    return feUrl + "/register/verify?t=" + t + "&token=" + token;
   }
 
   public String generateAndSaveRedisToken(String email) {
