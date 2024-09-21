@@ -117,6 +117,8 @@ public class SecurityConfig {
             API_VERSION + "/register/**",
             API_VERSION + "/oauth2/**",
             API_VERSION + "/password/**",
+            API_VERSION + "/password/forgot",
+            API_VERSION + "/password/reset",
             API_VERSION + "/midtrans",
             API_VERSION+"/bookings/{bookingId}",
             API_VERSION + "/error/**").permitAll();

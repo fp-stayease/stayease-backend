@@ -57,6 +57,7 @@ public class ResetPasswordRedisRepository {
     String emailKey = RESET_PASSWORD_KEY_PREFIX + EMAIL_PREFIX + BLACKLIST_PREFIX + email;
     Long TTL = redisTemplate.getExpire(key, TimeUnit.SECONDS);
     redisTemplate.delete(emailKey);
+    redisTemplate.delete(key);
     valueOperations.set(blacklistKey, "true", TTL, TimeUnit.SECONDS);
   }
 

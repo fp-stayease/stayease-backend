@@ -101,6 +101,7 @@ cron:
   cleanup:
     pending: 0 0 */12 * * ?
     cloudinary: 0 0 * * * ?
+    stale-data: 0 0 * * * ?
 rsa:
   private-key: ${PRIVATE_KEY}
   public-key: ${PUBLIC_KEY}

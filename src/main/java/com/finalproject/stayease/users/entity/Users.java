@@ -92,10 +92,10 @@ public class Users {
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private TenantInfo tenantInfo;
 
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Booking> bookings = new LinkedHashSet<>();
 
-  @OneToMany(mappedBy = "tenant")
+  @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Property> properties = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "addedBy")
