@@ -86,9 +86,9 @@ public class SecurityConfig {
             API_VERSION + "/properties/images",
             API_VERSION + "/properties/cities",
             API_VERSION + "/properties/available",
-            API_VERSION + "/properties/{propertyId}/rates",
-            API_VERSION + "/properties/{propertyId}/rates/daily",
-            API_VERSION + "/properties/{propertyId}/rates/daily/cumulative",
+            API_VERSION + "/rates/{propertyId}",
+            API_VERSION + "/rates/{propertyId}/daily",
+            API_VERSION + "/rates/{propertyId}/daily/cumulative",
             API_VERSION + "/payment/{bookingId}",
         API_VERSION+"/transactions/notification-handler").permitAll();
 

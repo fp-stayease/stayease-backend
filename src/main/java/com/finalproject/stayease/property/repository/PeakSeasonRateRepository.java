@@ -16,7 +16,7 @@ public interface PeakSeasonRateRepository extends JpaRepository<PeakSeasonRate, 
    SELECT psr
    FROM PeakSeasonRate psr
    WHERE psr.property.id = :propertyId
-   AND :date BETWEEN psr.startDate AND psr.endDate
+   AND :date BETWEEN psr.startDate AND COALESCE(psr.validTo, psr.endDate)
    AND (:bookingTime BETWEEN psr.validFrom AND COALESCE(psr.validTo, :futureDate))
    ORDER BY psr.validFrom ASC
    """)

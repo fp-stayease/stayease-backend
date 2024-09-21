@@ -50,7 +50,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       FROM Property p
       JOIN Room r ON p.id = r.property.id
       LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
-      AND :date BETWEEN psr.startDate AND psr.endDate
+      AND :date BETWEEN psr.startDate AND COALESCE(psr.validTo, psr.endDate)
       WHERE p.id = :propertyId
       AND p.deletedAt IS NULL
       AND r.deletedAt IS NULL

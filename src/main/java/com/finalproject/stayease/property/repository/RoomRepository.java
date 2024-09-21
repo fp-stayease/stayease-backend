@@ -86,7 +86,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
       FROM Room r
       JOIN Property p ON r.property.id = p.id
       LEFT JOIN PeakSeasonRate psr ON p.id = psr.property.id
-        AND :date BETWEEN psr.startDate AND psr.endDate
+        AND :date BETWEEN psr.startDate AND COALESCE(psr.validTo, psr.endDate)
       WHERE r.id = :roomId
         AND p.deletedAt IS NULL
         AND r.deletedAt IS NULL
