@@ -70,7 +70,7 @@ public class Room {
   @OneToMany(mappedBy = "room")
   private Set<RoomAvailability> roomAvailabilities = new LinkedHashSet<>();
 
-  @Column(name = "imageUrl", length = Integer.MAX_VALUE)
+  @Column(name = "image_url", length = Integer.MAX_VALUE)
   private String imageUrl;
 
   @OneToMany(mappedBy = "room")

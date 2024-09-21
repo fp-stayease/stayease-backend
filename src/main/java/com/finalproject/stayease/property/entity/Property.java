@@ -1,6 +1,5 @@
 package com.finalproject.stayease.property.entity;
 
-import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -58,9 +57,9 @@ public class Property {
   @NotNull(message = "Must include description")
   private String description;
 
-  @Column(name = "imageUrl", length = Integer.MAX_VALUE)
+  @Column(name = "image_url", length = Integer.MAX_VALUE)
   @NotNull(message = "Must include picture") //TODO: update with picture inclusion
-  private String imagesUrl;
+  private String imageUrl;
 
   @Size(max = 255)
   @NotNull(message = "Must include address")
@@ -105,9 +104,6 @@ public class Property {
 
   @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Room> rooms = new LinkedHashSet<>();
-
-  @OneToMany(mappedBy = "property")
-  private Set<Booking> bookings = new LinkedHashSet<>();
 
   @OneToOne(mappedBy = "property")
   private PropertyRateSetting propertyRateSetting;

@@ -5,15 +5,22 @@ import com.finalproject.stayease.exceptions.DuplicateEntryException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
+import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyRepository;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import jakarta.transaction.Transactional;
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -55,6 +62,16 @@ public class PropertyServiceImpl implements PropertyService {
   }
 
   @Override
+  public List<String> findDistinctCities() {
+    return propertyRepository.findDistinctCities();
+  }
+
+  @Override
+  public List<String> findAllPropertyRoomImageUrls() {
+    return propertyRepository.findAllPropertyRoomImageUrls();
+  }
+
+  @Override
   public Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO) {
     isTenant(tenant);
     return toPropertyEntity(tenant, requestDTO);
@@ -78,6 +95,56 @@ public class PropertyServiceImpl implements PropertyService {
     return propertyRepository.findByIdAndDeletedAtIsNull(id);
   }
 
+  @Override
+  public List<Property> getAllAvailablePropertiesOnDate(LocalDate date) {
+    validateDate(date);
+    // Properties with at least one room available
+    List<Property> availableProperties = propertyRepository.findAvailablePropertiesOnDate(date);
+    if (availableProperties.isEmpty()) {
+      throw new DataNotFoundException("No properties found for this date");
+    }
+    return availableProperties;
+  }
+
+  @Override
+  public RoomPriceRateDTO findLowestRoomRate(Long propertyId, LocalDate date) {
+    validateDate(date);
+    return propertyRepository.findAvailableRoomRates(propertyId, date).stream().findFirst().orElseThrow(
+        () -> new DataNotFoundException("No room rates found for this property")
+    );
+  }
+
+  @Override
+  public List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
+    validateDate(date);
+    Property property = propertyRepository.findByIdAndDeletedAtIsNull(propertyId).orElseThrow(
+        () -> new DataNotFoundException("Property with this ID does not exist or is deleted")
+    );
+    return propertyRepository.findAvailableRoomRates(propertyId, date);
+  }
+
+  @Override
+  public List<PropertyListingDTO> findAvailableProperties(LocalDate startDate,
+      LocalDate endDate,
+      String city,
+      Long categoryId,
+      String searchTerm,
+      BigDecimal minPrice,
+      BigDecimal maxPrice) {
+    validateDate(startDate, endDate);
+    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm, minPrice, maxPrice);
+  }
+
+  @Override
+  public boolean isTenantPropertyOwner(Users tenant, Long propertyId) {
+    try {
+    checkIfValid(tenant, propertyId);
+    } catch (RuntimeException e) {
+      return false;
+    }
+    return true;
+  }
+
   private void isTenant(Users tenant) {
     if (tenant.getUserType() != UserType.TENANT) {
       throw new InvalidRequestException("Only Tenants can create properties");
@@ -94,7 +161,7 @@ public class PropertyServiceImpl implements PropertyService {
     property.setCategory(category);
     property.setName(requestDTO.getName());
     property.setDescription(requestDTO.getDescription());
-    property.setImagesUrl(requestDTO.getImages());
+    property.setImageUrl(requestDTO.getImageUrl());
     property.setAddress(requestDTO.getAddress());
     property.setCity(requestDTO.getCity());
     property.setCountry(requestDTO.getCountry());
@@ -143,7 +210,7 @@ public class PropertyServiceImpl implements PropertyService {
     Optional.ofNullable(updatedCategory).ifPresent(existingProperty::setCategory);
     Optional.ofNullable(requestDTO.getName()).ifPresent(existingProperty::setName);
     Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingProperty::setDescription);
-    Optional.ofNullable(requestDTO.getImages()).ifPresent(existingProperty::setImagesUrl);
+    Optional.ofNullable(requestDTO.getImageUrl()).ifPresent(existingProperty::setImageUrl);
     propertyRepository.save(existingProperty);
     return existingProperty;
   }
@@ -159,9 +226,22 @@ public class PropertyServiceImpl implements PropertyService {
     return null;
   }
 
+  private void validateDate(LocalDate date) {
+    if (date.isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("Date is out of valid range: " + date);
+    }
+  }
+
+  private void validateDate(LocalDate startDate, LocalDate endDate) {
+    validateDate(startDate);
+    if (startDate.isAfter(endDate)) {
+      throw new IllegalArgumentException("Start date cannot be after end date");
+    }
+  }
+
   // Region - quarantine
 
-//  private Point getUpdatedPoint(Property existingProperty, UpdatePropertyRequestDTO requestDTO) {
+  //  private Point getUpdatedPoint(Property existingProperty, UpdatePropertyRequestDTO requestDTO) {
 //    Double existingLongitude = existingProperty.getLongitude();
 //    Double existingLatitude = existingProperty.getLatitude();
 //    Double requestLongitude = requestDTO.getLongitude();
@@ -173,4 +253,20 @@ public class PropertyServiceImpl implements PropertyService {
 //    }
 //    return null;
 //  }
+  public static class DateValidator {
+
+    private static final LocalDate MIN_DATE = LocalDate.of(1900, 1, 1);
+    private static final LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
+
+    public static boolean isValidDate(LocalDate date) {
+      return date != null && !date.isBefore(MIN_DATE) && !date.isAfter(MAX_DATE);
+    }
+
+    public static void validateDate(LocalDate date) {
+      if (!isValidDate(date)) {
+        throw new IllegalArgumentException("Date is out of valid range: " + date);
+      }
+
+    }
+  }
 }
