@@ -97,9 +97,10 @@ logging:
       springframework:
         security:
           DEBUG
-pending:
+cron:
   cleanup:
-    cron: 0 0 */12 * * ?
+    pending: 0 0 */12 * * ?
+    cloudinary: 0 0 * * * ?
 rsa:
   private-key: ${PRIVATE_KEY}
   public-key: ${PUBLIC_KEY}

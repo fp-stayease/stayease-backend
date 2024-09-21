@@ -52,7 +52,6 @@ public class PropertyCategoryServiceImplTest {
 
     CreateCategoryRequestDTO requestDTO = new CreateCategoryRequestDTO();
     requestDTO.setName("Apartment");
-    requestDTO.setDescription("Residential property for rent");
 
     PropertyCategory expectedCategory = new PropertyCategory();
     expectedCategory.setName("apartment");
@@ -78,7 +77,6 @@ public class PropertyCategoryServiceImplTest {
 
     CreateCategoryRequestDTO requestDTO = new CreateCategoryRequestDTO();
     requestDTO.setName("Apartment");
-    requestDTO.setDescription("Residential property for rent");
 
     PropertyCategory existingCategory = new PropertyCategory();
     existingCategory.setName("apartment");
@@ -98,7 +96,6 @@ public class PropertyCategoryServiceImplTest {
 
     CreateCategoryRequestDTO requestDTO = new CreateCategoryRequestDTO();
     requestDTO.setName("Apartment");
-    requestDTO.setDescription("Residential property for rent");
 
     assertThrows(InvalidRequestException.class, () -> propertyCategoryService.createCategory(nonTenant, requestDTO));
   }

@@ -4,26 +4,43 @@ import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
-import com.finalproject.stayease.property.entity.RoomAvailability;
-import com.finalproject.stayease.property.entity.dto.*;
+import com.finalproject.stayease.property.entity.dto.CategoryDTO;
+import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
+import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
+import com.finalproject.stayease.property.entity.dto.PropertyDTO;
+import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
+import com.finalproject.stayease.property.entity.dto.RoomDTO;
+import com.finalproject.stayease.property.entity.dto.RoomWithRoomAvailabilityDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
+import com.finalproject.stayease.property.service.PropertyImageUploadService;
+import com.finalproject.stayease.property.service.PropertyListingService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
-
+import java.util.Map;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,11 +50,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/properties")
 @Data
+@Slf4j
 public class PropertyController {
 
   private final UsersService usersService;
@@ -45,6 +65,9 @@ public class PropertyController {
   private final PropertyCategoryService propertyCategoryService;
   private final RoomService roomService;
   private final PeakSeasonRateService peakSeasonRateService;
+  private final PropertyImageUploadService propertyImageUploadService;
+  private final PropertyListingService propertyListingService;
+
 
   @GetMapping
   public ResponseEntity<Response<List<PropertyDTO>>> getAllProperties() {
@@ -53,13 +76,50 @@ public class PropertyController {
     return Response.successfulResponse(200, "Listing all properties", propertyDTOList);
   }
 
+  @GetMapping("/listings")
+  public ResponseEntity<Response<Map<String, Object>>> getPropertiesListings(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) String city,
+      @RequestParam(required = false) Long categoryId,
+      @RequestParam(required = false) String searchTerm,
+      @RequestParam(required = false) BigDecimal minPrice,
+      @RequestParam(required = false) BigDecimal maxPrice,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "name") String sortBy,
+      @RequestParam(defaultValue = "ASC") String sortDirection
+  ) {
+    Page<PropertyListingDTO> properties = propertyListingService.findAvailableProperties(
+        startDate, endDate, city, categoryId, searchTerm, minPrice,
+        maxPrice, page, size,
+        sortBy, sortDirection);
+
+    return Response.responseMapper(
+        HttpStatus.OK.value(),
+        "Listing available properties",
+        properties
+    );
+  }
+
+  @GetMapping("/available")
+  public ResponseEntity<Response<List<PropertyListingDTO>>> getAvailableProperties(
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+  ) {
+    List<PropertyListingDTO> properties = propertyListingService.findPropertiesWithLowestRoomRate(date);
+    return Response.successfulResponse(200, "Listing available properties", properties);
+  }
+
   @GetMapping("/{propertyId}")
-  public ResponseEntity<Response<PropertyDTO>> getProperty(@PathVariable Long propertyId) {
-    // TODO : PropertyNotFoundException
-    Property property = propertyService.findPropertyById(propertyId).orElseThrow(() -> new DataNotFoundException("No property "
-                                                                                                       + "is found "
-                                                                                                       + "with ID: " + propertyId));
-    return Response.successfulResponse(200, "Listing property ID: " + propertyId, new PropertyDTO(property));
+  public ResponseEntity<Response<PropertyCurrentDTO>> getProperty(@PathVariable Long propertyId) {
+    return Response.successfulResponse(200, "Listing property ID: " + propertyId, roomService.getPropertyCurrent(propertyId));
+  }
+
+  @GetMapping("{propertyId}/available")
+   public ResponseEntity<Response<PropertyAvailableOnDateDTO>> getAvailablePropertyOnDate(@PathVariable Long propertyId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    return Response.successfulResponse(200, "Listing available property for today",
+        propertyListingService.findAvailablePropertyOnDate(propertyId, date));
   }
 
   @GetMapping("/tenant")
@@ -83,6 +143,14 @@ public class PropertyController {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Property added!",
         new PropertyDTO(propertyService.createProperty(tenant, requestDTO)));
+  }
+
+  @PostMapping("/upload-image")
+  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadPropertyImage(@RequestBody MultipartFile image) throws IOException {
+    Users tenant = usersService.getLoggedUser();
+    Long id = tenant.getId();
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Property image uploaded!",
+        new PropertyRoomImageDTO(propertyImageUploadService.uploadImage(id, image)));
   }
 
   @PutMapping("/{propertyId}")
@@ -153,6 +221,21 @@ public class PropertyController {
     return Response.successfulResponse(200, "Listing room ID: " + roomId, new RoomDTO(room));
   }
 
+  @GetMapping("/{propertyId}/rooms/{roomId}/available")
+  public ResponseEntity<Response<RoomAdjustedRatesDTO>> getRoom(@PathVariable Long propertyId,
+      @PathVariable Long roomId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    Room room = roomService.getRoom(propertyId, roomId);
+    return Response.successfulResponse(200, "Listing room ID: " + roomId, roomService.getRoomRateAndAvailability(roomId, date));
+  }
+
+  @PostMapping("/{propertyId}/rooms/{roomId}")
+  public ResponseEntity<Response<PropertyRoomImageDTO>> uploadRoomImage(@PathVariable Long propertyId,
+      @PathVariable Long roomId, @RequestBody MultipartFile image) throws IOException {
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Room image uploaded!",
+        new PropertyRoomImageDTO(propertyImageUploadService.uploadRoomImage(propertyId, roomId, image)));
+  }
+
   @PutMapping("/{propertyId}/rooms/{roomId}")
   public ResponseEntity<Response<RoomDTO>> updateRoom(@PathVariable Long propertyId, @PathVariable Long roomId,
       @RequestBody UpdateRoomRequestDTO requestDTO) {
@@ -167,6 +250,31 @@ public class PropertyController {
   }
 
   // Region - PeakSeasonRate
+
+  @GetMapping("/{propertyId}/rates")
+  public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(@PathVariable Long propertyId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    return Response.successfulResponse(200, "Listing all adjusted rates for property ID: " + propertyId
+                                            + " on date: " + date, peakSeasonRateService.findAvailableRoomRates(propertyId, date));
+  }
+
+  @GetMapping("/{propertyId}/rates/daily")
+  public ResponseEntity<Response<List<DailyPriceDTO>>> getDailyRates(@PathVariable Long propertyId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+    return Response.successfulResponse(200, "Listing all lowest daily rates for property ID: " + propertyId
+                                            + " from date: " + startDate + " to date: " + endDate,
+        peakSeasonRateService.findLowestDailyRoomRates(propertyId, startDate, endDate));
+  }
+
+  @GetMapping("/{propertyId}/rates/daily/cumulative")
+  public ResponseEntity<Response<List<DailyPriceDTO>>> getLowestCumulativeRates(@PathVariable Long propertyId,
+      @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate startDate,
+      @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate endDate) {
+    return Response.successfulResponse(200, "Listing all lowest cumulative rates for property ID: " + propertyId
+                                            + " from date: " + startDate + " to date: " + endDate,
+        peakSeasonRateService.findCumulativeRoomRates(propertyId, startDate, endDate));
+  }
 
   @PostMapping("/{propertyId}/rates")
   public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
@@ -193,5 +301,26 @@ public class PropertyController {
     List<Room> availabilities = roomService.getRoomsAvailability(tenant.getId());
     List<RoomWithRoomAvailabilityDTO> response = availabilities.stream().map(RoomWithRoomAvailabilityDTO::new).toList();
     return Response.successfulResponse(200, "Listing availability for tenant ID: " + tenant.getId(), response);
+  }
+
+  // Region - utilities
+  @GetMapping("/cities")
+  public ResponseEntity<Response<List<String>>> getDistinctCities() {
+    return Response.successfulResponse(200, "Listing all distinct cities", propertyService.findDistinctCities());
+  }
+
+  @GetMapping("/images")
+  public ResponseEntity<Response<List<String>>> getAllPropertyRoomImageUrls() {
+    return Response.successfulResponse(200, "Listing all property and room image URLs",
+        propertyService.findAllPropertyRoomImageUrls());
+  }
+
+  @GetMapping("/{propertyId}/check-ownership")
+  public ResponseEntity<Response<Boolean>> checkOwnership(@PathVariable Long propertyId) {
+    Users tenant = usersService.getLoggedUser();
+    Boolean isOwner = propertyService.isTenantPropertyOwner(tenant, propertyId);
+    log.info("Checking if tenant is owner of property ID: " + isOwner);
+    return Response.successfulResponse(200, "Checking if tenant is owner of property ID: " + propertyId,
+        isOwner);
   }
 }

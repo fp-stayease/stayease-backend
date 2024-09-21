@@ -203,13 +203,18 @@ public class TransactionServiceImpl implements TransactionService {
     public void autoCancelTransaction() {
         var payments = paymentService.findExpiredPendingPayment();
 
+        if (payments.isEmpty()) {
+            log.info("No expired payment found");
+            return;
+        }
+
         for (Payment payment : payments) {
             var cancelledPayment = paymentService.updatePaymentStatus(payment.getId(), "expire");
             var cancelledBooking = bookingService.updateBooking(payment.getBooking().getId(),"expire");
 
             var bookingItems = cancelledBooking.getBookingItems();
             for (BookingItem bookingItem : bookingItems) {
-                roomAvailabilityService.removeUnavailability(bookingItem.getRoom().getId(), cancelledBooking.getCheckInDate(), cancelledBooking.getCheckOutDate());
+                roomAvailabilityService.removeUnavailability(bookingItem.getRoom().getId(), cancelledBooking.getCheckInDate(), cancelledBooking.getCheckOutDate().minusDays(1));
             }
 
             log.info("Payment with id -> " + cancelledPayment.getId() + " and booking id " + cancelledBooking.getId() + " has been cancelled due to expiration time.");

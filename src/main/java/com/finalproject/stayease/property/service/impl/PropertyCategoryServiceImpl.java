@@ -175,11 +175,23 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
 
   private PropertyCategory toPropertyCategoryEntity(Users tenant, CreateCategoryRequestDTO requestDTO) {
     PropertyCategory category = new PropertyCategory();
-    category.setName(requestDTO.getName().toLowerCase());
-    category.setDescription(requestDTO.getDescription());
+    category.setName(capitalizeWords(requestDTO.getName()));
     category.setAddedBy(tenant);
     propertyCategoryRepository.save(category);
     return category;
+  }
+
+  private String capitalizeWords(String str) {
+    String[] words = str.split("\\s+");
+    StringBuilder capitalized = new StringBuilder();
+    for (String word : words) {
+      if (!word.isEmpty()) {
+        capitalized.append(Character.toUpperCase(word.charAt(0)))
+            .append(word.substring(1).toLowerCase())
+            .append(" ");
+      }
+    }
+    return capitalized.toString().trim();
   }
 
   private PropertyCategory checkIfValid(Users tenant, Long categoryId) {

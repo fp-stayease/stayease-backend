@@ -4,6 +4,7 @@ import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -11,7 +12,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class PropertyDTO {
+public class PropertyCurrentDTO {
 
   private Long id;
   private String tenant;
@@ -27,7 +28,7 @@ public class PropertyDTO {
 
   private Set<RoomDTO> rooms = new HashSet<>();
 
-  public PropertyDTO(Property property) {
+  public PropertyCurrentDTO(Property property, List<Room> availableRooms) {
     this.id = property.getId();
     this.tenant = property.getTenant().getTenantInfo().getBusinessName();
     this.category = property.getCategory().getName();
@@ -39,7 +40,7 @@ public class PropertyDTO {
     this.country = property.getCountry();
     this.latitude = property.getLatitude();
     this.longitude = property.getLongitude();
-    this.rooms = property.getRooms().stream().map(RoomDTO::new).collect(Collectors.toSet());
+    this.rooms = availableRooms.stream().map(RoomDTO::new).collect(Collectors.toSet());
   }
 
   @Data

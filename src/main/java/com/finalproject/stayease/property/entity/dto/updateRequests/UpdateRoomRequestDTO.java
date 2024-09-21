@@ -13,4 +13,5 @@ public class UpdateRoomRequestDTO {
   private String description;
   private BigDecimal basePrice;
   private Integer capacity;
+  private String imageUrl;
 }
