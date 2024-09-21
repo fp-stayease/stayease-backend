@@ -1,5 +1,7 @@
 package com.finalproject.stayease.users.controller;
 
+import static com.finalproject.stayease.util.SessionCookieUtil.invalidateSessionAndCookie;
+
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.dto.EmailChangeResponseDTO;
@@ -23,6 +25,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,6 +45,14 @@ public class UsersController {
   private final UsersImageUploadService usersImageUploadService;
   private final EmailChangeService emailChangeService;
   private final ProfileService profileService;
+
+  @DeleteMapping
+  public ResponseEntity<Response<Object>> deleteUser(HttpServletRequest request, HttpServletResponse response) {
+    Users loggedUser = usersService.getLoggedUser();
+    usersService.deleteUser(loggedUser);
+    invalidateSessionAndCookie(request, response);
+    return Response.successfulResponse(HttpStatus.OK.value(), "User deleted successfully!", null);
+  }
 
   @GetMapping("/profile")
   public ResponseEntity<Response<UsersProfileDTO>> getLoggedInProfile() {
@@ -94,6 +105,7 @@ public class UsersController {
       throws MessagingException, IOException {
     Users loggedUser = usersService.getLoggedUser();
     String verificationUrl = emailChangeService.requestEmailChange(loggedUser, requestDTO);
+    log.info("Email change request sent successfully! Verification URL: {}", verificationUrl);
     return Response.successfulResponse(HttpStatus.OK.value(), "Email change request sent successfully!", new EmailChangeResponseDTO(verificationUrl));
   }
 
@@ -106,22 +118,6 @@ public class UsersController {
                                                               + "your new credentials!", new UsersProfileDTO(user));
   }
 
-  private void invalidateSessionAndCookie(HttpServletRequest request, HttpServletResponse response) {
-    HttpSession session = request.getSession(false);
-    if (session != null) {
-      session.invalidate();
-    }
-
-    Cookie[] cookies = request.getCookies();
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        cookie.setValue("");
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-      }
-    }
-  }
 
 
 }

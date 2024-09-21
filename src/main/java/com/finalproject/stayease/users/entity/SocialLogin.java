@@ -1,5 +1,6 @@
 package com.finalproject.stayease.users.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -30,7 +31,7 @@ public class SocialLogin {
   @Column(name = "id", nullable = false)
   private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinColumn(name = "user_id")
   private Users user;
 

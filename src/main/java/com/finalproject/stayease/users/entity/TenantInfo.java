@@ -2,6 +2,7 @@ package com.finalproject.stayease.users.entity;
 
 import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import com.finalproject.stayease.bookings.entity.Booking;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,7 +36,7 @@ public class TenantInfo {
   @Column(name = "id", nullable = false)
   private Long id;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "user_id")
   private Users user;
 

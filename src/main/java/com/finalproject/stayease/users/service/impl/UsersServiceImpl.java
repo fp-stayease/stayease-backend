@@ -4,6 +4,7 @@ import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.repository.UsersRepository;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.Data;
@@ -42,6 +43,12 @@ public class UsersServiceImpl implements UsersService {
   }
 
   @Override
+  public void deleteUser(Users user) {
+    user.setDeletedAt(Instant.now());
+    usersRepository.save(user);
+  }
+
+  @Override
   public List<String> findAllAvatars() {
     return usersRepository.findAllAvatars();
   }
@@ -49,6 +56,11 @@ public class UsersServiceImpl implements UsersService {
   @Override
   public Optional<Users> findById(Long id) {
     return usersRepository.findById(id);
+  }
+
+  @Override
+  public int hardDeleteStaleUsers(Instant timestamp) {
+    return usersRepository.hardDeleteStaleUsers(timestamp);
   }
 
   @Override

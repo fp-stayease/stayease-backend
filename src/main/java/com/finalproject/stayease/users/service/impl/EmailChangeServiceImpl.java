@@ -96,7 +96,7 @@ public class EmailChangeServiceImpl implements EmailChangeService {
 
   private String buildVerificationUrl(String tokenUUID) {
     // TODO :configure fe url accordingly here
-    return feUrl + "/verify-email?token=" + tokenUUID;
+    return feUrl + "/profile/settings/verify-email?token=" + tokenUUID;
   }
 
   private String generateEmailChangeToken(Users user, String newEmail) {

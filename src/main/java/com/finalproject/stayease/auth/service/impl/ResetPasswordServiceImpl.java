@@ -56,6 +56,18 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
   @Value("${token.expire.hours:1}")
   private long TOKEN_EXPIRE;
 
+  public ResetPasswordServiceImpl(ResetPasswordRedisRepository redisRepository, UsersService usersService,
+      SocialLoginService socialLoginService, MailService mailService, JwtDecoder jwtDecoder, JwtEncoder jwtEncoder,
+      PasswordEncoder passwordEncoder) {
+    this.redisRepository = redisRepository;
+    this.usersService = usersService;
+    this.socialLoginService = socialLoginService;
+    this.mailService = mailService;
+    this.jwtDecoder = jwtDecoder;
+    this.jwtEncoder = jwtEncoder;
+    this.passwordEncoder = passwordEncoder;
+  }
+
   @Override
   public ForgotPasswordResponseDTO requestResetToken(ForgotPasswordRequestDTO requestDTO)
       throws MessagingException, IOException {
@@ -99,7 +111,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     String randomKey = generateRandomKey(email);
 
     sendPasswordResetRequestMail(email, randomKey);
-
+    log.info("Request to reset password accepted! Random key: " + randomKey);
     String message = "Request to reset password accepted!";
     return new ForgotPasswordResponseDTO(message, randomKey);
   }
@@ -144,7 +156,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
   private ForgotPasswordResponseDTO handleResendPasswordRequest(String email) throws MessagingException, IOException {
     String randomKey = redisRepository.getTokenFromEmail(email);
     if (!redisRepository.isValid(email, randomKey)) {
-      String message = "Your previous request is still valid.";
+      String message = "Your previous request is still valid. Token is: " + randomKey;
       sendPasswordResetRequestMail(email, randomKey);
       return new ForgotPasswordResponseDTO(message, randomKey);
     } else {
@@ -182,6 +194,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     Resource resource = new ClassPathResource("templates/password-reset.html");
     String htmlTemplate = Files.readString(resource.getFile().toPath());
     String url = buildUrl(randomKey);
+    log.info("Reset URL: " + url);
 
     // Replace placeholders with actual values
     String htmlContent = htmlTemplate
