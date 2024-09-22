@@ -3,15 +3,20 @@ package com.finalproject.stayease.property.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -23,7 +28,8 @@ import org.hibernate.annotations.ColumnDefault;
 public class PropertyRateSetting {
 
   @Id
-  @ColumnDefault("nextval('property_rate_settings_id_seq'::regclass)")
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "property_rate_settings_id_gen")
+  @SequenceGenerator(name = "property_rate_settings_id_gen", sequenceName = "property_rate_settings_id_seq", allocationSize = 1)
   @Column(name = "id", nullable = false)
   private Long id;
 
@@ -37,14 +43,14 @@ public class PropertyRateSetting {
   private Boolean useAutoRates = false;
 
   @Column(name = "holiday_rate_adjustment", precision = 10, scale = 2)
-  private BigDecimal holidayRateAdjustment;
+  private BigDecimal holidayAdjustmentRate;
 
   @Size(max = 10)
   @Column(name = "holiday_adjustment_type", length = 10)
   private String holidayAdjustmentType;
 
   @Column(name = "long_weekend_rate_adjustment", precision = 10, scale = 2)
-  private BigDecimal longWeekendRateAdjustment;
+  private BigDecimal longWeekendAdjustmentRate;
 
   @Size(max = 10)
   @Column(name = "long_weekend_adjustment_type", length = 10)
@@ -54,12 +60,23 @@ public class PropertyRateSetting {
   @Column(name = "valid_from")
   private Instant validFrom;
 
-  @Column(name = "valid_to")
-  private Instant validTo;
+
+  @ColumnDefault("CURRENT_TIMESTAMP")
+  @Column(name = "updated_at")
+  private Instant updatedAt;
+
+  @Column(name = "deleted_at")
+  private Instant deletedAt;
 
   @PrePersist
   protected void onCreate() {
     validFrom = Instant.now();
+    updatedAt = Instant.now();
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    updatedAt = Instant.now();
   }
 
 }

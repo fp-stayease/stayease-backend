@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.repository;
 
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
+import com.finalproject.stayease.property.entity.Property;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -17,8 +18,8 @@ public interface PeakSeasonRateRepository extends JpaRepository<PeakSeasonRate, 
       SELECT psr
       FROM PeakSeasonRate psr
       WHERE psr.property.id = :propertyId
-      AND :date BETWEEN psr.startDate AND COALESCE(psr.validTo, psr.endDate)
-      AND (:bookingTime BETWEEN psr.validFrom AND COALESCE(psr.validTo, :futureDate))
+      AND :date BETWEEN psr.startDate AND psr.endDate
+      AND (:bookingTime BETWEEN psr.validFrom AND COALESCE(psr.endDate, :futureDate))
       ORDER BY psr.validFrom ASC
       """)
   List<PeakSeasonRate> findValidRatesByPropertyAndDate(
@@ -30,9 +31,11 @@ public interface PeakSeasonRateRepository extends JpaRepository<PeakSeasonRate, 
   @Query("""
       SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END
       FROM PeakSeasonRate p
-      WHERE p.property.id = :propertyId AND p.startDate = :startDate AND p.endDate = :endDate AND p.validTo IS NULL
+      WHERE p.property.id = :propertyId AND p.startDate = :startDate AND p.endDate = :endDate AND p.deletedAt IS NULL
       """)
   boolean existsConflictingRate(@Param("propertyId") Long propertyId,
       @Param("startDate") LocalDate startDate,
       @Param("endDate") LocalDate endDate);
+
+  List<PeakSeasonRate> findByPropertyAndEndDateAfterAndDeletedAtIsNull(Property property, LocalDate date);
 }

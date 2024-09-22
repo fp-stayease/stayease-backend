@@ -45,14 +45,26 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   @Override
   public PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO) {
     // TODO PeakSeasonRateNotFoundException
-    PeakSeasonRate existingRate = peakSeasonRateRepository.findById(rateId).orElseThrow(() -> new DataNotFoundException("Peak Season Rate Not Found"));
-    existingRate.setValidTo(Instant.now());
-    peakSeasonRateRepository.save(existingRate);
+    PeakSeasonRate existingRate = peakSeasonRateRepository.findById(rateId)
+        .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
+    log.info("Updating peak season rate with ID {}", rateId);
 
     // Get property while also checking ownership of property and rate
     Property property = getProperty(tenant, existingRate.getProperty().getId());
 
-   return updateRate(property, existingRate, requestDTO);
+   return updateRate(existingRate, requestDTO);
+  }
+
+  @Override
+  public List<PeakSeasonRate> getTenantCurrentRates(Users tenant) {
+    List<Property> properties = propertyService.findAllByTenant(tenant);
+    List<PeakSeasonRate> currentRates = new ArrayList<>();
+    for (Property property : properties) {
+      List<PeakSeasonRate> rates = peakSeasonRateRepository.findByPropertyAndEndDateAfterAndDeletedAtIsNull(property,
+          LocalDate.now());
+      currentRates.addAll(rates);
+    }
+    return currentRates;
   }
 
   @Override
@@ -120,8 +132,8 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     BigDecimal adjustedPrice = basePrice;
     for (PeakSeasonRate rate : applicableRates) {
       adjustedPrice = rate.getAdjustmentType() == AdjustmentType.PERCENTAGE
-          ? adjustedPrice.add(basePrice.multiply(rate.getRateAdjustment().divide(BigDecimal.valueOf(100))))
-          : adjustedPrice.add(Optional.ofNullable(rate.getRateAdjustment()).orElse(BigDecimal.ZERO));
+          ? adjustedPrice.add(basePrice.multiply(rate.getAdjustmentRate().divide(BigDecimal.valueOf(100))))
+          : adjustedPrice.add(Optional.ofNullable(rate.getAdjustmentRate()).orElse(BigDecimal.ZERO));
     }
     return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }
@@ -142,7 +154,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     peakSeasonRate.setProperty(property);
     peakSeasonRate.setStartDate(requestDTO.getStartDate());
     peakSeasonRate.setEndDate(requestDTO.getEndDate());
-    peakSeasonRate.setRateAdjustment(requestDTO.getAdjustmentRate());
+    peakSeasonRate.setAdjustmentRate(requestDTO.getAdjustmentRate());
     peakSeasonRate.setAdjustmentType(requestDTO.getAdjustmentType());
     peakSeasonRateRepository.save(peakSeasonRate);
     return peakSeasonRate;
@@ -168,23 +180,20 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return null;
   }
 
-  private PeakSeasonRate updateRate(Property property, PeakSeasonRate existingRate, SetPeakSeasonRateRequestDTO requestDTO) {
-    PeakSeasonRate updatedRate = new PeakSeasonRate();
-    updatedRate.setProperty(property);
-
-    updatedRate.setStartDate(Optional.ofNullable(isUpdateDateValid(requestDTO))
+  private PeakSeasonRate updateRate(PeakSeasonRate existingRate, SetPeakSeasonRateRequestDTO requestDTO) {
+    existingRate.setStartDate(Optional.ofNullable(isUpdateDateValid(requestDTO))
         .orElse(existingRate.getStartDate()));
 
-    updatedRate.setEndDate(Optional.ofNullable(requestDTO.getEndDate())
+    existingRate.setEndDate(Optional.ofNullable(requestDTO.getEndDate())
         .orElse(existingRate.getEndDate()));
 
-    updatedRate.setRateAdjustment(Optional.ofNullable(requestDTO.getAdjustmentRate())
-        .orElse(existingRate.getRateAdjustment()));
+    existingRate.setAdjustmentRate(Optional.ofNullable(requestDTO.getAdjustmentRate())
+        .orElse(existingRate.getAdjustmentRate()));
 
-    updatedRate.setAdjustmentType(Optional.ofNullable(requestDTO.getAdjustmentType())
+    existingRate.setAdjustmentType(Optional.ofNullable(requestDTO.getAdjustmentType())
         .orElse(existingRate.getAdjustmentType()));
 
-    return peakSeasonRateRepository.save(updatedRate);
+    return peakSeasonRateRepository.save(existingRate);
   }
 
   private void validateDate(LocalDate date) {

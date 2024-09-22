@@ -9,6 +9,7 @@ import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,19 @@ public class RatesController {
   
   private final PeakSeasonRateService rateService;
   private final UsersService usersService;
+
+  @GetMapping
+  public ResponseEntity<Response<List<PeakSeasonRateDTO>>> getTenantCurrentRates() {
+    Users tenant = usersService.getLoggedUser();
+    List<PeakSeasonRateDTO> currentRatesDTO = rateService
+        .getTenantCurrentRates(tenant)
+        .stream()
+        .map(PeakSeasonRateDTO::new)
+        .sorted(Comparator.comparing(PeakSeasonRateDTO::getId))
+        .toList();
+    return Response.successfulResponse(200,
+        "Listing all current rates for tenant: " + tenant.getTenantInfo().getBusinessName(), currentRatesDTO);
+  }
 
   @GetMapping("/{propertyId}")
   public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(@PathVariable Long propertyId,
@@ -62,6 +76,7 @@ public class RatesController {
   @PostMapping("/properties/{propertyId}")
   public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
       @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
+    log.info("request:" + requestDTO.toString());
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Set!",
         new PeakSeasonRateDTO(rateService.setPeakSeasonRate(tenant, propertyId, requestDTO)));
