@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 public class SetPeakSeasonRateRequestDTO {
   private LocalDate startDate;
   private LocalDate endDate;
-  private BigDecimal rateAdjustment;
+  private BigDecimal adjustmentRate;
   private AdjustmentType adjustmentType;
 }

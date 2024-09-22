@@ -72,7 +72,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         r.description,
         r.basePrice,
         psr.adjustmentType,
-        psr.rateAdjustment,
+        psr.adjustmentRate,
         CASE
           WHEN EXISTS (
             SELECT 1 FROM RoomAvailability ra

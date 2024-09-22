@@ -59,7 +59,7 @@ public class PeakSeasonRateServiceImplTest {
     requestDTO = new SetPeakSeasonRateRequestDTO();
     requestDTO.setStartDate(LocalDate.of(2024, 7, 1));
     requestDTO.setEndDate(LocalDate.of(2024, 7, 31));
-    requestDTO.setRateAdjustment(BigDecimal.valueOf(20));
+    requestDTO.setAdjustmentRate(BigDecimal.valueOf(20));
     requestDTO.setAdjustmentType(PeakSeasonRate.AdjustmentType.PERCENTAGE);
   }
 
@@ -74,7 +74,7 @@ public class PeakSeasonRateServiceImplTest {
     assertEquals(property, result.getProperty());
     assertEquals(requestDTO.getStartDate(), result.getStartDate());
     assertEquals(requestDTO.getEndDate(), result.getEndDate());
-    assertEquals(requestDTO.getRateAdjustment(), result.getRateAdjustment());
+    assertEquals(requestDTO.getAdjustmentRate(), result.getAdjustmentRate());
     assertEquals(requestDTO.getAdjustmentType(), result.getAdjustmentType());
 
     verify(peakSeasonRateRepository).save(any(PeakSeasonRate.class));
@@ -119,7 +119,7 @@ public class PeakSeasonRateServiceImplTest {
 
     PeakSeasonRate rate = new PeakSeasonRate();
     rate.setAdjustmentType(PeakSeasonRate.AdjustmentType.PERCENTAGE);
-    rate.setRateAdjustment(BigDecimal.valueOf(20));
+    rate.setAdjustmentRate(BigDecimal.valueOf(20));
 
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(1L, date, bookingTime, Instant.MAX)).thenReturn(List.of(rate));
 
@@ -136,7 +136,7 @@ public class PeakSeasonRateServiceImplTest {
 
     PeakSeasonRate rate = new PeakSeasonRate();
     rate.setAdjustmentType(PeakSeasonRate.AdjustmentType.FIXED);
-    rate.setRateAdjustment(BigDecimal.valueOf(50));
+    rate.setAdjustmentRate(BigDecimal.valueOf(50));
 
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(1L, date, bookingTime, Instant.MAX)).thenReturn(List.of(rate));
 
@@ -153,11 +153,11 @@ public class PeakSeasonRateServiceImplTest {
 
     PeakSeasonRate rate1 = new PeakSeasonRate();
     rate1.setAdjustmentType(PeakSeasonRate.AdjustmentType.PERCENTAGE);
-    rate1.setRateAdjustment(BigDecimal.valueOf(20));
+    rate1.setAdjustmentRate(BigDecimal.valueOf(20));
 
     PeakSeasonRate rate2 = new PeakSeasonRate();
     rate2.setAdjustmentType(PeakSeasonRate.AdjustmentType.FIXED);
-    rate2.setRateAdjustment(BigDecimal.valueOf(30));
+    rate2.setAdjustmentRate(BigDecimal.valueOf(30));
 
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(1L, date, bookingTime, Instant.MAX)).thenReturn(List.of(rate1, rate2));
 
@@ -174,7 +174,7 @@ public class PeakSeasonRateServiceImplTest {
     Long rateId = 1L;
     SetPeakSeasonRateRequestDTO requestDTO = new SetPeakSeasonRateRequestDTO();
     requestDTO.setEndDate(LocalDate.now().plusDays(7));
-    requestDTO.setRateAdjustment(BigDecimal.valueOf(10));
+    requestDTO.setAdjustmentRate(BigDecimal.valueOf(10));
     requestDTO.setAdjustmentType(AdjustmentType.PERCENTAGE);
 
     Property property = new Property();
@@ -188,12 +188,12 @@ public class PeakSeasonRateServiceImplTest {
     when(peakSeasonRateRepository.save(any(PeakSeasonRate.class))).thenAnswer(i -> i.getArguments()[0]);
 
     // Act
-    PeakSeasonRate result = peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO);
+    PeakSeasonRate result = peakSeasonRateService.updatePeakSeasonRate(tenant, rateId, requestDTO);
 
     // Assert
     assertNotNull(result);
     assertEquals(requestDTO.getEndDate(), result.getEndDate());
-    assertEquals(requestDTO.getRateAdjustment(), result.getRateAdjustment());
+    assertEquals(requestDTO.getAdjustmentRate(), result.getAdjustmentRate());
     assertEquals(requestDTO.getAdjustmentType(), result.getAdjustmentType());
     assertEquals(existingRate.getStartDate(), result.getStartDate());
     verify(peakSeasonRateRepository, times(2)).save(any(PeakSeasonRate.class));
@@ -211,7 +211,7 @@ public class PeakSeasonRateServiceImplTest {
 
     // Act & Assert
     assertThrows(DataNotFoundException.class, () ->
-        peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO));
+        peakSeasonRateService.updatePeakSeasonRate(tenant, rateId, requestDTO));
   }
 
   @Test
@@ -230,7 +230,7 @@ public class PeakSeasonRateServiceImplTest {
 
     // Act & Assert
     assertThrows(BadCredentialsException.class, () ->
-        peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO));
+        peakSeasonRateService.updatePeakSeasonRate(tenant, rateId, requestDTO));
   }
 
   @Test
@@ -249,7 +249,7 @@ public class PeakSeasonRateServiceImplTest {
 
     // Act & Assert
     assertThrows(DataNotFoundException.class, () ->
-        peakSeasonRateService.updatePeakSeasonRate(tenant, propertyId, rateId, requestDTO));
+        peakSeasonRateService.updatePeakSeasonRate(tenant, rateId, requestDTO));
   }
 
   @Test
@@ -280,7 +280,7 @@ public class PeakSeasonRateServiceImplTest {
 
     PeakSeasonRate rate = new PeakSeasonRate();
     rate.setAdjustmentType(PeakSeasonRate.AdjustmentType.PERCENTAGE);
-    rate.setRateAdjustment(new BigDecimal("10.00")); // 10% increase
+    rate.setAdjustmentRate(new BigDecimal("10.00")); // 10% increase
 
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(eq(propertyId), eq(date), any(Instant.class), any(Instant.class)))
         .thenReturn(Collections.singletonList(rate));
@@ -302,7 +302,7 @@ public class PeakSeasonRateServiceImplTest {
 
     PeakSeasonRate rate = new PeakSeasonRate();
     rate.setAdjustmentType(PeakSeasonRate.AdjustmentType.FIXED);
-    rate.setRateAdjustment(new BigDecimal("20.00")); // $20 increase
+    rate.setAdjustmentRate(new BigDecimal("20.00")); // $20 increase
 
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(eq(propertyId), eq(date), any(Instant.class), any(Instant.class)))
         .thenReturn(Collections.singletonList(rate));
@@ -324,11 +324,11 @@ public class PeakSeasonRateServiceImplTest {
 
     PeakSeasonRate rate1 = new PeakSeasonRate();
     rate1.setAdjustmentType(PeakSeasonRate.AdjustmentType.PERCENTAGE);
-    rate1.setRateAdjustment(new BigDecimal("10.00")); // 10% increase
+    rate1.setAdjustmentRate(new BigDecimal("10.00")); // 10% increase
 
     PeakSeasonRate rate2 = new PeakSeasonRate();
     rate2.setAdjustmentType(PeakSeasonRate.AdjustmentType.FIXED);
-    rate2.setRateAdjustment(new BigDecimal("20.00")); // $20 increase
+    rate2.setAdjustmentRate(new BigDecimal("20.00")); // $20 increase
 
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(eq(propertyId), eq(date), any(Instant.class), any(Instant.class)))
         .thenReturn(Arrays.asList(rate1, rate2));
@@ -351,7 +351,7 @@ public class PeakSeasonRateServiceImplTest {
 
     PeakSeasonRate rate = new PeakSeasonRate();
     rate.setAdjustmentType(PeakSeasonRate.AdjustmentType.PERCENTAGE);
-    rate.setRateAdjustment(new BigDecimal("5.5")); // 5.5% increase
+    rate.setAdjustmentRate(new BigDecimal("5.5")); // 5.5% increase
 
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(eq(propertyId), eq(date), any(Instant.class), any(Instant.class)))
         .thenReturn(Collections.singletonList(rate));

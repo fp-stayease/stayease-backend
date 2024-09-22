@@ -52,7 +52,6 @@ public class SecurityConfig {
   private String API_VERSION;
 
 
-
   // TODO : configure later, only here for starter
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -70,65 +69,70 @@ public class SecurityConfig {
         .build();
   }
 
-  private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+  private void configureAuthorization(
+      AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
     // Deny all access to the role endpoint
     auth.requestMatchers(API_VERSION + "/role").denyAll();
 
     // Permit all access to certain GET endpoints
     auth.requestMatchers(HttpMethod.GET,
-            API_VERSION + "/properties/{propertyId}",
-            API_VERSION + "/properties/{propertyId}/listings",
-            API_VERSION + "/properties/{propertyId}/available/**",
-            API_VERSION + "/properties/{propertyId}/rooms/{roomId}",
-            API_VERSION + "/properties/{propertyId}/rooms/{roomId}/available",
-            API_VERSION + "/properties/rooms",
-            API_VERSION + "/properties/categories",
-            API_VERSION + "/properties/images",
-            API_VERSION + "/properties/cities",
-            API_VERSION + "/properties/available",
-            API_VERSION + "/properties/{propertyId}/rates",
-            API_VERSION + "/properties/{propertyId}/rates/daily",
-            API_VERSION + "/properties/{propertyId}/rates/daily/cumulative",
-            API_VERSION + "/payment/{bookingId}",
-        API_VERSION+"/transactions/notification-handler").permitAll();
+        API_VERSION + "/properties",
+        API_VERSION + "/properties/{propertyId}",
+        API_VERSION + "/properties/{propertyId}/listings",
+        API_VERSION + "/properties/{propertyId}/available/**",
+        API_VERSION + "/properties/{propertyId}/rooms/{roomId}",
+        API_VERSION + "/properties/{propertyId}/rooms/{roomId}/available",
+        API_VERSION + "/properties/rooms",
+        API_VERSION + "/properties/categories",
+        API_VERSION + "/properties/images",
+        API_VERSION + "/properties/cities",
+        API_VERSION + "/properties/available",
+        API_VERSION + "/rates/**",
+        API_VERSION + "/rates/{propertyId}/daily",
+        API_VERSION + "/rates/{propertyId}/daily/cumulative",
+        API_VERSION + "/payment/{bookingId}",
+        API_VERSION + "/transactions/notification-handler").permitAll();
 
     // Permit access to specific POST endpoint
-    auth.requestMatchers(HttpMethod.POST, API_VERSION+"/transactions").hasRole("USER");
+    auth.requestMatchers(HttpMethod.POST, API_VERSION + "/transactions").hasRole("USER");
 
     // Permit access to specific PUT endpoint
     auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/users/profile/email").permitAll();
-    auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/transactions/user/{bookingId}").hasRole("USER");
-    auth.requestMatchers(HttpMethod.PUT, API_VERSION+"/transactions/{bookingId}").hasRole("TENANT");
+    auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/transactions/user/{bookingId}").hasRole("USER");
+    auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
 
     // Permit access to specific PATCH endpoint
-    auth.requestMatchers(HttpMethod.PATCH, API_VERSION+"/transactions/{bookingId}").hasRole("TENANT");
+    auth.requestMatchers(HttpMethod.PATCH, API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
 
     // Role-based access control
-    auth.requestMatchers(API_VERSION + "/role/user",
-        API_VERSION+"/payments/payment-proof/{bookingId}",
-        API_VERSION+"/bookings/user").hasRole("USER");
+    auth.requestMatchers(
+        API_VERSION + "/role/user",
+        API_VERSION + "/payments/payment-proof/{bookingId}",
+        API_VERSION + "/bookings/user").hasRole("USER");
+
     auth.requestMatchers(API_VERSION + "/role/tenant",
-            API_VERSION + "/properties/**",
-            API_VERSION + "/profile/tenant",
-        API_VERSION+"/bookings/tenant").hasRole("TENANT");
+        API_VERSION + "/properties/**",
+        API_VERSION + "/profile/tenant",
+        API_VERSION + "/bookings/tenant").hasRole("TENANT");
 
     // Permit all access to authentication and registration endpoints
-    auth.requestMatchers(API_VERSION + "/auth/**",
-            API_VERSION + "/register/**",
-            API_VERSION + "/oauth2/**",
-            API_VERSION + "/password/**",
-            API_VERSION + "/password/forgot",
-            API_VERSION + "/password/reset",
-            API_VERSION + "/midtrans",
-            API_VERSION+"/bookings/{bookingId}",
-            API_VERSION + "/error/**").permitAll();
+    auth.requestMatchers(
+        API_VERSION + "/auth/**",
+        API_VERSION + "/register/**",
+        API_VERSION + "/oauth2/**",
+        API_VERSION + "/password/**",
+        API_VERSION + "/password/forgot",
+        API_VERSION + "/password/reset",
+        API_VERSION + "/midtrans",
+        API_VERSION + "/bookings/{bookingId}",
+        API_VERSION + "/error/**").permitAll();
 
     // Authenticate any other request
     auth.anyRequest().authenticated();
 
 //    auth.anyRequest().permitAll();
     // TODO !! THIS IS STILL FOR TESTING, PLEASE SECURE THE ENDPOINTS
-}
+  }
 
   private void configureOAuth2Login(OAuth2LoginConfigurer<HttpSecurity> oauth2) {
     oauth2
