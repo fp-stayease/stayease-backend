@@ -1,5 +1,7 @@
 package com.finalproject.stayease.auth.controller;
 
+import static com.finalproject.stayease.util.SessionCookieUtil.invalidateSessionAndCookie;
+
 import com.finalproject.stayease.auth.model.dto.AuthResponseDto;
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
@@ -149,22 +151,5 @@ public class AuthController {
           .orElse(null);
     }
     return null;
-  }
-
-  private void invalidateSessionAndCookie(HttpServletRequest request, HttpServletResponse response) {
-    HttpSession session = request.getSession(false);
-    if (session != null) {
-      session.invalidate();
-    }
-
-    Cookie[] cookies = request.getCookies();
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        cookie.setValue("");
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
-      }
-    }
   }
 }

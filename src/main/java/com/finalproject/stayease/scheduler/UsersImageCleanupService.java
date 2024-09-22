@@ -19,7 +19,7 @@ public class UsersImageCleanupService {
   private final UsersService usersService;
 
   @SneakyThrows
-  @Scheduled(cron = "0 0 2 * * ?") // Run at 2 AM every day
+  @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}")
   public void cleanupOrphanedImages() {
     Set<String> allUsersImages = getAllUsersImages();
     Set<String> allImagesInCloudinary = new HashSet<>(cloudinaryService.findAllImagesFromFolder("/users/*"));

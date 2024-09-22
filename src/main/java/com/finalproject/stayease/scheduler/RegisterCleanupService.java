@@ -15,7 +15,7 @@ public class RegisterCleanupService {
 
   private final PendingRegistrationService pendingRegistrationService;
 
-  @Scheduled(cron = "${pending.cleanup.cron:0 0 */12 * * ?}")
+  @Scheduled(cron = "${cron.cleanup.pending:0 0 */12 * * ?}")
   public void cleanupExpiredPendingRegistrations() {
     Instant now = Instant.now();
     Instant expirationThreshold = now.minus(1, ChronoUnit.DAYS);
