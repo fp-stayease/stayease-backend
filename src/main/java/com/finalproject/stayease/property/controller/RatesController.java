@@ -13,10 +13,12 @@ import java.util.Comparator;
 import java.util.List;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.repository.query.Param;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,11 +33,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Data
 public class RatesController {
-  
+
   private final PeakSeasonRateService rateService;
   private final UsersService usersService;
 
   @GetMapping
+  @PreAuthorize("hasRole('TENANT')")
   public ResponseEntity<Response<List<PeakSeasonRateDTO>>> getTenantCurrentRates() {
     Users tenant = usersService.getLoggedUser();
     List<PeakSeasonRateDTO> currentRatesDTO = rateService
@@ -48,15 +51,20 @@ public class RatesController {
         "Listing all current rates for tenant: " + tenant.getTenantInfo().getBusinessName(), currentRatesDTO);
   }
 
-  @GetMapping("/{propertyId}")
-  public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(@PathVariable Long propertyId,
-      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+  @GetMapping(params = {"propertyId"})
+  public ResponseEntity<Response<List<RoomAdjustedRatesDTO>>> getAdjustedRates(
+      @RequestParam("propertyId") Long propertyId,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    if (date == null) {
+      date = LocalDate.now();
+    }
     return Response.successfulResponse(200, "Listing all adjusted rates for property ID: " + propertyId
-                                            + " on date: " + date, rateService.findAvailableRoomRates(propertyId, date));
+                                            + " on date: " + date,
+        rateService.findAvailableRoomRates(propertyId, date));
   }
 
-  @GetMapping("/{propertyId}/daily")
-  public ResponseEntity<Response<List<DailyPriceDTO>>> getDailyRates(@PathVariable Long propertyId,
+  @GetMapping(value = "/daily", params = {"propertyId"})
+  public ResponseEntity<Response<List<DailyPriceDTO>>> getDailyRates(@RequestParam Long propertyId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
     return Response.successfulResponse(200, "Listing all lowest daily rates for property ID: " + propertyId
@@ -64,8 +72,8 @@ public class RatesController {
         rateService.findLowestDailyRoomRates(propertyId, startDate, endDate));
   }
 
-  @GetMapping("/{propertyId}/daily/cumulative")
-  public ResponseEntity<Response<List<DailyPriceDTO>>> getLowestCumulativeRates(@PathVariable Long propertyId,
+  @GetMapping(value = "/daily/cumulative", params = {"propertyId"})
+  public ResponseEntity<Response<List<DailyPriceDTO>>> getLowestCumulativeRates(@RequestParam Long propertyId,
       @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate endDate) {
     return Response.successfulResponse(200, "Listing all lowest cumulative rates for property ID: " + propertyId
@@ -73,14 +81,18 @@ public class RatesController {
         rateService.findCumulativeRoomRates(propertyId, startDate, endDate));
   }
 
-  @PostMapping("/properties/{propertyId}")
-  public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@PathVariable Long propertyId,
+  // Region - POST Requests
+
+  @PostMapping(params = {"propertyId"})
+  public ResponseEntity<Response<PeakSeasonRateDTO>> setPeakSeasonRate(@RequestParam Long propertyId,
       @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
     log.info("request:" + requestDTO.toString());
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Set!",
         new PeakSeasonRateDTO(rateService.setPeakSeasonRate(tenant, propertyId, requestDTO)));
   }
+
+  // Region - PUT Requests
 
   @PutMapping("/{rateId}")
   public ResponseEntity<Response<PeakSeasonRateDTO>> updatePeakSeasonRate(
