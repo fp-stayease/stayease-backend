@@ -44,7 +44,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         r.description,
         r.basePrice,
         psr.adjustmentType,
-        psr.rateAdjustment,
+        psr.adjustmentRate,
         true
         )
       FROM Property p
