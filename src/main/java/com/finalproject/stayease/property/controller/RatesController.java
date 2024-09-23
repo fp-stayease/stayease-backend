@@ -46,7 +46,7 @@ public class RatesController {
         .getTenantCurrentRates(tenant)
         .stream()
         .map(PeakSeasonRateDTO::new)
-        .sorted(Comparator.comparing(PeakSeasonRateDTO::getId))
+        .sorted(Comparator.comparing(PeakSeasonRateDTO::getRateId))
         .toList();
     log.info("Current Rates: " + currentRatesDTO.getFirst());
     return Response.successfulResponse(200,
@@ -101,8 +101,10 @@ public class RatesController {
       @PathVariable Long rateId,
       @RequestBody SetPeakSeasonRateRequestDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
+    PeakSeasonRateDTO response = new PeakSeasonRateDTO(rateService.updatePeakSeasonRate(tenant, rateId, requestDTO));
+    log.info("Updated Rate: " + response);
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
-        new PeakSeasonRateDTO(rateService.updatePeakSeasonRate(tenant, rateId, requestDTO)));
+       response);
   }
 
   // Region - DELETE Requests

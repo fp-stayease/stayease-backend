@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PeakSeasonRateDTO {
 
-  private Long id;
+  private Long rateId;
   private LocalDate startDate;
   private LocalDate endDate;
   private BigDecimal adjustmentRate;
@@ -24,7 +24,7 @@ public class PeakSeasonRateDTO {
   private PropertySummary propertySummary;
 
   public PeakSeasonRateDTO(PeakSeasonRate peakSeasonRate) {
-    this.id = peakSeasonRate.getId();
+    this.rateId = peakSeasonRate.getId();
     this.startDate = peakSeasonRate.getStartDate();
     this.endDate = peakSeasonRate.getEndDate();
     this.adjustmentRate = peakSeasonRate.getAdjustmentRate();

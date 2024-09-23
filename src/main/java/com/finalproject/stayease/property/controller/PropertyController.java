@@ -259,9 +259,8 @@ public class PropertyController {
     return Response.successfulResponse(200, "Listing availability for tenant ID: " + tenant.getId(), response);
   }
 
-  @PostMapping("/{propertyId}/rooms/{roomId}/unavailable")
-  public ResponseEntity<Response<RoomAvailabilityDTO>> setRoomUnavailability(@PathVariable Long propertyId,
-      @PathVariable Long roomId,
+  @PostMapping(value = "/availability", params = {"roomId"})
+  public ResponseEntity<Response<RoomAvailabilityDTO>> setRoomUnavailability(@RequestParam Long roomId,
       @RequestBody SetUnavailabilityDTO requestDTO) {
     Users tenant = usersService.getLoggedUser();
     RoomAvailability availability = roomAvailabilityService.setUnavailability(tenant, roomId, requestDTO.getStartDate(),
@@ -271,10 +270,8 @@ public class PropertyController {
         new RoomAvailabilityDTO(availability));
   }
 
-  @DeleteMapping("/{propertyId}/rooms/{roomId}/unavailable/{availabilityId}")
-  public ResponseEntity<Response<Object>> removeRoomUnavailability(@PathVariable Long propertyId,
-      @PathVariable Long roomId,
-      @PathVariable Long availabilityId) {
+  @DeleteMapping(value = "/availability", params = {"roomId", "availabilityId"})
+  public ResponseEntity<Response<Object>> removeRoomUnavailability(@RequestParam Long roomId, @RequestParam Long availabilityId) {
     Users tenant = usersService.getLoggedUser();
     roomAvailabilityService.removeUnavailability(tenant, roomId, availabilityId);
     log.info("Room unavailability removed for room ID: " + roomId);
