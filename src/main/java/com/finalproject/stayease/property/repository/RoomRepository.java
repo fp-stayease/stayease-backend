@@ -37,6 +37,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     AND ra.deletedAt IS NULL
     AND ra.isAvailable = FALSE
     AND p.tenant.id = :tenantId
+    ORDER BY ra.startDate
     """)
   List<Room> findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(@Param("tenantId") Long tenantId);
 
