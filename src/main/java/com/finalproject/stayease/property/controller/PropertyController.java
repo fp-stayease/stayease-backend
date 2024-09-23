@@ -254,8 +254,7 @@ public class PropertyController {
   @GetMapping("/tenant/availability")
   public ResponseEntity<Response<List<RoomWithRoomAvailabilityDTO>>> getTenantRoomAvailability() {
     Users tenant = usersService.getLoggedUser();
-    List<Room> availabilities = roomService.getRoomsAvailability(tenant.getId());
-    List<RoomWithRoomAvailabilityDTO> response = availabilities.stream().map(RoomWithRoomAvailabilityDTO::new).toList();
+    List<RoomWithRoomAvailabilityDTO> response = roomAvailabilityService.getRoomAvailabilityByTenant(tenant);
     return Response.successfulResponse(200, "Listing availability for tenant ID: " + tenant.getId(), response);
   }
 

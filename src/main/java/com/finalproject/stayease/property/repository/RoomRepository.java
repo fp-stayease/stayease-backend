@@ -3,6 +3,7 @@ package com.finalproject.stayease.property.repository;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
+import com.finalproject.stayease.users.entity.Users;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

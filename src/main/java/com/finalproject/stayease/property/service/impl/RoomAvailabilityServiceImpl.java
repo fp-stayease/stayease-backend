@@ -2,10 +2,13 @@ package com.finalproject.stayease.property.service.impl;
 
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.RoomAvailability;
 import com.finalproject.stayease.property.entity.dto.RoomAvailabilityDTO;
+import com.finalproject.stayease.property.entity.dto.RoomWithRoomAvailabilityDTO;
 import com.finalproject.stayease.property.repository.RoomAvailabilityRepository;
+import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.users.entity.Users;
@@ -27,6 +30,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
 
   private final RoomAvailabilityRepository roomAvailabilityRepository;
   private final RoomService roomService;
+  private final PropertyService propertyService;
 
   @Override
   public RoomAvailability setUnavailability(Long roomId, LocalDate startDate, LocalDate endDate) {
@@ -64,6 +68,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   public void removeUnavailability(Users tenant, Long roomId, Long unavailabilityId) {
     RoomAvailability roomAvailability = checkOwnership(tenant, roomId, unavailabilityId);
     log.info("Removing unavailability: " + roomAvailability);
+    roomAvailability.preRemove();
     roomAvailabilityRepository.save(roomAvailability);
   }
 
@@ -71,6 +76,31 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   public List<RoomAvailability> getRoomAvailabilityByPropertyId(Long propertyId) {
     return roomAvailabilityRepository.findAllByPropertyId(propertyId);
   }
+
+  @Override
+ public List<RoomWithRoomAvailabilityDTO> getRoomAvailabilityByTenant(Users tenant) {
+  List<Property> properties = propertyService.findAllByTenant(tenant);
+  List<Room> roomsByTenant = properties.stream()
+          .map(property -> roomService.getRoomsOfProperty(property.getId()))
+          .flatMap(List::stream)
+          .toList();
+  List<RoomAvailability> roomAvailabilitiesByProperty = properties.stream()
+          .map(property -> roomAvailabilityRepository.findAllByPropertyId(property.getId()))
+          .flatMap(List::stream)
+          .toList();
+  List<RoomWithRoomAvailabilityDTO> validRoomAvailability = roomsByTenant.stream()
+          .map(room -> {
+            List<RoomAvailabilityDTO> roomAvailabilityDTOs = roomAvailabilitiesByProperty.stream()
+                    .filter(roomAvailability -> Objects.equals(roomAvailability.getRoom().getId(), room.getId()))
+                    .map(RoomAvailabilityDTO::new)
+                    .toList();
+            return roomAvailabilityDTOs.isEmpty() ? null : new RoomWithRoomAvailabilityDTO(room, roomAvailabilityDTOs);
+          })
+          .filter(Objects::nonNull)
+          .toList();
+  log.info("Checking room availability for tenant: " + tenant.getTenantInfo().getBusinessName());
+  return validRoomAvailability;
+}
 
   private LocalDate checkDate(LocalDate date) {
     RoomAvailability roomAvailability = roomAvailabilityRepository.findRoomAvailabilityByDate(date);
@@ -100,6 +130,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
     roomAvailability.setStartDate(startDate);
     roomAvailability.setEndDate(endDate);
     roomAvailability.setIsAvailable(false);
+    roomAvailability.setIsManual(true);
     return roomAvailabilityRepository.save(roomAvailability);
   }
 
