@@ -20,6 +20,7 @@ public class PeakSeasonRateDTO {
   private BigDecimal adjustmentRate;
   private AdjustmentType adjustmentType;
   private Instant validFrom;
+  private String reason;
   private PropertySummary propertySummary;
 
   public PeakSeasonRateDTO(PeakSeasonRate peakSeasonRate) {
@@ -29,6 +30,7 @@ public class PeakSeasonRateDTO {
     this.adjustmentRate = peakSeasonRate.getAdjustmentRate();
     this.adjustmentType = peakSeasonRate.getAdjustmentType();
     this.validFrom = peakSeasonRate.getValidFrom();
+    this.reason = peakSeasonRate.getReason();
     this.propertySummary = new PeakSeasonRateDTO.PropertySummary(peakSeasonRate.getProperty().getId(),
         peakSeasonRate.getProperty().getName());
   }

@@ -18,6 +18,7 @@ import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,12 +41,14 @@ public class RatesController {
   @PreAuthorize("hasRole('TENANT')")
   public ResponseEntity<Response<List<PeakSeasonRateDTO>>> getTenantCurrentRates() {
     Users tenant = usersService.getLoggedUser();
+    log.info("Tenant: " + tenant.getTenantInfo().getBusinessName());
     List<PeakSeasonRateDTO> currentRatesDTO = rateService
         .getTenantCurrentRates(tenant)
         .stream()
         .map(PeakSeasonRateDTO::new)
         .sorted(Comparator.comparing(PeakSeasonRateDTO::getId))
         .toList();
+    log.info("Current Rates: " + currentRatesDTO.getFirst());
     return Response.successfulResponse(200,
         "Listing all current rates for tenant: " + tenant.getTenantInfo().getBusinessName(), currentRatesDTO);
   }
@@ -62,7 +65,7 @@ public class RatesController {
         rateService.findAvailableRoomRates(propertyId, date));
   }
 
-  @GetMapping(value = "/daily", params = {"propertyId"})
+  @GetMapping(value = "/daily", params = {"propertyId", "startDate", "endDate"})
   public ResponseEntity<Response<List<DailyPriceDTO>>> getDailyRates(@RequestParam Long propertyId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -100,6 +103,14 @@ public class RatesController {
     Users tenant = usersService.getLoggedUser();
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
         new PeakSeasonRateDTO(rateService.updatePeakSeasonRate(tenant, rateId, requestDTO)));
+  }
+
+  // Region - DELETE Requests
+  @DeleteMapping("/{rateId}")
+  public ResponseEntity<Response<String>> deletePeakSeasonRate(@PathVariable Long rateId) {
+    Users tenant = usersService.getLoggedUser();
+    rateService.deletePeakSeasonRate(tenant, rateId);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Adjustment Rate Successfully Deleted!", "Deleted rate ID: " + rateId);
   }
 
 }

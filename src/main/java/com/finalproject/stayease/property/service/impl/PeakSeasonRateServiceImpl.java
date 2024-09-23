@@ -56,6 +56,17 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   @Override
+  public void deletePeakSeasonRate(Users tenant, Long rateId) {
+    Property property = getProperty(tenant, rateId);
+    PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
+        .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
+    log.info("Deleting peak season rate with ID {}", rateId);
+    rate.setDeletedAt(Instant.now());
+    peakSeasonRateRepository.save(rate);
+    log.info("Deleted peak season rate with ID {}", rateId);
+  }
+
+  @Override
   public List<PeakSeasonRate> getTenantCurrentRates(Users tenant) {
     List<Property> properties = propertyService.findAllByTenant(tenant);
     List<PeakSeasonRate> currentRates = new ArrayList<>();
@@ -156,6 +167,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     peakSeasonRate.setEndDate(requestDTO.getEndDate());
     peakSeasonRate.setAdjustmentRate(requestDTO.getAdjustmentRate());
     peakSeasonRate.setAdjustmentType(requestDTO.getAdjustmentType());
+    peakSeasonRate.setReason(requestDTO.getReason());
     peakSeasonRateRepository.save(peakSeasonRate);
     return peakSeasonRate;
   }
@@ -192,6 +204,9 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
 
     existingRate.setAdjustmentType(Optional.ofNullable(requestDTO.getAdjustmentType())
         .orElse(existingRate.getAdjustmentType()));
+
+    existingRate.setReason(Optional.ofNullable(requestDTO.getReason())
+        .orElse(existingRate.getReason()));
 
     return peakSeasonRateRepository.save(existingRate);
   }

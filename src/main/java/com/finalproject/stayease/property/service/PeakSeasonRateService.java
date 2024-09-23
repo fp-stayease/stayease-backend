@@ -16,6 +16,8 @@ public interface PeakSeasonRateService {
 
   PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO);
 
+  void deletePeakSeasonRate(Users tenant, Long rateId);
+
   List<PeakSeasonRate> getTenantCurrentRates(Users tenant);
 
   List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
