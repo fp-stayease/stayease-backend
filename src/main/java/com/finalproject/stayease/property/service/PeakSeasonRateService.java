@@ -12,11 +12,16 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface PeakSeasonRateService {
+
+  // Region - basic CRUD operations
+
   PeakSeasonRate setPeakSeasonRate(Users tenant, Long propertyId, SetPeakSeasonRateRequestDTO requestDTO);
 
   PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO);
 
   void deletePeakSeasonRate(Users tenant, Long rateId);
+
+  // Region - query operations
 
   List<PeakSeasonRate> getTenantCurrentRates(Users tenant);
 
