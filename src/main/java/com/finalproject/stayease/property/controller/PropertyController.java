@@ -3,15 +3,18 @@ package com.finalproject.stayease.property.controller;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.RoomAvailability;
 import com.finalproject.stayease.property.entity.dto.CategoryDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRoomImageDTO;
+import com.finalproject.stayease.property.entity.dto.RoomAvailabilityDTO;
 import com.finalproject.stayease.property.entity.dto.RoomDTO;
 import com.finalproject.stayease.property.entity.dto.RoomWithRoomAvailabilityDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
+import com.finalproject.stayease.property.entity.dto.createRequests.SetUnavailabilityDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
@@ -23,6 +26,7 @@ import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
 import com.finalproject.stayease.property.service.PropertyListingService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
@@ -30,6 +34,7 @@ import com.finalproject.stayease.users.service.UsersService;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -62,6 +67,7 @@ public class PropertyController {
   private final PeakSeasonRateService peakSeasonRateService;
   private final PropertyImageUploadService propertyImageUploadService;
   private final PropertyListingService propertyListingService;
+  private final RoomAvailabilityService roomAvailabilityService;
 
 
   @GetMapping
@@ -168,7 +174,10 @@ public class PropertyController {
   @GetMapping("/categories")
   public ResponseEntity<Response<List<CategoryDTO>>> getAllCategories() {
     List<PropertyCategory> categoryList = propertyCategoryService.findAll();
-    List<CategoryDTO> categoryDTOList = categoryList.stream().map(CategoryDTO::new).toList();
+    List<CategoryDTO> categoryDTOList = categoryList.stream()
+    .map(CategoryDTO::new)
+    .sorted(Comparator.comparing(CategoryDTO::getName))
+    .toList();
     return Response.successfulResponse(200, "Listing all categories", categoryDTOList);
   }
 
@@ -249,10 +258,29 @@ public class PropertyController {
   @GetMapping("/tenant/availability")
   public ResponseEntity<Response<List<RoomWithRoomAvailabilityDTO>>> getTenantRoomAvailability() {
     Users tenant = usersService.getLoggedUser();
-    List<Room> availabilities = roomService.getRoomsAvailability(tenant.getId());
-    List<RoomWithRoomAvailabilityDTO> response = availabilities.stream().map(RoomWithRoomAvailabilityDTO::new).toList();
+    List<RoomWithRoomAvailabilityDTO> response = roomAvailabilityService.getRoomAvailabilityByTenant(tenant);
     return Response.successfulResponse(200, "Listing availability for tenant ID: " + tenant.getId(), response);
   }
+
+  @PostMapping(value = "/availability", params = {"roomId"})
+  public ResponseEntity<Response<RoomAvailabilityDTO>> setRoomUnavailability(@RequestParam Long roomId,
+      @RequestBody SetUnavailabilityDTO requestDTO) {
+    Users tenant = usersService.getLoggedUser();
+    RoomAvailability availability = roomAvailabilityService.setUnavailability(tenant, roomId, requestDTO.getStartDate(),
+        requestDTO.getEndDate());
+    log.info("Room unavailability set for room ID: " + roomId);
+    return Response.successfulResponse(HttpStatus.CREATED.value(), "Room unavailability set!",
+        new RoomAvailabilityDTO(availability));
+  }
+
+  @DeleteMapping(value = "/availability", params = {"roomId", "availabilityId"})
+  public ResponseEntity<Response<Object>> removeRoomUnavailability(@RequestParam Long roomId, @RequestParam Long availabilityId) {
+    Users tenant = usersService.getLoggedUser();
+    roomAvailabilityService.removeUnavailability(tenant, roomId, availabilityId);
+    log.info("Room unavailability removed for room ID: " + roomId);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Room unavailability removed!", null);
+  }
+
 
   // Region - utilities
   @GetMapping("/cities")

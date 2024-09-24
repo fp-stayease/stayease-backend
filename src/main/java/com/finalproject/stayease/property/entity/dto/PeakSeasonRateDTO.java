@@ -14,21 +14,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PeakSeasonRateDTO {
 
-  private Long id;
+  private Long rateId;
   private LocalDate startDate;
   private LocalDate endDate;
   private BigDecimal adjustmentRate;
   private AdjustmentType adjustmentType;
   private Instant validFrom;
+  private String reason;
   private PropertySummary propertySummary;
 
   public PeakSeasonRateDTO(PeakSeasonRate peakSeasonRate) {
-    this.id = peakSeasonRate.getId();
+    this.rateId = peakSeasonRate.getId();
     this.startDate = peakSeasonRate.getStartDate();
     this.endDate = peakSeasonRate.getEndDate();
     this.adjustmentRate = peakSeasonRate.getAdjustmentRate();
     this.adjustmentType = peakSeasonRate.getAdjustmentType();
     this.validFrom = peakSeasonRate.getValidFrom();
+    this.reason = peakSeasonRate.getReason();
     this.propertySummary = new PeakSeasonRateDTO.PropertySummary(peakSeasonRate.getProperty().getId(),
         peakSeasonRate.getProperty().getName());
   }

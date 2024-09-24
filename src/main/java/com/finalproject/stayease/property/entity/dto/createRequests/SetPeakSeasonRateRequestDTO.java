@@ -15,4 +15,5 @@ public class SetPeakSeasonRateRequestDTO {
   private LocalDate endDate;
   private BigDecimal adjustmentRate;
   private AdjustmentType adjustmentType;
+  private String reason;
 }
