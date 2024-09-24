@@ -81,6 +81,7 @@ public class SecurityConfig {
         API_VERSION + "/properties/{propertyId}/listings",
         API_VERSION + "/properties/{propertyId}/available/**",
         API_VERSION + "/properties/{propertyId}/rooms/{roomId}",
+        API_VERSION + "/properties/{propertyId}/rooms",
         API_VERSION + "/properties/{propertyId}/rooms/{roomId}/available",
         API_VERSION + "/properties/rooms",
         API_VERSION + "/properties/categories",
