@@ -20,7 +20,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -83,15 +85,29 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     validateDate(date);
     log.info("Finding available room rates for property {} on date {}", propertyId, date);
     List<RoomPriceRateDTO> rooms = propertyService.findAvailableRoomRates(propertyId, date);
-    List<RoomAdjustedRatesDTO> adjustedPrices = new ArrayList<>();
+
+    Map<Long, RoomAdjustedRatesDTO> adjustedPrices = new HashMap<>();
+
     for (RoomPriceRateDTO room : rooms) {
-      BigDecimal adjustedPrice = applyPeakSeasonRate(room);
-      adjustedPrices.add(new RoomAdjustedRatesDTO(room.getPropertyId(), room.getRoomId(), room.getRoomName(),
-          room.getImageUrl(), room.getRoomCapacity(), room.getRoomDescription(),
-          room.getBasePrice(), adjustedPrice, date, room.getIsAvailable()));
+      BigDecimal adjustedPrice = applyPeakSeasonRate(room.getPropertyId(), date, room.getBasePrice(), Instant.now());
+
+      if (!adjustedPrices.containsKey(room.getRoomId())) {
+        adjustedPrices.put(room.getRoomId(), new RoomAdjustedRatesDTO(
+            room.getPropertyId(), room.getRoomId(), room.getRoomName(),
+            room.getImageUrl(), room.getRoomCapacity(), room.getRoomDescription(),
+            room.getBasePrice(), adjustedPrice, date, room.getIsAvailable()
+        ));
+      } else {
+        // If the room already exists, update the adjusted price if it's higher
+        RoomAdjustedRatesDTO existingRoom = adjustedPrices.get(room.getRoomId());
+        if (adjustedPrice.compareTo(existingRoom.getAdjustedPrice()) > 0) {
+          existingRoom.setAdjustedPrice(adjustedPrice);
+        }
+      }
     }
+
     log.info("Found {} available room rates for property {} on date {}", adjustedPrices.size(), propertyId, date);
-    return adjustedPrices;
+    return new ArrayList<>(adjustedPrices.values());
   }
 
   @Override
@@ -140,12 +156,18 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     List<PeakSeasonRate> applicableRates = peakSeasonRateRepository
         .findValidRatesByPropertyAndDate(propertyId, date, bookingTime, futureDate);
 
-    BigDecimal adjustedPrice = basePrice;
+    BigDecimal totalAdjustment = BigDecimal.ZERO;
+
     for (PeakSeasonRate rate : applicableRates) {
-      adjustedPrice = rate.getAdjustmentType() == AdjustmentType.PERCENTAGE
-          ? adjustedPrice.add(basePrice.multiply(rate.getAdjustmentRate().divide(BigDecimal.valueOf(100))))
-          : adjustedPrice.add(Optional.ofNullable(rate.getAdjustmentRate()).orElse(BigDecimal.ZERO));
+      if (rate.getAdjustmentType() == AdjustmentType.PERCENTAGE) {
+        BigDecimal percentageAdjustment = basePrice.multiply(rate.getAdjustmentRate().divide(BigDecimal.valueOf(100)));
+        totalAdjustment = totalAdjustment.add(percentageAdjustment);
+      } else {
+        totalAdjustment = totalAdjustment.add(Optional.ofNullable(rate.getAdjustmentRate()).orElse(BigDecimal.ZERO));
+      }
     }
+
+    BigDecimal adjustedPrice = basePrice.add(totalAdjustment);
     return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }
 
