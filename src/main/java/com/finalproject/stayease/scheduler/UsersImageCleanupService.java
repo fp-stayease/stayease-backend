@@ -5,6 +5,7 @@ import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,18 +22,23 @@ public class UsersImageCleanupService {
   @SneakyThrows
   @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}")
   public void cleanupOrphanedImages() {
-    Set<String> allUsersImages = getAllUsersImages();
-    Set<String> allImagesInCloudinary = new HashSet<>(cloudinaryService.findAllImagesFromFolder("/users/*"));
+    Set<String> allUsersImagesPublicIds = extractPublicIdsFromUrls(getAllUsersImages());
+    Set<String> allImagesInCloudinaryPublicIds =
+        extractPublicIdsFromUrls(new HashSet<>(cloudinaryService.findAllImagesFromFolder("users/")));
 
-    allImagesInCloudinary.removeAll(allUsersImages);
+    allImagesInCloudinaryPublicIds.removeAll(allUsersImagesPublicIds);
 
-    for (String imageUrl : allImagesInCloudinary) {
+    for (String imageUrl : allImagesInCloudinaryPublicIds) {
       cloudinaryService.deleteImage(imageUrl);
     }
   }
 
   private Set<String> getAllUsersImages() {
     return new HashSet<>(usersService.findAllAvatars());
+  }
+
+  private Set<String> extractPublicIdsFromUrls(Set<String> urls) {
+    return urls.stream().map(cloudinaryService::extractPublicIdFromUrl).collect(Collectors.toSet());
   }
 
 }

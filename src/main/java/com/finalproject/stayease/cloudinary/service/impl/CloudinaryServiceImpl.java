@@ -82,23 +82,23 @@ public class CloudinaryServiceImpl implements CloudinaryService {
   }
 
   @Override
-  public void deleteImage(String imageUrl) throws IOException {
-    String publicId = extractPublicIdFromUrl(imageUrl);
-    log.info("Attempting to delete image with public ID: {}", publicId);
+  public void deleteImage(String imagePublicId) throws IOException {
+    log.info("Attempting to delete image with public ID: {}", imagePublicId);
     try {
-      Map result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+      Map result = cloudinary.uploader().destroy(imagePublicId, ObjectUtils.emptyMap());
       if ("ok".equals(result.get("result"))) {
-        log.info("Successfully deleted image: {}", imageUrl);
+        log.info("Successfully deleted image: {}", imagePublicId);
       } else {
         log.warn("Unexpected result when deleting image: {}", result);
       }
     } catch (Exception e) {
-      log.error("Failed to delete image: {}", imageUrl, e);
-      throw new IOException("Failed to delete image: " + imageUrl, e);
+      log.error("Failed to delete image: {}", imagePublicId, e);
+      throw new IOException("Failed to delete image: " + imagePublicId, e);
     }
   }
 
-  private String extractPublicIdFromUrl(String imageUrl) {
+  @Override
+  public String extractPublicIdFromUrl(String imageUrl) {
     Matcher matcher = PUBLIC_ID_PATTERN.matcher(imageUrl);
     if (matcher.find()) {
       return matcher.group(1);
