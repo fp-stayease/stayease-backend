@@ -34,6 +34,7 @@ import com.finalproject.stayease.users.service.UsersService;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -173,7 +174,10 @@ public class PropertyController {
   @GetMapping("/categories")
   public ResponseEntity<Response<List<CategoryDTO>>> getAllCategories() {
     List<PropertyCategory> categoryList = propertyCategoryService.findAll();
-    List<CategoryDTO> categoryDTOList = categoryList.stream().map(CategoryDTO::new).toList();
+    List<CategoryDTO> categoryDTOList = categoryList.stream()
+    .map(CategoryDTO::new)
+    .sorted(Comparator.comparing(CategoryDTO::getName))
+    .toList();
     return Response.successfulResponse(200, "Listing all categories", categoryDTOList);
   }
 

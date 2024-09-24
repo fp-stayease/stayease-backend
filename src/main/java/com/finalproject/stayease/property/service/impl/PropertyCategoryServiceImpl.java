@@ -90,8 +90,6 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
   public PropertyCategory updateCategory(Long categoryId, Users tenant, UpdateCategoryRequestDTO requestDTO) {
     PropertyCategory existingCategory = checkIfValid(tenant, categoryId);
 
-    // TODO : if name is updateable, do checkMatch on the name
-
     // update category
     Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingCategory::setDescription);
     propertyCategoryRepository.save(existingCategory);
