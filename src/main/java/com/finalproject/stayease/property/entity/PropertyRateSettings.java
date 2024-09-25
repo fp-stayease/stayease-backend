@@ -24,7 +24,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Setter
 @Entity
 @Table(name = "property_rate_settings")
-public class PropertyRateSetting {
+public class PropertyRateSettings {
 
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "property_rate_settings_id_gen")

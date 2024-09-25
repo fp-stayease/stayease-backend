@@ -106,7 +106,7 @@ public class Property {
   private Set<Room> rooms = new LinkedHashSet<>();
 
   @OneToOne(mappedBy = "property")
-  private PropertyRateSetting propertyRateSetting;
+  private PropertyRateSettings propertyRateSettings;
 
   @PrePersist
   protected void onCreate() {

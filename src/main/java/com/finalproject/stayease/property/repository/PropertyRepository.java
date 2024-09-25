@@ -34,6 +34,15 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
   List<String> findAllPropertyRoomImageUrls();
 
   @Query("""
+      SELECT p
+      FROM Property p
+      JOIN FETCH p.propertyRateSettings prs
+      WHERE prs.useAutoRates = true
+      AND p.deletedAt IS NULL
+      """)
+  List<Property> findPropertiesWithAutoRatesEnabled();
+
+  @Query("""
       SELECT new com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO(
         p.id,
         p.name,

@@ -29,6 +29,19 @@ public interface PeakSeasonRateRepository extends JpaRepository<PeakSeasonRate, 
       @Param("futureDate") Instant futureDate);
 
   @Query("""
+      SELECT psr
+      FROM PeakSeasonRate psr
+      WHERE psr.property.id = :propertyId
+      AND psr.startDate <= :startDate
+      AND psr.endDate >= :endDate
+      and psr.reason LIKE 'Automatic - %'
+      AND psr.deletedAt IS NULL
+      """)
+  List<PeakSeasonRate> findAutoRatesByPropertyAndDateRange(@Param("propertyId") Long propertyId,
+      @Param("startDate") LocalDate startDate,
+      @Param("endDate") LocalDate endDate);
+
+  @Query("""
       SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END
       FROM PeakSeasonRate p
       WHERE p.property.id = :propertyId AND p.startDate = :startDate AND p.endDate = :endDate AND p.deletedAt IS NULL
