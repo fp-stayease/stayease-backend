@@ -29,6 +29,8 @@ public interface PeakSeasonRateService {
 
   void deletePeakSeasonRate(Users tenant, Long rateId);
 
+  int hardDeleteStaleRates(Instant timestamp);
+
   // Region - query operations
 
   List<PeakSeasonRate> getTenantCurrentRates(Users tenant);

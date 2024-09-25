@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -51,4 +52,19 @@ public interface PeakSeasonRateRepository extends JpaRepository<PeakSeasonRate, 
       @Param("endDate") LocalDate endDate);
 
   List<PeakSeasonRate> findByPropertyAndEndDateAfterAndDeletedAtIsNull(Property property, LocalDate date);
+
+  @Query("""
+      SELECT psr
+      FROM PeakSeasonRate psr
+      WHERE psr.deletedAt < :timestamp
+      """)
+  List<PeakSeasonRate> findStaleRates(@Param("timestamp") Instant timestamp);
+
+  @Modifying
+  @Query("""
+      DELETE FROM PeakSeasonRate psr
+      WHERE psr.deletedAt < :timestamp
+      """)
+  int hardDeleteStaleRates(@Param("timestamp") Instant timestamp);
+
 }

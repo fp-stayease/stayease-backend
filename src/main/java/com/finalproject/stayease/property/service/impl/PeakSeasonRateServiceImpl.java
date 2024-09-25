@@ -93,6 +93,11 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   @Override
+  public int hardDeleteStaleRates(Instant timestamp) {
+    return peakSeasonRateRepository.hardDeleteStaleRates(timestamp);
+  }
+
+  @Override
   public List<PeakSeasonRate> getTenantCurrentRates(Users tenant) {
     List<Property> properties = propertyService.findAllByTenant(tenant);
     List<PeakSeasonRate> currentRates = new ArrayList<>();
