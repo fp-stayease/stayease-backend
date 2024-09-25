@@ -1,7 +1,10 @@
 package com.finalproject.stayease.property.entity;
 
+import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -44,16 +48,16 @@ public class PropertyRateSettings {
   @Column(name = "holiday_rate_adjustment", precision = 10, scale = 2)
   private BigDecimal holidayAdjustmentRate;
 
-  @Size(max = 10)
-  @Column(name = "holiday_adjustment_type", length = 10)
-  private String holidayAdjustmentType;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "holiday_adjustment_type")
+  private PeakSeasonRate.AdjustmentType holidayAdjustmentType;
 
   @Column(name = "long_weekend_rate_adjustment", precision = 10, scale = 2)
   private BigDecimal longWeekendAdjustmentRate;
 
-  @Size(max = 10)
-  @Column(name = "long_weekend_adjustment_type", length = 10)
-  private String longWeekendAdjustmentType;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "long_weekend_adjustment_type")
+  private AdjustmentType longWeekendAdjustmentType;
 
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "valid_from")
@@ -76,6 +80,11 @@ public class PropertyRateSettings {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = Instant.now();
+  }
+
+  @PreRemove
+  protected void onDelete() {
+    deletedAt = Instant.now();
   }
 
 }

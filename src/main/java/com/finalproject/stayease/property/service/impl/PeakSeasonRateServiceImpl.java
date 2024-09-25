@@ -39,9 +39,24 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   private final PropertyService propertyService;
 
   @Override
+  public PeakSeasonRate setPeakSeasonRate(Long propertyId, SetPeakSeasonRateRequestDTO requestDTO) {
+    Property property = propertyService.findPropertyById(propertyId)
+        .orElseThrow(() -> new DataNotFoundException("Property not found"));
+    return setRate(property, requestDTO);
+  }
+
+  @Override
   public PeakSeasonRate setPeakSeasonRate(Users tenant, Long propertyId, SetPeakSeasonRateRequestDTO requestDTO) {
     Property property = getProperty(tenant, propertyId);
+    checkDateRangeValid(property.getId(), requestDTO.getStartDate(), requestDTO.getEndDate());
     return setRate(property, requestDTO);
+  }
+
+  @Override
+  public PeakSeasonRate updatePeakSeasonRate(PeakSeasonRate peakSeasonRate, BigDecimal adjustmentRate, AdjustmentType adjustmentType) {
+    peakSeasonRate.setAdjustmentRate(adjustmentRate);
+    peakSeasonRate.setAdjustmentType(adjustmentType);
+    return peakSeasonRateRepository.save(peakSeasonRate);
   }
 
   @Override
@@ -55,6 +70,15 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     Property property = getProperty(tenant, existingRate.getProperty().getId());
 
    return updateRate(existingRate, requestDTO);
+  }
+
+  @Override
+  public void deletePeakSeasonRate(Long rateId) {
+    PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
+        .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
+    rate.setDeletedAt(Instant.now());
+    peakSeasonRateRepository.save(rate);
+    log.info("Deleted peak season rate with ID {}", rateId);
   }
 
   @Override
@@ -78,6 +102,18 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
       currentRates.addAll(rates);
     }
     return currentRates;
+  }
+
+  @Override
+  public List<PeakSeasonRate> findValidRatesByPropertyAndDate(Long propertyId, LocalDate startDate, Instant bookingDate,
+      Instant endDate) {
+    return peakSeasonRateRepository.findValidRatesByPropertyAndDate(propertyId, startDate, bookingDate, endDate);
+  }
+
+  @Override
+  public List<PeakSeasonRate> findAutomaticRatesByPropertyAndDateRange(Long propertyId, LocalDate startDate,
+      LocalDate endDate) {
+    return peakSeasonRateRepository.findAutomaticRatesByPropertyAndDateRange(propertyId, startDate, endDate);
   }
 
   @Override
@@ -138,7 +174,6 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
 
-
   @Override
   public BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
     BigDecimal adjustedPrice = roomRate.getBasePrice();
@@ -182,7 +217,6 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   private PeakSeasonRate setRate(Property property, SetPeakSeasonRateRequestDTO requestDTO) {
-    checkDateRangeValid(property.getId(), requestDTO.getStartDate(), requestDTO.getEndDate());
     PeakSeasonRate peakSeasonRate = new PeakSeasonRate();
     peakSeasonRate.setProperty(property);
     peakSeasonRate.setStartDate(requestDTO.getStartDate());

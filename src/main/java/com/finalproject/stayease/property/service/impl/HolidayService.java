@@ -2,11 +2,13 @@ package com.finalproject.stayease.property.service.impl;
 
 import java.time.LocalDate;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @Data
+@Slf4j
 public class HolidayService {
 
   private final WebClient webClient;

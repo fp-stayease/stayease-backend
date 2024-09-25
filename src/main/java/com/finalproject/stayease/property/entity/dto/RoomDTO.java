@@ -28,7 +28,7 @@ public class RoomDTO {
 
  @Data
  @AllArgsConstructor
- private static class PropertySummary {
+ public static class PropertySummary {
    private Long propertyId;
    private String propertyName;
    private String imageUrl;
