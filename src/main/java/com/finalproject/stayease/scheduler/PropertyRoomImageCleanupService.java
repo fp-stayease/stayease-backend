@@ -20,15 +20,18 @@ public class PropertyRoomImageCleanupService {
   private final PropertyService propertyService;
 
   @SneakyThrows
-  @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}") // Runs every hour
+//  @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}") // Runs every hour
+//  @Scheduled(cron = "0 */1 * * * ?") // Runs every 5 minutes
   public void cleanupOrphanedImages() {
     log.info("Starting orphaned image cleanup");
     Set<String> allPropertyAndRoomImagesPublicIds = extractPublicIdsFromUrls(getAllPropertyAndRoomImages());
-    log.info("image examples: {}", allPropertyAndRoomImagesPublicIds.stream().findFirst().orElse("No images found"));
+    log.info("All property and room image public IDs: {}", allPropertyAndRoomImagesPublicIds);
+
     Set<String> allImagesInCloudinaryPublicIds = extractPublicIdsFromUrls(new HashSet<>(cloudinaryService.findAllImagesFromFolder("tenants/")));
-    log.info("cloudinary examples: {}", allImagesInCloudinaryPublicIds.stream().findFirst().orElse("No images found"));
+    log.info("All images in Cloudinary public IDs: {}", allImagesInCloudinaryPublicIds);
 
     allImagesInCloudinaryPublicIds.removeAll(allPropertyAndRoomImagesPublicIds);
+    log.info("Orphaned images in Cloudinary public IDs: {}", allImagesInCloudinaryPublicIds);
 
     for (String imagePublicId : allImagesInCloudinaryPublicIds) {
       cloudinaryService.deleteImage(imagePublicId);

@@ -48,7 +48,8 @@ public class RatesController {
         .map(PeakSeasonRateDTO::new)
         .sorted(Comparator.comparing(PeakSeasonRateDTO::getRateId))
         .toList();
-    log.info("Current Rates: " + currentRatesDTO.getFirst());
+    log.info(
+        "Current Rates: " + (currentRatesDTO != null && !currentRatesDTO.isEmpty() ? currentRatesDTO.get(0) : null));
     return Response.successfulResponse(200,
         "Listing all current rates for tenant: " + tenant.getTenantInfo().getBusinessName(), currentRatesDTO);
   }
@@ -104,7 +105,7 @@ public class RatesController {
     PeakSeasonRateDTO response = new PeakSeasonRateDTO(rateService.updatePeakSeasonRate(tenant, rateId, requestDTO));
     log.info("Updated Rate: " + response);
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Adjustment Rate Successfully Updated!",
-       response);
+        response);
   }
 
   // Region - DELETE Requests
@@ -112,7 +113,8 @@ public class RatesController {
   public ResponseEntity<Response<String>> deletePeakSeasonRate(@PathVariable Long rateId) {
     Users tenant = usersService.getLoggedUser();
     rateService.deletePeakSeasonRate(tenant, rateId);
-    return Response.successfulResponse(HttpStatus.OK.value(), "Adjustment Rate Successfully Deleted!", "Deleted rate ID: " + rateId);
+    return Response.successfulResponse(HttpStatus.OK.value(), "Adjustment Rate Successfully Deleted!",
+        "Deleted rate ID: " + rateId);
   }
 
 }
