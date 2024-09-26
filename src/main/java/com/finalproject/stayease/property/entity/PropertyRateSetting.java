@@ -26,7 +26,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Getter
 @Setter
 @Entity
-@Table(name = "property_rate_settings")
+@Table(name = "property_rate_setting")
 public class PropertyRateSetting {
 
   @Id
