@@ -48,5 +48,5 @@ public interface PropertyService {
   );
 
   boolean isTenantPropertyOwner(Users tenant, Long propertyId);
-
+  Long tenantPropertyCount(Users tenant);
 }

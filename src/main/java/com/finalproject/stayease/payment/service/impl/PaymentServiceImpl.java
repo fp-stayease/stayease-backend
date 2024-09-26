@@ -8,12 +8,17 @@ import com.finalproject.stayease.payment.entity.dto.PaymentDTO;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.payment.repository.PaymentRepository;
 import com.finalproject.stayease.payment.service.PaymentService;
+import com.finalproject.stayease.reports.dto.overview.MonthlySalesDTO;
+import com.finalproject.stayease.users.entity.TenantInfo;
+import com.finalproject.stayease.users.service.TenantInfoService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -23,11 +28,13 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final CloudinaryService cloudinaryService;
     private final BookingService bookingService;
+    private final TenantInfoService tenantInfoService;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, CloudinaryService cloudinaryService, BookingService bookingService) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, CloudinaryService cloudinaryService, BookingService bookingService, TenantInfoService tenantInfoService) {
         this.paymentRepository = paymentRepository;
         this.cloudinaryService = cloudinaryService;
         this.bookingService = bookingService;
+        this.tenantInfoService = tenantInfoService;
     }
 
     @Override
@@ -103,5 +110,24 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentExpirationAt(Instant.now().plus(1, ChronoUnit.HOURS));
 
         paymentRepository.save(payment);
+    }
+
+    @Override
+    public List<MonthlySalesDTO> getMonthlySalesByTenantId(Long tenantId) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(tenantId);
+        int year = LocalDate.now().getYear();
+
+        List<MonthlySalesDTO> salesReport = paymentRepository.getYearlySalesReport(tenant.getId(), year);
+        List<MonthlySalesDTO> fullReport = new ArrayList<>();
+
+        for (int month = 1; month <= 12; month++) {
+            int finalMonth = month;
+            MonthlySalesDTO monthData = salesReport.stream()
+                    .filter(dto -> dto.getMonth() == finalMonth)
+                    .findFirst()
+                    .orElse(new MonthlySalesDTO(month, 0.0));
+            fullReport.add(monthData);
+        }
+        return fullReport;
     }
 }

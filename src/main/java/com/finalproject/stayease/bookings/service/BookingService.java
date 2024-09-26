@@ -9,6 +9,7 @@ import com.finalproject.stayease.property.entity.Room;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Month;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,4 +23,6 @@ public interface BookingService {
     Booking updateBooking(UUID bookingId, String bookingStatus);
     List<BookingDTO> getTenantBookings(Long userId);
     void userBookingReminder();
+    Long countCompletedBookingsByTenantId(Long userId, Month month);
+    Long countUsersTrxByTenantId(Long userId, Month month);
 }

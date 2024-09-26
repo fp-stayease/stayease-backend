@@ -167,6 +167,9 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       @Param("maxPrice") BigDecimal maxPrice
   );
 
+  @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId")
+  Long countPropertiesByTenantId(@Param("tenantId") Long tenantId);
+
 //  @Query("""
 //          SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
 //              p.id, p.tenant.tenantInfo.businessName, p.name, p.description, p.imageUrl, p.address, p.city, p.country, pc.name,

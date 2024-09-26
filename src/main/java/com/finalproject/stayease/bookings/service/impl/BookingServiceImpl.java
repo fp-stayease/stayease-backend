@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.UUID;
 
@@ -159,5 +160,17 @@ public class BookingServiceImpl implements BookingService {
             MailTemplate template = new MailTemplate(user.getEmail(), "Booking Reminder", message);
             mailService.sendMail(template);
         }
+    }
+
+    @Override
+    public Long countCompletedBookingsByTenantId(Long userId, Month month) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingRepository.countCompletedBookingsByTenantId(tenant.getId(), month.getValue());
+    }
+
+    @Override
+    public Long countUsersTrxByTenantId(Long userId, Month month) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingRepository.countUserBookingsByTenantId(tenant.getId(), month.getValue());
     }
 }

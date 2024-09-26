@@ -145,6 +145,12 @@ public class PropertyServiceImpl implements PropertyService {
     return true;
   }
 
+  @Override
+  public Long tenantPropertyCount(Users tenant) {
+    isTenant(tenant);
+    return propertyRepository.countPropertiesByTenantId(tenant.getId());
+  }
+
   private void isTenant(Users tenant) {
     if (tenant.getUserType() != UserType.TENANT) {
       throw new InvalidRequestException("Only Tenants can create properties");

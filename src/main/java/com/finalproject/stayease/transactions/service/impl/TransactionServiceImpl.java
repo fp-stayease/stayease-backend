@@ -140,7 +140,7 @@ public class TransactionServiceImpl implements TransactionService {
                     Sincerely,\s
                     Stay Ease Admin""";
             updatedPayment = paymentService.updatePaymentStatus(payment.getId(), "paid");
-            updatedBooking = bookingService.updateBooking(booking.getId(), "payment complete");
+            updatedBooking = bookingService.updateBooking(booking.getId(), "complete");
             mailService.sendMailWithPdf(user.getEmail(), "Booking Invoice", "booking-invoice.html", data, message);
 
             return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
@@ -230,7 +230,7 @@ public class TransactionServiceImpl implements TransactionService {
             throw new RuntimeException("This booking does not have a payment proof, you cannot approve this booking");
         }
 
-        var updatedBooking = bookingService.updateBooking(bookingId, "paid");
+        var updatedBooking = bookingService.updateBooking(bookingId, "complete");
         var updatedPayment = paymentService.updatePaymentStatus(payment.getId(), "paid");
 
         return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
