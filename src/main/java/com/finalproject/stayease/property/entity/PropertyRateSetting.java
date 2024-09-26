@@ -17,7 +17,6 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 import lombok.Getter;
@@ -28,7 +27,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Setter
 @Entity
 @Table(name = "property_rate_settings")
-public class PropertyRateSettings {
+public class PropertyRateSetting {
 
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "property_rate_settings_id_gen")

@@ -1,6 +1,5 @@
 package com.finalproject.stayease.property.controller;
 
-import com.finalproject.stayease.property.entity.PropertyRateSettings;
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
 import com.finalproject.stayease.property.entity.dto.PropertyRateSettingsDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
@@ -117,7 +116,7 @@ public class RatesController {
   @DeleteMapping("/{rateId}")
   public ResponseEntity<Response<String>> deletePeakSeasonRate(@PathVariable Long rateId) {
     Users tenant = usersService.getLoggedUser();
-    rateService.deletePeakSeasonRate(tenant, rateId);
+    rateService.removePeakSeasonRate(tenant, rateId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Adjustment Rate Successfully Deleted!",
         "Deleted rate ID: " + rateId);
   }
@@ -125,12 +124,14 @@ public class RatesController {
 
   // End - Property Rates Settings
   @GetMapping(value = "/auto", params = {"propertyId"})
+  @PreAuthorize("hasRole('TENANT')")
   public ResponseEntity<Response<PropertyRateSettingsDTO>> getPropertyRateSettings(@RequestParam Long propertyId) {
     return Response.successfulResponse(HttpStatus.OK.value(), "Property Rate Settings Retrieved Successfully!",
         new PropertyRateSettingsDTO(propertyRateSettingsService.getOrCreatePropertyRateSettings(propertyId)));
   }
 
   @PutMapping(value = "/auto", params = {"propertyId"})
+  @PreAuthorize("hasRole('TENANT')")
   public ResponseEntity<Response<PropertyRateSettingsDTO>> updatePropertyRateSettings(@RequestParam Long propertyId,
       @RequestBody SetPropertyRateSettingsDTO request) {
     log.info("Updating property rate settings for property ID: " + propertyId);

@@ -25,9 +25,9 @@ public interface PeakSeasonRateService {
 
   PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO);
 
-  void deletePeakSeasonRate(Long rateId);
+  void removePeakSeasonRate(Long rateId);
 
-  void deletePeakSeasonRate(Users tenant, Long rateId);
+  void removePeakSeasonRate(Users tenant, Long rateId);
 
   int hardDeleteStaleRates(Instant timestamp);
 

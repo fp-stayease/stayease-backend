@@ -4,7 +4,7 @@ import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
-import com.finalproject.stayease.property.entity.PropertyRateSettings;
+import com.finalproject.stayease.property.entity.PropertyRateSetting;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPropertyRateSettingsDTO;
 import com.finalproject.stayease.property.repository.PropertyRateSettingsRepository;
@@ -33,46 +33,48 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
   private final HolidayService holidayService;
 
   @Override
-  public PropertyRateSettings getOrCreatePropertyRateSettings(Long propertyId) {
+  public PropertyRateSetting getOrCreatePropertyRateSettings(Long propertyId) {
     // Check if the settings exist, if not create default settings
     return propertyRateSettingsRepository.findByPropertyId(propertyId)
         .orElseGet(() -> createDefaultPropertyRateSettings(propertyId));
   }
 
   @Override
-  public PropertyRateSettings updatePropertyRateSettings(Long propertyId, SetPropertyRateSettingsDTO request) {
-    PropertyRateSettings propertyRateSettings = getOrCreatePropertyRateSettings(propertyId);
+  public PropertyRateSetting updatePropertyRateSettings(Long propertyId, SetPropertyRateSettingsDTO request) {
+    PropertyRateSetting propertyRateSetting = getOrCreatePropertyRateSettings(propertyId);
 
     log.info("Setting request: {}", request);
 
     // Update the settings
-    propertyRateSettings.setUseAutoRates(request.isUseAutoRates());
-    propertyRateSettings.setHolidayAdjustmentRate(request.getHolidayAdjustmentRate());
-    propertyRateSettings.setHolidayAdjustmentType(request.getHolidayAdjustmentType());
-    propertyRateSettings.setLongWeekendAdjustmentRate(request.getLongWeekendAdjustmentRate());
-    propertyRateSettings.setLongWeekendAdjustmentType(request.getLongWeekendAdjustmentType());
-    propertyRateSettingsRepository.save(propertyRateSettings);
+    propertyRateSetting.setUseAutoRates(request.isUseAutoRates());
+    propertyRateSetting.setHolidayAdjustmentRate(request.getHolidayAdjustmentRate());
+    propertyRateSetting.setHolidayAdjustmentType(request.getHolidayAdjustmentType());
+    propertyRateSetting.setLongWeekendAdjustmentRate(request.getLongWeekendAdjustmentRate());
+    propertyRateSetting.setLongWeekendAdjustmentType(request.getLongWeekendAdjustmentType());
+    propertyRateSettingsRepository.save(propertyRateSetting);
 
     // apply the settings
-    applySettingsForProperty(propertyId, request);
+    applySettingForProperty(propertyRateSetting);
 
-    return propertyRateSettings;
+    return propertyRateSetting;
   }
 
   @Override
-  public void applySettingsForProperty(Long propertyId, SetPropertyRateSettingsDTO request) {
+  public void applySettingForProperty(PropertyRateSetting setting) {
     // initial application, for the next 6 months
-    log.info("Initial application of property rate settings for property ID: {}", propertyId);
+    log.info("Initial application of property rate settings for property ID: {}", setting.getProperty().getId());
     LocalDate startDate = LocalDate.now();
     LocalDate endDate = startDate.plusMonths(6);
-    applySettingsForProperty(propertyId, request, startDate, endDate);
+    applySettingForProperty(setting, startDate, endDate);
   }
 
   @Override
-  public void applySettingsForProperty(Long propertyId, SetPropertyRateSettingsDTO request, LocalDate startDate,
+  public void applySettingForProperty(PropertyRateSetting setting, LocalDate startDate,
       LocalDate endDate) {
 
-    log.info("Request to apply: {}", request);
+    log.info("Request to apply: {}", setting);
+
+    Long propertyId = setting.getProperty().getId();
 
     // * get existing auto rates
     List<PeakSeasonRate> existingAutoRates = peakSeasonRateService.findAutomaticRatesByPropertyAndDateRange(propertyId,
@@ -80,15 +82,14 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
         endDate);
 
     // * handle !useAutoRates or deactivation
-    if (!request.isUseAutoRates()) {
-      log.info("Deactivating auto rates for property ID: {}", propertyId);
-      log.info("Existing auto rates: {}", existingAutoRates);
+    if (!setting.getUseAutoRates()) {
+      log.info("Existing auto rates: {} for property ID: {} will be deactivated", existingAutoRates, propertyId);
       handleDeactivation(existingAutoRates);
       return;
     }
 
     // * handle useAutoRates
-    handleAutoRatesApplication(propertyId, request, startDate, endDate, existingAutoRates);
+    handleAutoRatesApplication(setting, startDate, endDate, existingAutoRates);
   }
 
   @Override
@@ -97,32 +98,31 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
     updatePropertyRateSettings(propertyId, new SetPropertyRateSettingsDTO(false, null, null, null, null));
   }
 
-  private PropertyRateSettings createDefaultPropertyRateSettings(Long propertyId) {
+  private PropertyRateSetting createDefaultPropertyRateSettings(Long propertyId) {
     Property property = propertyService.findPropertyById(propertyId)
         .orElseThrow(() -> new DataNotFoundException("Property not found with id: " + propertyId));
 
     log.info("Creating default property rate settings for property ID: {}", property.getId());
 
-    PropertyRateSettings propertyRateSettings = new PropertyRateSettings();
-    propertyRateSettings.setProperty(property);
-    propertyRateSettings.setUseAutoRates(false);
-    propertyRateSettings.setHolidayAdjustmentRate(null);
-    propertyRateSettings.setHolidayAdjustmentType(null);
-    propertyRateSettings.setLongWeekendAdjustmentRate(null);
-    propertyRateSettings.setLongWeekendAdjustmentType(null);
-    return propertyRateSettingsRepository.save(propertyRateSettings);
+    PropertyRateSetting propertyRateSetting = new PropertyRateSetting();
+    propertyRateSetting.setProperty(property);
+    propertyRateSetting.setUseAutoRates(false);
+    propertyRateSetting.setHolidayAdjustmentRate(null);
+    propertyRateSetting.setHolidayAdjustmentType(null);
+    propertyRateSetting.setLongWeekendAdjustmentRate(null);
+    propertyRateSetting.setLongWeekendAdjustmentType(null);
+    return propertyRateSettingsRepository.save(propertyRateSetting);
   }
 
   private void handleDeactivation(List<PeakSeasonRate> existingAutoRates) {
-    log.info("Deactivating auto rates");
     if (existingAutoRates != null && !existingAutoRates.isEmpty()) {
       for (PeakSeasonRate rate : existingAutoRates) {
-        peakSeasonRateService.deletePeakSeasonRate(rate.getId());
+        peakSeasonRateService.removePeakSeasonRate(rate.getId());
       }
     }
   }
 
-  private void handleAutoRatesApplication(Long propertyId, SetPropertyRateSettingsDTO request, LocalDate startDate,
+  private void handleAutoRatesApplication(PropertyRateSetting setting, LocalDate startDate,
       LocalDate endDate, List<PeakSeasonRate> existingAutoRates) {
 
     Map<LocalDate, List<PeakSeasonRate>> existingAutoRatesMap = existingAutoRates.stream()
@@ -130,21 +130,26 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
 
     log.info("Setting up for start date: {} to end date: {}", startDate, endDate);
 
+    Long propertyId = setting.getProperty().getId();
+
     for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+
       if (holidayService.isHoliday(date)) {
         // set or update holiday rate
         log.info("Setting holiday rate for property ID: {} on date: {}", propertyId, date);
-        setOrUpdateAutomaticRate(propertyId, date, request.getHolidayAdjustmentRate(),
-            request.getHolidayAdjustmentType(), "Automatic - Holiday", existingAutoRatesMap.get(date));
+        setOrUpdateAutomaticRate(propertyId, date, setting.getHolidayAdjustmentRate(),
+            setting.getHolidayAdjustmentType(), "Automatic - Holiday", existingAutoRatesMap.get(date));
 
       } else if (holidayService.isLongWeekend(date)) {
         // set or update long weekend rate
         log.info("Setting long weekend rate for property ID: {} on date: {}", propertyId, date);
-        setOrUpdateAutomaticRate(propertyId, date, request.getLongWeekendAdjustmentRate(),
-            request.getLongWeekendAdjustmentType(), "Automatic - Long Weekend", existingAutoRatesMap.get(date));
+        setOrUpdateAutomaticRate(propertyId, date, setting.getLongWeekendAdjustmentRate(),
+            setting.getLongWeekendAdjustmentType(), "Automatic - Long Weekend", existingAutoRatesMap.get(date));
 
-      } else {
+      } else if (existingAutoRatesMap.containsKey(date)) {
         // else remove existing auto rates (cases where holiday or long weekend is removed)
+        log.info("Not a holiday or long weekend, removing existing auto rates for property ID: {} on date: {}",
+            propertyId, date);
         handleDeactivation(existingAutoRatesMap.get(date));
       }
     }

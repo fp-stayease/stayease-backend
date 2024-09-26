@@ -73,7 +73,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   @Override
-  public void deletePeakSeasonRate(Long rateId) {
+  public void removePeakSeasonRate(Long rateId) {
     PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
         .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
     rate.setDeletedAt(Instant.now());
@@ -82,7 +82,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   @Override
-  public void deletePeakSeasonRate(Users tenant, Long rateId) {
+  public void removePeakSeasonRate(Users tenant, Long rateId) {
     PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
         .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
     Property property = getProperty(tenant, rate.getProperty().getId());
