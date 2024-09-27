@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PropertyRateSettingsDTO {
+public class PropertyRateSettingDTO {
 
-  private Long settingsId;
+  private Long settingId;
   private boolean useAutoRates;
   private BigDecimal holidayAdjustmentRate;
   private AdjustmentType holidayAdjustmentType;
@@ -23,8 +23,8 @@ public class PropertyRateSettingsDTO {
   private Instant validFrom;
   private PropertySummary propertySummary;
 
-  public PropertyRateSettingsDTO(PropertyRateSetting propertyRateSetting) {
-    this.settingsId = propertyRateSetting.getId();
+  public PropertyRateSettingDTO(PropertyRateSetting propertyRateSetting) {
+    this.settingId = propertyRateSetting.getId();
     this.useAutoRates = propertyRateSetting.getUseAutoRates();
     this.holidayAdjustmentRate = propertyRateSetting.getHolidayAdjustmentRate();
     this.holidayAdjustmentType = propertyRateSetting.getHolidayAdjustmentType();

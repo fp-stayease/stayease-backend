@@ -143,25 +143,33 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
   private void setHolidaysRate(PropertyRateSetting setting, List<Holiday> holidays, Map<LocalDate,
       List<PeakSeasonRate>> existingAutoRatesMap) {
     Long propertyId = setting.getProperty().getId();
-    for (Holiday holiday : holidays) {
-      LocalDate date = holiday.getDate();
-      log.info("Setting holiday rate for property ID: {} on date: {}", propertyId, date);
-      setOrUpdateAutomaticRate(propertyId, date, date, setting.getHolidayAdjustmentRate(),
-          setting.getHolidayAdjustmentType(), "Automatic - Holiday", existingAutoRatesMap.get(date));
+    if (setting.getHolidayAdjustmentRate() != null && setting.getHolidayAdjustmentType() != null) {
+      for (Holiday holiday : holidays) {
+        LocalDate date = holiday.getDate();
+        log.info("Setting holiday rate for property ID: {} on date: {}", propertyId, date);
+        setOrUpdateAutomaticRate(propertyId, date, date, setting.getHolidayAdjustmentRate(),
+            setting.getHolidayAdjustmentType(), "Automatic - Holiday", existingAutoRatesMap.get(date));
+      }
+    } else {
+      log.info("Skipping holiday rate setting for property ID: {} as rate or type is null", propertyId);
     }
   }
 
   private void setLongWeekendsRate(PropertyRateSetting setting, List<LongWeekend> longWeekends, Map<LocalDate,
       List<PeakSeasonRate>> existingAutoRatesMap) {
     Long propertyId = setting.getProperty().getId();
-    for (LongWeekend longWeekend : longWeekends) {
-      LocalDate longWeekendStartDate = longWeekend.getStartDate();
-      LocalDate longWeekendEndDate = longWeekend.getEndDate();
-      log.info("Setting long weekend rate for property ID: {} on date: {}", propertyId, longWeekendStartDate);
-      setOrUpdateAutomaticRate(propertyId, longWeekendStartDate, longWeekendEndDate,
-          setting.getLongWeekendAdjustmentRate(),
-          setting.getLongWeekendAdjustmentType(), "Automatic - Long Weekend", existingAutoRatesMap.get(
-              longWeekendStartDate));
+    if (setting.getLongWeekendAdjustmentRate() != null && setting.getLongWeekendAdjustmentType() != null) {
+      for (LongWeekend longWeekend : longWeekends) {
+        LocalDate longWeekendStartDate = longWeekend.getStartDate();
+        LocalDate longWeekendEndDate = longWeekend.getEndDate();
+        log.info("Setting long weekend rate for property ID: {} on date: {}", propertyId, longWeekendStartDate);
+        setOrUpdateAutomaticRate(propertyId, longWeekendStartDate, longWeekendEndDate,
+            setting.getLongWeekendAdjustmentRate(),
+            setting.getLongWeekendAdjustmentType(), "Automatic - Long Weekend", existingAutoRatesMap.get(
+                longWeekendStartDate));
+      }
+    } else {
+      log.info("Skipping long weekend rate setting for property ID: {} as rate or type is null", propertyId);
     }
   }
 
@@ -181,7 +189,10 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
   private void setOrUpdateAutomaticRate(Long propertyId, LocalDate startDate,
       LocalDate endDate, BigDecimal adjustmentRate,
       AdjustmentType adjustmentType, String reason, List<PeakSeasonRate> existingAutoRates) {
-
+    if (adjustmentRate == null || adjustmentType == null) {
+      log.info("Skipping rate setting for property ID: {} as rate or type is null", propertyId);
+      return;
+    }
     if (existingAutoRates == null || existingAutoRates.isEmpty()) {
       createNewRate(propertyId, new SetPeakSeasonRateRequestDTO(startDate, endDate, adjustmentRate,
           adjustmentType, reason));
