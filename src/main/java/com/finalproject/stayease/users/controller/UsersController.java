@@ -118,6 +118,16 @@ public class UsersController {
                                                               + "your new credentials!", new UsersProfileDTO(user));
   }
 
+  @PostMapping("/profile/email/check-token")
+  public ResponseEntity<Response<Boolean>> checkEmailChangeToken(@RequestBody String token) {
+    String normalizedToken = token.replaceAll("=+$", "");
+    boolean isValid = emailChangeService.checkToken(normalizedToken);
+    String message = isValid ? "Token is valid" : "Token is invalid, please check your email or try to resend an "
+                                                  + "email change request.";
+    log.info("Token: {}, isValid: {}", normalizedToken, isValid);
+    return Response.successfulResponse(HttpStatus.OK.value(), message, isValid);
+  }
+
 
 
 }

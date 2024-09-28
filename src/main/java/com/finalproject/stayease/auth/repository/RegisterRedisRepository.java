@@ -36,10 +36,14 @@ public class RegisterRedisRepository {
 
   // helpers
   public String getToken(String email) {
-    return valueOperations.get(VERIFICATION_TOKEN_PREFIX + email);
+    String token = valueOperations.get(VERIFICATION_TOKEN_PREFIX + email);
+    log.info("token: {}", token);
+    return token;
   }
 
   public String getEmail(String token) {
+    String email = valueOperations.get(TOKEN_TO_EMAIL_PREFIX + token);
+    log.info("email: {}", email);
     return valueOperations.get(TOKEN_TO_EMAIL_PREFIX + token);
   }
 
@@ -48,6 +52,7 @@ public class RegisterRedisRepository {
     String storedEmail = getEmail(verificationToken);
     String verified = valueOperations.get(VERIFICATION_TOKEN_PREFIX + email + VERIFIED_SUFFIX);
     String verifiedToken = valueOperations.get(TOKEN_TO_EMAIL_PREFIX + verificationToken + VERIFIED_SUFFIX);
+    log.info("token: {}, storedEmail: {}, verified: {}, verifiedToken: {}", token, storedEmail, verified, verifiedToken);
     return token != null && storedEmail != null && verified == null && verifiedToken == null && token.equals(verificationToken) && storedEmail.equals(email);
   }
 

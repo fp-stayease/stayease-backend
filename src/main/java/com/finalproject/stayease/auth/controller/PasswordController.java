@@ -42,4 +42,14 @@ public class PasswordController {
     return Response.successfulResponse(HttpStatus.OK.value(), "Password successfully reset!", null);
   }
 
+  @PostMapping("/check-token")
+  public ResponseEntity<Response<Boolean>> checkToken(@RequestBody String token) {
+    String normalizedToken = token.replaceAll("=+$", "");
+    boolean isValid = resetPasswordService.checkToken(normalizedToken);
+    String responseMessage = isValid ? "Token is valid" : "Token is invalid, please check your email or try to resend"
+                                                          + " a reset password request.";
+    return Response.successfulResponse(HttpStatus.OK.value(), responseMessage, isValid);
+  }
+
+
 }
