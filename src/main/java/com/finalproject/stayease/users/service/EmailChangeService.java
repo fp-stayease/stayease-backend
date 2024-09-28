@@ -8,4 +8,5 @@ import java.io.IOException;
 public interface EmailChangeService {
   String requestEmailChange(Users user, RequestEmailChangeDTO requestDTO) throws MessagingException, IOException;
   Users verifyEmailChange(String tokenUUID);
+  boolean checkToken(String token);
 }
