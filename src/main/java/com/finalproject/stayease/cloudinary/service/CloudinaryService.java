@@ -8,5 +8,7 @@ import java.io.IOException;
 public interface CloudinaryService {
     String uploadFile(MultipartFile file, String folderName) throws IOException;
     List<String> findAllImagesFromFolder(String folderName);
-    void deleteImage(String imageUrl) throws IOException;
+    void deleteImage(String imagePublicId) throws IOException;
+
+    String extractPublicIdFromUrl(String imageUrl);
 }

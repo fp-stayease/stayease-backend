@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreRemove;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -46,8 +48,8 @@ public class PeakSeasonRate {
   private LocalDate endDate;
 
   @NotNull
-  @Column(name = "rate_adjustment", nullable = false, precision = 10, scale = 2)
-  private BigDecimal rateAdjustment;
+  @Column(name = "adjustment_rate", nullable = false, precision = 10, scale = 2)
+  private BigDecimal adjustmentRate;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "adjustment_type", length = 10)
@@ -60,15 +62,28 @@ public class PeakSeasonRate {
   @Column(name = "valid_from")
   private Instant validFrom;
 
-  @Column(name = "valid_to")
-  private Instant validTo;
+  @ColumnDefault("CURRENT_TIMESTAMP")
+  @Column(name = "updated_at")
+  private Instant updatedAt;
 
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
+
   @PrePersist
   protected void onCreate() {
     validFrom = Instant.now();
+    updatedAt = Instant.now();
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    updatedAt = Instant.now();
+  }
+
+  @PreRemove
+  protected void onDelete() {
+    deletedAt = Instant.now();
   }
 
   public enum AdjustmentType {

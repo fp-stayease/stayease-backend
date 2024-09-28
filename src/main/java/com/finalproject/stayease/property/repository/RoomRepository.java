@@ -3,6 +3,7 @@ package com.finalproject.stayease.property.repository;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
+import com.finalproject.stayease.users.entity.Users;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     AND ra.deletedAt IS NULL
     AND ra.isAvailable = FALSE
     AND p.tenant.id = :tenantId
+    ORDER BY ra.startDate
     """)
   List<Room> findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(@Param("tenantId") Long tenantId);
 
@@ -72,7 +74,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         r.description,
         r.basePrice,
         psr.adjustmentType,
-        psr.rateAdjustment,
+        psr.adjustmentRate,
         CASE
           WHEN EXISTS (
             SELECT 1 FROM RoomAvailability ra

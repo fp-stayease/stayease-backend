@@ -159,6 +159,12 @@
       <artifactId>google-oauth-client</artifactId>
       <version>1.36.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webflux</artifactId>
+      <version>6.1.13</version>
+    </dependency>
+
 
 
 

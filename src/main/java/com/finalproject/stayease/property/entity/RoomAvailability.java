@@ -47,6 +47,10 @@ public class RoomAvailability {
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
+  @ColumnDefault("false")
+  @Column(name = "is_manual")
+  private Boolean isManual;
+
   @PrePersist
   protected void onCreate() {
     createdAt = Instant.now();

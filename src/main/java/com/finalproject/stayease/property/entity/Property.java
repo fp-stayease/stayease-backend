@@ -105,7 +105,7 @@ public class Property {
   @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Room> rooms = new LinkedHashSet<>();
 
-  @OneToOne(mappedBy = "property")
+  @OneToOne(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private PropertyRateSetting propertyRateSetting;
 
   @PrePersist

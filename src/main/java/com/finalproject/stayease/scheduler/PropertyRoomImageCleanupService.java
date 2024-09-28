@@ -2,10 +2,9 @@ package com.finalproject.stayease.scheduler;
 
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import com.finalproject.stayease.property.service.PropertyService;
-import com.finalproject.stayease.property.service.RoomService;
-import com.finalproject.stayease.users.service.UsersService;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -21,24 +20,31 @@ public class PropertyRoomImageCleanupService {
   private final PropertyService propertyService;
 
   @SneakyThrows
-  @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}") // Runs every hour
+//  @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}") // Runs every hour
+//  @Scheduled(cron = "0 */1 * * * ?") // Runs every 5 minutes
   public void cleanupOrphanedImages() {
     log.info("Starting orphaned image cleanup");
-    Set<String> allPropertyAndRoomImages = getAllPropertyAndRoomImages();
-    log.info("image examples: {}", allPropertyAndRoomImages.stream().findFirst().orElse("No images found"));
-    Set<String> allImagesInCloudinary = new HashSet<>(cloudinaryService.findAllImagesFromFolder("tenants/"));
-    log.info("cloudinary examples: {}", allImagesInCloudinary.stream().findFirst().orElse("No images found"));
+    Set<String> allPropertyAndRoomImagesPublicIds = extractPublicIdsFromUrls(getAllPropertyAndRoomImages());
+    log.info("All property and room image public IDs: {}", allPropertyAndRoomImagesPublicIds);
 
-    allImagesInCloudinary.removeAll(allPropertyAndRoomImages);
+    Set<String> allImagesInCloudinaryPublicIds = extractPublicIdsFromUrls(new HashSet<>(cloudinaryService.findAllImagesFromFolder("tenants/")));
+    log.info("All images in Cloudinary public IDs: {}", allImagesInCloudinaryPublicIds);
 
-    for (String imageUrl : allImagesInCloudinary) {
-      cloudinaryService.deleteImage(imageUrl);
-      log.info("Deleted orphaned image: {}", imageUrl);
+    allImagesInCloudinaryPublicIds.removeAll(allPropertyAndRoomImagesPublicIds);
+    log.info("Orphaned images in Cloudinary public IDs: {}", allImagesInCloudinaryPublicIds);
+
+    for (String imagePublicId : allImagesInCloudinaryPublicIds) {
+      cloudinaryService.deleteImage(imagePublicId);
+      log.info("Deleted orphaned image: {}", imagePublicId);
     }
   }
 
   private Set<String> getAllPropertyAndRoomImages() {
     return new HashSet<>(propertyService.findAllPropertyRoomImageUrls());
+  }
+
+  private Set<String> extractPublicIdsFromUrls(Set<String> urls) {
+    return urls.stream().map(cloudinaryService::extractPublicIdFromUrl).collect(Collectors.toSet());
   }
 
 }
