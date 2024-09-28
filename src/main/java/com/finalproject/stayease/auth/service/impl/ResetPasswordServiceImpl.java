@@ -106,6 +106,17 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     redisRepository.blacklist(email, randomKey);
   }
 
+  @Override
+  public boolean checkToken(String token) {
+    try {
+      String jwtToken = redisRepository.getJwtKey(token);
+      String email = jwtDecoder.decode(jwtToken).getSubject();
+      return redisRepository.isValid(email, token);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   public ForgotPasswordResponseDTO getResetToken(String email) throws MessagingException, IOException {
 
     String randomKey = generateRandomKey(email);

@@ -86,6 +86,11 @@ public class EmailChangeServiceImpl implements EmailChangeService {
     return usersService.save(user);
   }
 
+  @Override
+  public boolean checkToken(String token) {
+    return emailChangeRedisRepository.isValid(token);
+  }
+
   private void sendVerificationEmail(String newEmail, String tokenUUID) throws MessagingException, IOException {
     Resource resource = new ClassPathResource("templates/email-change.html");
     String htmlTemplate = Files.readString(resource.getFile().toPath());
