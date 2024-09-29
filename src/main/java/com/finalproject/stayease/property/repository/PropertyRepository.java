@@ -25,7 +25,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
   List<Property> findByTenantAndDeletedAtIsNull(Users tenant);
 
-  @Query("SELECT DISTINCT p.city FROM Property p")
+  @Query("SELECT DISTINCT p.city FROM Property p WHERE p.deletedAt IS NULL")
   List<String> findDistinctCities();
 
   @Query("""
