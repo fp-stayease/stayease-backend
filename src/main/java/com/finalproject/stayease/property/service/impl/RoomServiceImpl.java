@@ -14,6 +14,7 @@ import com.finalproject.stayease.property.repository.RoomRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
+import com.finalproject.stayease.users.entity.Users;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -78,6 +80,17 @@ public class RoomServiceImpl implements RoomService {
     Room existingRoom = checkBelongsToProperty(propertyId, roomId);
     existingRoom.setDeletedAt(Instant.now());
     roomRepository.save(existingRoom);
+  }
+
+  @Override
+  public Set<Room> deletePropertyAndRoom(Users tenant, Long propertyId) {
+    Property property = propertyService.deleteProperty(tenant, propertyId);
+    Set<Room> rooms = property.getRooms();
+    rooms.forEach(room -> {
+      room.setDeletedAt(Instant.now());
+      roomRepository.save(room);
+    });
+    return rooms;
   }
 
   @Override

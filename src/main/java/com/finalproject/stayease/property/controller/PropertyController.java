@@ -91,6 +91,8 @@ public class PropertyController {
       @RequestParam(defaultValue = "name") String sortBy,
       @RequestParam(defaultValue = "ASC") String sortDirection
   ) {
+    log.info("Listing properties with filters: startDate: {}, endDate: {}, city: {}, categoryId: {}, searchTerm: {}, minPrice: {}, maxPrice: {}, page: {}, size: {}, sortBy: {}, sortDirection: {}",
+        startDate, endDate, city, categoryId, searchTerm);
     Page<PropertyListingDTO> properties = propertyListingService.findAvailableProperties(
         startDate, endDate, city, categoryId, searchTerm, minPrice,
         maxPrice, page, size,
@@ -165,7 +167,7 @@ public class PropertyController {
   @DeleteMapping("/{propertyId}")
   public ResponseEntity<Response<Object>> deleteProperty(@PathVariable Long propertyId) {
     Users tenant = usersService.getLoggedUser();
-    propertyService.deleteProperty(tenant, propertyId);
+    roomAvailabilityService.removeUnavailabilityByRoomsDeletedAtNotNull(tenant, propertyId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Property deleted successfully", null);
   }
 
@@ -298,7 +300,7 @@ public class PropertyController {
   public ResponseEntity<Response<Boolean>> checkOwnership(@PathVariable Long propertyId) {
     Users tenant = usersService.getLoggedUser();
     Boolean isOwner = propertyService.isTenantPropertyOwner(tenant, propertyId);
-    log.info("Checking if tenant is owner of property ID: " + isOwner);
+    log.info("Checking if tenant is owner of property ID: {}, result: {}",  propertyId, isOwner);
     return Response.successfulResponse(200, "Checking if tenant is owner of property ID: " + propertyId,
         isOwner);
   }

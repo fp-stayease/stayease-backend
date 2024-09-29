@@ -7,6 +7,7 @@ import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDT
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.users.entity.Users;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +28,9 @@ public interface PropertyService {
 
   Property updateProperty(Users tenant, Long propertyId, UpdatePropertyRequestDTO requestDTO);
 
-  void deleteProperty(Users tenant, Long propertyId);
+  Property deleteProperty(Users tenant, Long propertyId);
+
+  int hardDeleteStaleProperties(Instant timestamp);
 
   Optional<Property> findPropertyById(Long id);
 

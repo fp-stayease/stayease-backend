@@ -12,6 +12,7 @@ public interface RoomAvailabilityService {
   void removeUnavailability(Long roomId, LocalDate startDate, LocalDate endDate);
   void removeUnavailability(Users tenant, Long roomId, Long unavailabilityId);
 
-  List<RoomAvailability> getRoomAvailabilityByPropertyId(Long propertyId);
   List<RoomWithRoomAvailabilityDTO> getRoomAvailabilityByTenant(Users tenant);
+
+  void removeUnavailabilityByRoomsDeletedAtNotNull(Users tenant, Long propertyId);
 }

@@ -86,10 +86,16 @@ public class PropertyServiceImpl implements PropertyService {
   }
 
   @Override
-  public void deleteProperty(Users tenant, Long propertyId) {
+  public Property deleteProperty(Users tenant, Long propertyId) {
     Property existingProperty = checkIfValid(tenant, propertyId);
     existingProperty.setDeletedAt(Instant.now());
     propertyRepository.save(existingProperty);
+    return existingProperty;
+  }
+
+  @Override
+  public int hardDeleteStaleProperties(Instant timestamp) {
+    return propertyRepository.deleteAllDeletedPropertiesOlderThan(timestamp);
   }
 
   @Override

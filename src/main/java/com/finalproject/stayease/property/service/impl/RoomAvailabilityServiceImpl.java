@@ -16,6 +16,8 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,11 +75,6 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   }
 
   @Override
-  public List<RoomAvailability> getRoomAvailabilityByPropertyId(Long propertyId) {
-    return roomAvailabilityRepository.findAllByPropertyId(propertyId);
-  }
-
-  @Override
  public List<RoomWithRoomAvailabilityDTO> getRoomAvailabilityByTenant(Users tenant) {
   List<Property> properties = propertyService.findAllByTenant(tenant);
   List<Room> roomsByTenant = properties.stream()
@@ -101,6 +98,30 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   log.info("Checking room availability for tenant: " + tenant.getTenantInfo().getBusinessName());
   return validRoomAvailability;
 }
+
+  @Override
+  public void removeUnavailabilityByRoomsDeletedAtNotNull(Users tenant, Long propertyId) {
+    checkBookedRoomAvailability(propertyId);
+    Set<Room> rooms = roomService.deletePropertyAndRoom(tenant, propertyId);
+    rooms.forEach(room -> {
+      // only remove manual unavailability
+      Set<RoomAvailability> roomAvailabilities = room.getRoomAvailabilities().stream()
+        .filter(RoomAvailability::getIsManual)
+        .collect(Collectors.toSet());
+      roomAvailabilities.forEach(roomAvailability -> {
+        roomAvailability.preRemove();
+        roomAvailabilityRepository.save(roomAvailability);
+      });
+    });
+  }
+
+  private void checkBookedRoomAvailability(Long propertyId) {
+    List<RoomAvailability> bookedRoomAvailabilities =
+        roomAvailabilityRepository.findAllByPropertyIdAndIsManualFalse(propertyId);
+    if (!bookedRoomAvailabilities.isEmpty()) {
+      throw new InvalidRequestException("Cannot delete property with booked rooms, please resolve with customer first");
+    }
+  }
 
   private LocalDate checkDate(LocalDate date) {
     RoomAvailability roomAvailability = roomAvailabilityRepository.findRoomAvailabilityByDate(date);
