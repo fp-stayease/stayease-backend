@@ -44,6 +44,7 @@ public class PropertyListingServiceImpl implements PropertyListingService {
     List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
         minPrice,
         maxPrice);
+    log.info("Properties fetched: " + properties.size());
     applyPeakSeasonRates(properties, checkInDate);
     sortProperties(properties, sortBy, sortDirection);
     return createPage(properties, page, size, sortBy, sortDirection);
@@ -110,6 +111,8 @@ public class PropertyListingServiceImpl implements PropertyListingService {
     int start = page * size;
     int end = Math.min((page + 1) * size, properties.size());
     List<PropertyListingDTO> pageContent = properties.subList(start, end);
+    log.info("Creating page: start={}, end={}, pageContentSize={}, totalSize={}",
+        start, end, pageContent.size(), properties.size());
     return new PageImpl<>(pageContent, PageRequest.of(page, size, Sort.by(sortDirection, sortBy)), properties.size());
   }
 

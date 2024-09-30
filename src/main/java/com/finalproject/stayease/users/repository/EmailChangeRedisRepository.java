@@ -47,7 +47,8 @@ public class EmailChangeRedisRepository {
   }
 
   public boolean isValid (String tokenUUID) {
-    String key = EMAIL_CHANGE_TOKEN_PREFIX + tokenUUID + VERIFIED_SUFFIX;
-    return valueOperations.get(key) == null;
+    String verifiedKey = EMAIL_CHANGE_TOKEN_PREFIX + tokenUUID + VERIFIED_SUFFIX;
+    String key = EMAIL_CHANGE_TOKEN_PREFIX + tokenUUID;
+    return valueOperations.get(verifiedKey) == null && valueOperations.get(key) != null;
   }
 }

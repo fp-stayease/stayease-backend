@@ -15,7 +15,7 @@ public class StaleUsersCleanupService {
 
   private final UsersService usersService;
 
-  @Scheduled(cron = "${stale.users.cleanup.cron:0 0 * * * ?}")
+  @Scheduled(cron = "${cron.cleanup.stale-data:0 0 * * * ?}")
   public void cleanupStaleUsers() {
     log.info("Cleaning up stale users...");
     Instant timestamp = Instant.now().minus(48, ChronoUnit.HOURS);
