@@ -114,7 +114,9 @@ public class SecurityConfig {
     auth.requestMatchers(API_VERSION + "/role/tenant",
         API_VERSION + "/properties/**",
         API_VERSION + "/profile/tenant",
-        API_VERSION + "/bookings/tenant").hasRole("TENANT");
+        API_VERSION + "/bookings/tenant",
+        API_VERSION + "/reports/**"
+    ).hasRole("TENANT");
 
     // Permit all access to authentication and registration endpoints
     auth.requestMatchers(

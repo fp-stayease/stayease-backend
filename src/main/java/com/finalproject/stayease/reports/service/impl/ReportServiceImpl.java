@@ -27,6 +27,8 @@ public class ReportServiceImpl implements ReportService {
         this.paymentService = paymentService;
     }
 
+    // Overview Sections
+
     @Override
     public SummaryDTO getReportOverviewSummary(Users user) {
         LocalDate today = LocalDate.now();
@@ -52,9 +54,15 @@ public class ReportServiceImpl implements ReportService {
         return paymentService.getMonthlySalesByTenantId(user.getId());
     }
 
+    // Properties Report
+
     private TrxDiffDTO trxDiffGen(Long userId, Month thisMonth, Month prevMonth) {
         Long thisMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, thisMonth);
         Long prevMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, prevMonth);
+        if (prevMonthTrx == 0) {
+            Long trxDiffPercent = (thisMonthTrx - prevMonthTrx) * 100;
+            return new TrxDiffDTO(thisMonthTrx, trxDiffPercent);
+        }
         Long trxDiffPercent = ((thisMonthTrx - prevMonthTrx) / prevMonthTrx) * 100;
 
         return new TrxDiffDTO(thisMonthTrx, trxDiffPercent);
@@ -63,6 +71,10 @@ public class ReportServiceImpl implements ReportService {
     private UsersDiffDTO usersDiffGen(Long userId, Month thisMonth, Month prevMonth) {
         Long totalUsersThisMonth = bookingService.countUsersTrxByTenantId(userId, thisMonth);
         Long totalUsersPrevMonth = bookingService.countUsersTrxByTenantId(userId, prevMonth);
+        if (totalUsersPrevMonth == 0) {
+            Long trxDiffPercent = (totalUsersThisMonth - totalUsersPrevMonth) * 100;
+            return new UsersDiffDTO(totalUsersThisMonth, trxDiffPercent);
+        }
         Long usersDiffPercent = ((totalUsersThisMonth - totalUsersPrevMonth) / totalUsersPrevMonth) * 100;
 
         return new UsersDiffDTO(totalUsersThisMonth, usersDiffPercent);

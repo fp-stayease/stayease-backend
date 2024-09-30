@@ -23,17 +23,18 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findBookingsWithCheckInTomorrow(LocalDate tomorrow);
     @Query("""
         SELECT COUNT(b.id) FROM Booking b
-        WHERE b.status = 'complete'
+        WHERE b.status = 'completed'
         AND b.tenant.id = :tenantId
-        AND FUNCTION('YEAR', b.createdAt) = FUNCTION('YEAR', CURRENT_DATE)
-        AND FUNCTION('MONTH', b.createdAt) = :month
+        AND EXTRACT(YEAR FROM b.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
+        AND EXTRACT(MONTH FROM b.createdAt) = :month
     """)
     Long countCompletedBookingsByTenantId(@Param("tenantId") Long tenantId, @Param("month") int month);
+
     @Query("""
         SELECT DISTINCT COUNT(b.user.id) FROM Booking b
         WHERE b.tenant.id = :tenantId
-        AND FUNCTION('YEAR', b.createdAt) = FUNCTION('YEAR', CURRENT_DATE)
-        AND FUNCTION('MONTH', b.createdAt) = :month
+        AND EXTRACT(YEAR FROM b.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
+        AND EXTRACT(MONTH FROM b.createdAt) = :month
     """)
     Long countUserBookingsByTenantId(@Param("tenantId") Long tenantId, @Param("month") int month);
 }

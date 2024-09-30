@@ -119,7 +119,7 @@ public class TransactionServiceImpl implements TransactionService {
             if (Objects.equals(transactionStatus, "expire")) {
                 updatedBooking = bookingService.updateBooking(booking.getId(), "expire");
             } else {
-                updatedBooking = bookingService.updateBooking(booking.getId(), "payment failed");
+                updatedBooking = bookingService.updateBooking(booking.getId(), "failed");
             }
 
             var bookingItems = updatedBooking.getBookingItems();
@@ -140,7 +140,7 @@ public class TransactionServiceImpl implements TransactionService {
                     Sincerely,\s
                     Stay Ease Admin""";
             updatedPayment = paymentService.updatePaymentStatus(payment.getId(), "paid");
-            updatedBooking = bookingService.updateBooking(booking.getId(), "complete");
+            updatedBooking = bookingService.updateBooking(booking.getId(), "completed");
             mailService.sendMailWithPdf(user.getEmail(), "Booking Invoice", "booking-invoice.html", data, message);
 
             return toResDto(updatedBooking.getId(), updatedBooking.getStatus(), updatedPayment.getPaymentMethod(), updatedPayment.getPaymentStatus());
