@@ -6,6 +6,8 @@ import com.finalproject.stayease.bookings.entity.dto.request.BookingRequestReqDT
 import com.finalproject.stayease.bookings.entity.dto.BookingDTO;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
+import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,4 +27,7 @@ public interface BookingService {
     void userBookingReminder();
     Long countCompletedBookingsByTenantId(Long userId, Month month);
     Long countUsersTrxByTenantId(Long userId, Month month);
+    List<BookingDTO> findTenantRecentCompletedBookings(Long userId);
+//    List<DailySummaryDTO> getMonthlyDailySummary(Long tenantId, int year, int month);
+    List<PopularRoomDTO> findMostPopularBookings(Long userId);
 }

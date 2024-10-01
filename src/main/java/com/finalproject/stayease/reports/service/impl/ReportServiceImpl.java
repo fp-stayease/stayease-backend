@@ -1,5 +1,6 @@
 package com.finalproject.stayease.reports.service.impl;
 
+import com.finalproject.stayease.bookings.entity.dto.BookingDTO;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.payment.service.PaymentService;
 import com.finalproject.stayease.property.service.PropertyService;
@@ -7,6 +8,8 @@ import com.finalproject.stayease.reports.dto.overview.MonthlySalesDTO;
 import com.finalproject.stayease.reports.dto.overview.SummaryDTO;
 import com.finalproject.stayease.reports.dto.overview.TrxDiffDTO;
 import com.finalproject.stayease.reports.dto.overview.UsersDiffDTO;
+import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
+import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import com.finalproject.stayease.reports.service.ReportService;
 import com.finalproject.stayease.users.entity.Users;
 import org.springframework.stereotype.Service;
@@ -54,7 +57,39 @@ public class ReportServiceImpl implements ReportService {
         return paymentService.getMonthlySalesByTenantId(user.getId());
     }
 
+    @Override
+    public List<BookingDTO> recentCompletedBookings(Users user) {
+        return bookingService.findTenantRecentCompletedBookings(user.getId());
+    }
+
     // Properties Report
+
+    @Override
+    public List<PopularRoomDTO> popularRooms(Users user) {
+        return bookingService.findMostPopularBookings(user.getId());
+    }
+
+//    @Override
+//    public List<DailySummaryDTO> propertiesDailySalesSummary(Users user, String year, String month) {
+//        if (month == null && year == null) {
+//            LocalDate today = LocalDate.now();
+//            Month thisMonth = Month.from(today);
+//            return bookingService.getMonthlyDailySummary(user.getId(), today.getYear(), thisMonth.getValue());
+//        }
+//
+//        if (month == null) {
+//            LocalDate today = LocalDate.now();
+//            Month thisMonth = Month.from(today);
+//            return bookingService.getMonthlyDailySummary(user.getId(), Integer.parseInt(year), thisMonth.getValue());
+//        }
+//
+//        if (year == null) {
+//            LocalDate today = LocalDate.now();
+//            return bookingService.getMonthlyDailySummary(user.getId(), today.getYear(), Month.valueOf(month).getValue());
+//        }
+//
+//        return bookingService.getMonthlyDailySummary(user.getId(), Integer.parseInt(year), Month.valueOf(month).getValue());
+//    }
 
     private TrxDiffDTO trxDiffGen(Long userId, Month thisMonth, Month prevMonth) {
         Long thisMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, thisMonth);

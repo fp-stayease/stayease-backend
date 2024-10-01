@@ -1,6 +1,7 @@
 package com.finalproject.stayease.bookings.repository;
 
 import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,12 +30,37 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
         AND EXTRACT(MONTH FROM b.createdAt) = :month
     """)
     Long countCompletedBookingsByTenantId(@Param("tenantId") Long tenantId, @Param("month") int month);
-
     @Query("""
-        SELECT DISTINCT COUNT(b.user.id) FROM Booking b
+        SELECT COUNT(DISTINCT b.user.id) FROM Booking b
         WHERE b.tenant.id = :tenantId
         AND EXTRACT(YEAR FROM b.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
         AND EXTRACT(MONTH FROM b.createdAt) = :month
     """)
     Long countUserBookingsByTenantId(@Param("tenantId") Long tenantId, @Param("month") int month);
+    @Query("""
+        SELECT b FROM Booking b
+        WHERE b.tenant.id = :tenantId
+        AND b.status = 'completed'
+        ORDER BY b.createdAt DESC
+        LIMIT 5
+    """)
+    List<Booking> findRecentCompletedBookingsByTenantId(@Param("tenantId") Long tenantId);
+
+    @Query("""
+        SELECT NEW com.finalproject.stayease.reports.dto.properties.DailySummaryDTO(
+            FUNCTION('EXTRACT', 'MONTH FROM b.createdAt'),
+            COALESCE(SUM(b.totalPrice), 0.0)
+        )
+        FROM Booking b
+        WHERE b.tenant.id = :tenantId
+        AND b.status = 'completed'
+        AND b.createdAt >= :startDate
+        AND b.createdAt <= :endDate
+        GROUP BY FUNCTION('DATE_TRUNC', 'day', b.createdAt)
+        ORDER BY FUNCTION('DATE_TRUNC', 'day', b.createdAt)
+    """)
+    List<DailySummaryDTO> getDailySummaryForMonth(@Param("tenantId") Long tenantId,
+                                                  @Param("startDate") Instant startDate,
+                                                  @Param("endDate") Instant endDate);
+
 }

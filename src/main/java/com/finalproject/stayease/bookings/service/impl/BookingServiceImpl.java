@@ -17,6 +17,8 @@ import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
+import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
+import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.TenantInfoService;
@@ -29,6 +31,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
@@ -173,4 +176,26 @@ public class BookingServiceImpl implements BookingService {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
         return bookingRepository.countUserBookingsByTenantId(tenant.getId(), month.getValue());
     }
+
+    @Override
+    public List<BookingDTO> findTenantRecentCompletedBookings(Long userId) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingRepository.findRecentCompletedBookingsByTenantId(tenant.getId())
+                .stream().map(Booking::toResDto).toList();
+    }
+
+    @Override
+    public List<PopularRoomDTO> findMostPopularBookings(Long userId) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingItemRepository.findMostBookedRoomByTenantId(tenant.getId());
+    }
+
+//    @Override
+//    public List<DailySummaryDTO> getMonthlyDailySummary(Long userId, int year, int month) {
+//        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+//        LocalDate startDate = LocalDate.of(year, month, 1);
+//        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+//
+//        return bookingRepository.getDailySummaryForMonth(tenant.getId(), Instant.from(startDate), Instant.from(endDate));
+//    }
 }
