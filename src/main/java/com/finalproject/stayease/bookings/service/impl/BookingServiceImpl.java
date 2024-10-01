@@ -36,6 +36,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Data
@@ -188,6 +189,16 @@ public class BookingServiceImpl implements BookingService {
     public List<PopularRoomDTO> findMostPopularBookings(Long userId) {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
         return bookingItemRepository.findMostBookedRoomByTenantId(tenant.getId());
+    }
+
+    public List<DailySummaryDTO> getDailySummaryForMonth(Long tenantId, Instant startDate, Instant endDate) {
+        List<Object[]> results = bookingRepository.getDailySummaryForMonth(tenantId, startDate, endDate);
+        return results.stream()
+                .map(row -> new DailySummaryDTO(
+                        (String) row[0],
+                        ((Number) row[2]).doubleValue()
+                ))
+                .collect(Collectors.toList());
     }
 
 //    @Override

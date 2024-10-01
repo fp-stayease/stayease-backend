@@ -46,21 +46,24 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     """)
     List<Booking> findRecentCompletedBookingsByTenantId(@Param("tenantId") Long tenantId);
 
-    @Query("""
-        SELECT NEW com.finalproject.stayease.reports.dto.properties.DailySummaryDTO(
-            FUNCTION('EXTRACT', 'MONTH FROM b.createdAt'),
-            COALESCE(SUM(b.totalPrice), 0.0)
-        )
-        FROM Booking b
-        WHERE b.tenant.id = :tenantId
-        AND b.status = 'completed'
-        AND b.createdAt >= :startDate
-        AND b.createdAt <= :endDate
-        GROUP BY FUNCTION('DATE_TRUNC', 'day', b.createdAt)
-        ORDER BY FUNCTION('DATE_TRUNC', 'day', b.createdAt)
-    """)
-    List<DailySummaryDTO> getDailySummaryForMonth(@Param("tenantId") Long tenantId,
-                                                  @Param("startDate") Instant startDate,
-                                                  @Param("endDate") Instant endDate);
+    @Query(value = """
+        SELECT 
+            TO_CHAR(b.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS date,
+            COALESCE(SUM(b.total_price), 0.0) AS total_price
+        FROM 
+            bookings b
+        WHERE 
+            b.tenant_id = :tenantId
+            AND b.status = 'completed'
+            AND b.created_at >= :startDate
+            AND b.created_at <= :endDate
+        GROUP BY 
+            TO_CHAR(b.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD')
+        ORDER BY 
+            TO_CHAR(b.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD')
+        """, nativeQuery = true)
+    List<Object[]> getDailySummaryForMonth(@Param("tenantId") Long tenantId,
+                                           @Param("startDate") Instant startDate,
+                                           @Param("endDate") Instant endDate);
 
 }
