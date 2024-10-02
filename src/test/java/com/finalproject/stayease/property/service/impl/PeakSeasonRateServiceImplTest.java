@@ -174,7 +174,7 @@ class PeakSeasonRateServiceImplTest {
     roomPriceRate.setRoomId(1L);
     roomPriceRate.setBasePrice(BigDecimal.valueOf(100));
 
-    when(propertyService.findAvailableRoomRates(1L, LocalDate.now())).thenReturn(Arrays.asList(roomPriceRate));
+    when(propertyService.findAvailableRoomRates(1L, LocalDate.now())).thenReturn(List.of(roomPriceRate));
     when(peakSeasonRateRepository.findValidRatesByPropertyAndDate(eq(1L), any(LocalDate.class), any(Instant.class), any(Instant.class)))
         .thenReturn(Collections.singletonList(peakSeasonRate));
 

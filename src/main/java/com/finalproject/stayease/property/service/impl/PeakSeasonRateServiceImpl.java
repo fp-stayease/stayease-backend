@@ -158,7 +158,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
       RoomPriceRateDTO lowestRoomRate = propertyService.findLowestRoomRate(propertyId, date);
       BigDecimal lowestPrice = applyPeakSeasonRate(lowestRoomRate);
-      dailyPrices.add(new DailyPriceDTO(date, lowestPrice, !lowestRoomRate.getBasePrice().equals(lowestPrice)));
+      dailyPrices.add(new DailyPriceDTO(date, lowestPrice, lowestRoomRate.getBasePrice().compareTo(lowestPrice) != 0));
     }
     return dailyPrices;
   }

@@ -46,10 +46,9 @@ public interface PeakSeasonRateService {
 
   List<DailyPriceDTO> findCumulativeRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
 
-
+  // Region - price adjustments
   BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate);
 
-  // Region - price adjustments
   BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice, Instant bookingTime);
 
 }
