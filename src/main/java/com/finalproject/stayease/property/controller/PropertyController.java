@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.controller;
 
+import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
@@ -91,8 +92,6 @@ public class PropertyController {
       @RequestParam(defaultValue = "name") String sortBy,
       @RequestParam(defaultValue = "ASC") String sortDirection
   ) {
-    log.info("Listing properties with filters: startDate: {}, endDate: {}, city: {}, categoryId: {}, searchTerm: {}, minPrice: {}, maxPrice: {}, page: {}, size: {}, sortBy: {}, sortDirection: {}",
-        startDate, endDate, city, categoryId, searchTerm);
     Page<PropertyListingDTO> properties = propertyListingService.findAvailableProperties(
         startDate, endDate, city, categoryId, searchTerm, minPrice,
         maxPrice, page, size,
@@ -128,9 +127,13 @@ public class PropertyController {
   @GetMapping("/tenant")
   public ResponseEntity<Response<List<PropertyDTO>>> getAllTenantProperties() {
     Users tenant = usersService.getLoggedUser();
+    try {
     List<Property> tenantsProperties = propertyService.findAllByTenant(tenant);
-    List<PropertyDTO> propertyDTOList = tenantsProperties.stream().map(PropertyDTO::new).toList();
-    return Response.successfulResponse(200, "Listing tenant properties", propertyDTOList);
+      List<PropertyDTO> propertyDTOList = tenantsProperties.stream().map(PropertyDTO::new).toList();
+      return Response.successfulResponse(200, "Listing tenant properties", propertyDTOList);
+    } catch (DataNotFoundException e) {
+      return Response.successfulResponse(200, "No properties found for tenant", List.of());
+    }
   }
 
   @GetMapping("/tenant/rooms")
@@ -169,40 +172,6 @@ public class PropertyController {
     Users tenant = usersService.getLoggedUser();
     roomAvailabilityService.removeUnavailabilityByRoomsDeletedAtNotNull(tenant, propertyId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Property deleted successfully", null);
-  }
-
-  // Region - Property Categories
-
-  @GetMapping("/categories")
-  public ResponseEntity<Response<List<CategoryDTO>>> getAllCategories() {
-    List<PropertyCategory> categoryList = propertyCategoryService.findAll();
-    List<CategoryDTO> categoryDTOList = categoryList.stream()
-    .map(CategoryDTO::new)
-    .sorted(Comparator.comparing(CategoryDTO::getName))
-    .toList();
-    return Response.successfulResponse(200, "Listing all categories", categoryDTOList);
-  }
-
-  @PostMapping("/categories")
-  public ResponseEntity<Response<CategoryDTO>> addCategory(@RequestBody CreateCategoryRequestDTO requestDTO) {
-    Users tenant = usersService.getLoggedUser();
-    return Response.successfulResponse(HttpStatus.CREATED.value(), "Category added!", new CategoryDTO(
-        propertyCategoryService.createCategory(tenant, requestDTO)));
-  }
-
-  @PutMapping("/categories/{categoryId}")
-  public ResponseEntity<Response<CategoryDTO>> updateCategory(@PathVariable Long categoryId,
-      @RequestBody UpdateCategoryRequestDTO requestDTO) {
-    Users tenant = usersService.getLoggedUser();
-    return Response.successfulResponse(HttpStatus.OK.value(), "Category updated!", new CategoryDTO(
-        propertyCategoryService.updateCategory(categoryId, tenant, requestDTO)));
-  }
-
-  @DeleteMapping("/categories/{categoryId}")
-  public ResponseEntity<Response<Object>> deleteCategory(@PathVariable Long categoryId) {
-    Users tenant = usersService.getLoggedUser();
-    propertyCategoryService.deleteCategory(categoryId, tenant);
-    return Response.successfulResponse(HttpStatus.OK.value(), "Category successfully deleted!", null);
   }
 
   // Region - Room
