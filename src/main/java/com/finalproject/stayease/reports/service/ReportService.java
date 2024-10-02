@@ -14,6 +14,6 @@ public interface ReportService {
     List<MonthlySalesDTO> monthlySales(Users user);
     List<BookingDTO> recentCompletedBookings(Users user);
 
-//    List<DailySummaryDTO> propertiesDailySalesSummary(Users user, String year, String month);
+    List<DailySummaryDTO> propertiesDailySalesSummary(Users user, String year, String month);
     List<PopularRoomDTO> popularRooms(Users user);
 }

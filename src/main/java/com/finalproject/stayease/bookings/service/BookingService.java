@@ -11,6 +11,7 @@ import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.time.Month;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,6 @@ public interface BookingService {
     Long countCompletedBookingsByTenantId(Long userId, Month month);
     Long countUsersTrxByTenantId(Long userId, Month month);
     List<BookingDTO> findTenantRecentCompletedBookings(Long userId);
-//    List<DailySummaryDTO> getMonthlyDailySummary(Long tenantId, int year, int month);
+    List<DailySummaryDTO> getDailySummaryForMonth(Long userId, Instant startDate, Instant endDate);
     List<PopularRoomDTO> findMostPopularBookings(Long userId);
 }

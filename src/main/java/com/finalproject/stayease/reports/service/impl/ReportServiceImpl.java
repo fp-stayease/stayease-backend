@@ -12,13 +12,14 @@ import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
 import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import com.finalproject.stayease.reports.service.ReportService;
 import com.finalproject.stayease.users.entity.Users;
+import lombok.extern.java.Log;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.Month;
+import java.time.*;
 import java.util.List;
 
 @Service
+@Log
 public class ReportServiceImpl implements ReportService {
     private final BookingService bookingService;
     private final PropertyService propertyService;
@@ -69,27 +70,33 @@ public class ReportServiceImpl implements ReportService {
         return bookingService.findMostPopularBookings(user.getId());
     }
 
-//    @Override
-//    public List<DailySummaryDTO> propertiesDailySalesSummary(Users user, String year, String month) {
-//        if (month == null && year == null) {
-//            LocalDate today = LocalDate.now();
-//            Month thisMonth = Month.from(today);
-//            return bookingService.getMonthlyDailySummary(user.getId(), today.getYear(), thisMonth.getValue());
-//        }
-//
-//        if (month == null) {
-//            LocalDate today = LocalDate.now();
-//            Month thisMonth = Month.from(today);
-//            return bookingService.getMonthlyDailySummary(user.getId(), Integer.parseInt(year), thisMonth.getValue());
-//        }
-//
-//        if (year == null) {
-//            LocalDate today = LocalDate.now();
-//            return bookingService.getMonthlyDailySummary(user.getId(), today.getYear(), Month.valueOf(month).getValue());
-//        }
-//
-//        return bookingService.getMonthlyDailySummary(user.getId(), Integer.parseInt(year), Month.valueOf(month).getValue());
-//    }
+    @Override
+    public List<DailySummaryDTO> propertiesDailySalesSummary(Users user, String year, String month) {
+        LocalDate startDate;
+        LocalDate endDate;
+
+        if (year == null) {
+            year = String.valueOf(LocalDate.now().getYear());
+        }
+
+        if (month == null) {
+            month = LocalDate.now().getMonth().name();
+        }
+
+        int selectedYear = Integer.parseInt(year);
+        Month selectedMonth = Month.valueOf(month.toUpperCase());
+
+        startDate = LocalDate.of(selectedYear, selectedMonth, 1);
+        endDate = startDate.plusMonths(1).minusDays(1);
+
+        Instant startInstant = startDate.atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant endInstant = endDate.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
+
+        log.info("start date " + startInstant);
+        log.info("end date " + endInstant);
+
+        return bookingService.getDailySummaryForMonth(user.getId(), startInstant, endInstant);
+    }
 
     private TrxDiffDTO trxDiffGen(Long userId, Month thisMonth, Month prevMonth) {
         Long thisMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, thisMonth);

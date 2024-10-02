@@ -24,6 +24,7 @@ import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
 import lombok.Data;
+import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -36,9 +37,11 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Data
+@Log
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingItemRepository bookingItemRepository;
@@ -185,17 +188,20 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<DailySummaryDTO> getDailySummaryForMonth(Long userId, Instant startDate, Instant endDate) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        List<Object[]> results = bookingRepository.getDailySummaryForMonth(tenant.getId(), startDate, endDate);
+        return results.stream()
+                .map(row -> new DailySummaryDTO(
+                        (String) row[0],
+                        ((Number) row[1]).doubleValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<PopularRoomDTO> findMostPopularBookings(Long userId) {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
         return bookingItemRepository.findMostBookedRoomByTenantId(tenant.getId());
     }
-
-//    @Override
-//    public List<DailySummaryDTO> getMonthlyDailySummary(Long userId, int year, int month) {
-//        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
-//        LocalDate startDate = LocalDate.of(year, month, 1);
-//        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
-//
-//        return bookingRepository.getDailySummaryForMonth(tenant.getId(), Instant.from(startDate), Instant.from(endDate));
-//    }
 }

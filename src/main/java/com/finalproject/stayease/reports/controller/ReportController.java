@@ -53,16 +53,18 @@ public class ReportController {
 
     // Properties Report
 
-//    @GetMapping("/properties")
-//    public ResponseEntity<Response<List<DailySummaryDTO>>> getDailySalesReportByMonth(
-//            @RequestParam(required = false) String month,
-//            @RequestParam(required = false) String year
-//    ) {
-//        Users tenant = usersService.getLoggedUser();
-//        var response = reportService.propertiesDailySalesSummary(tenant, year, month);
-//
-//        return Response.successfulResponse("Daily sales report fetched", response);
-//    }
+    @GetMapping("/properties")
+    public ResponseEntity<Response<List<DailySummaryDTO>>> getDailySalesReportByMonth(
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) String year
+    ) {
+        log.info("month: " + month);
+        log.info("year: " + year);
+        Users tenant = usersService.getLoggedUser();
+        var response = reportService.propertiesDailySalesSummary(tenant, year, month);
+
+        return Response.successfulResponse("Daily sales report fetched", response);
+    }
 
     @GetMapping("/properties/popular")
     public ResponseEntity<Response<List<PopularRoomDTO>>> getPopularRooms() {
