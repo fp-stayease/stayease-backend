@@ -64,7 +64,7 @@ class PropertyCategoryServiceImplTest {
 
   @Test
   void findAll_Success() {
-    when(propertyCategoryRepository.findAll()).thenReturn(Arrays.asList(category));
+    when(propertyCategoryRepository.findAll()).thenReturn(Collections.singletonList(category));
     List<PropertyCategory> result = propertyCategoryService.findAll();
     assertFalse(result.isEmpty());
     assertEquals(1, result.size());
@@ -97,7 +97,7 @@ class PropertyCategoryServiceImplTest {
   @Test
   void createCategory_SimilarName() {
     when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(Optional.empty());
-    when(propertyCategoryRepository.findAll()).thenReturn(Arrays.asList(category));
+    when(propertyCategoryRepository.findAll()).thenReturn(Collections.singletonList(category));
 
     createDTO.setName("Apartmant");  // Similar to "Apartment"
     assertThrows(DuplicateEntryException.class, () -> propertyCategoryService.createCategory(tenant, createDTO));
