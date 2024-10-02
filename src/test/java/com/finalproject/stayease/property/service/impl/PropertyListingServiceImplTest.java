@@ -100,7 +100,7 @@ public class PropertyListingServiceImplTest {
     assertNotNull(result);
     assertFalse(result.getContent().isEmpty());
     assertEquals(1, result.getContent().size());
-    assertEquals(BigDecimal.valueOf(120), result.getContent().get(0).getLowestAdjustedPrice());
+    assertEquals(BigDecimal.valueOf(120), result.getContent().getFirst().getLowestAdjustedPrice());
   }
 
   @Test
