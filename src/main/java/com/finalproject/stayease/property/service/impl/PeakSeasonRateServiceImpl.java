@@ -78,7 +78,6 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
         .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
     rate.setDeletedAt(Instant.now());
     peakSeasonRateRepository.save(rate);
-    log.info("Deleted peak season rate with ID {}", rateId);
   }
 
   @Override
