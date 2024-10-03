@@ -12,7 +12,6 @@ import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
-import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
 import com.finalproject.stayease.property.repository.RoomRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
@@ -47,7 +46,6 @@ class RoomServiceImplTest {
   private Property property;
   private Room room;
   private CreateRoomRequestDTO createRoomDTO;
-  private UpdateRoomRequestDTO updateRoomDTO;
   private Users tenant;
 
   @BeforeEach
@@ -70,9 +68,6 @@ class RoomServiceImplTest {
 
     createRoomDTO = new CreateRoomRequestDTO();
     createRoomDTO.setName("New Room");
-
-    updateRoomDTO = new UpdateRoomRequestDTO();
-    updateRoomDTO.setName("Updated Room");
 
     tenant = new Users();
     tenant.setId(1L);
@@ -121,9 +116,13 @@ class RoomServiceImplTest {
 
   @Test
   void createRoom_Success() {
+    Room newRoom = new Room();
+    newRoom.setProperty(property);
+    newRoom.setName("New Room");
+
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
     when(roomRepository.findAllRoomNamesByPropertyId(1L)).thenReturn(Collections.emptyList());
-    when(roomRepository.save(any(Room.class))).thenReturn(room);
+    when(roomRepository.save(any(Room.class))).thenReturn(newRoom);
 
     Room result = roomService.createRoom(1L, createRoomDTO);
     assertNotNull(result);
@@ -143,9 +142,9 @@ class RoomServiceImplTest {
     when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(room));
     when(roomRepository.save(any(Room.class))).thenReturn(room);
 
-    Room result = roomService.updateRoom(1L, 1L, updateRoomDTO);
+    Room result = roomService.updateRoom(1L, 1L, createRoomDTO);
     assertNotNull(result);
-    assertEquals(updateRoomDTO.getName(), result.getName());
+    assertEquals(createRoomDTO.getName(), result.getName());
   }
 
   @Test
@@ -153,7 +152,7 @@ class RoomServiceImplTest {
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
     when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
-    assertThrows(RoomNotFoundException.class, () -> roomService.updateRoom(1L, 1L, updateRoomDTO));
+    assertThrows(RoomNotFoundException.class, () -> roomService.updateRoom(1L, 1L, createRoomDTO));
   }
 
   @Test
@@ -166,13 +165,13 @@ class RoomServiceImplTest {
   }
 
   @Test
-  void deletePropertyAndRoom_Success() {
+  void softDeletePropertyAndRoom_Success() {
     Set<Room> rooms = new HashSet<>(Collections.singletonList(room));
     property.setRooms(rooms);
 
     when(propertyService.deleteProperty(tenant, 1L)).thenReturn(property);
 
-    Set<Room> result = roomService.deletePropertyAndRoom(tenant, 1L);
+    Set<Room> result = roomService.softDeletePropertyAndRoom(tenant, 1L);
     assertFalse(result.isEmpty());
     assertEquals(1, result.size());
     verify(roomRepository, times(1)).save(any(Room.class));

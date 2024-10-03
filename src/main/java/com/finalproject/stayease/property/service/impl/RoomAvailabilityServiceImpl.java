@@ -101,7 +101,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   @Override
   public void removeUnavailabilityByRoomsDeletedAtNotNull(Users tenant, Long propertyId) {
     checkBookedRoomAvailability(propertyId);
-    Set<Room> rooms = roomService.deletePropertyAndRoom(tenant, propertyId);
+    Set<Room> rooms = roomService.softDeletePropertyAndRoom(tenant, propertyId);
     rooms.forEach(room -> {
       // only remove manual unavailability
       Set<RoomAvailability> roomAvailabilities = room.getRoomAvailabilities().stream()

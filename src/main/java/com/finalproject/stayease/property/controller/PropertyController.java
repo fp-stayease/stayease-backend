@@ -17,7 +17,6 @@ import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailab
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
-import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
@@ -208,7 +207,7 @@ public class PropertyController {
 
   @PutMapping("/{propertyId}/rooms/{roomId}")
   public ResponseEntity<Response<RoomDTO>> updateRoom(@PathVariable Long propertyId, @PathVariable Long roomId,
-      @RequestBody UpdateRoomRequestDTO requestDTO) {
+      @RequestBody CreateRoomRequestDTO requestDTO) {
     return Response.successfulResponse(HttpStatus.OK.value(), "Room updated!",
         new RoomDTO(roomService.updateRoom(propertyId, roomId, requestDTO)));
   }

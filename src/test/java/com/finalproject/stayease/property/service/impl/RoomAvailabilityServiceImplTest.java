@@ -205,7 +205,7 @@ public class RoomAvailabilityServiceImplTest {
     room.setRoomAvailabilities(new HashSet<>(Collections.singletonList(roomAvailability)));
 
     when(roomAvailabilityRepository.findAllByPropertyIdAndIsManualFalse(1L)).thenReturn(Collections.emptyList());
-    when(roomService.deletePropertyAndRoom(tenant, 1L)).thenReturn(rooms);
+    when(roomService.softDeletePropertyAndRoom(tenant, 1L)).thenReturn(rooms);
 
     assertDoesNotThrow(() -> roomAvailabilityService.removeUnavailabilityByRoomsDeletedAtNotNull(tenant, 1L));
     verify(roomAvailabilityRepository).save(roomAvailability);
