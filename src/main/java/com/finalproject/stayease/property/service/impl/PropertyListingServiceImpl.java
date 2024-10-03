@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
@@ -54,7 +55,7 @@ public class PropertyListingServiceImpl implements PropertyListingService {
   public PropertyAvailableOnDateDTO findAvailablePropertyOnDate(Long propertyId, LocalDate date) {
     validateDate(date);
     Property property = propertyService.findPropertyById(propertyId)
-        .orElseThrow(() -> new DataNotFoundException("Property not found"));
+        .orElseThrow(() -> new PropertyNotFoundException("Property not found"));
     List<RoomAdjustedRatesDTO> rooms = peakSeasonRateService.findAvailableRoomRates(propertyId, date);
     List<Room> unavailableRooms = roomService.getUnavailableRoomsByPropertyIdAndDate(propertyId, date);
     return new PropertyAvailableOnDateDTO(property, rooms, unavailableRooms);
@@ -68,7 +69,7 @@ public class PropertyListingServiceImpl implements PropertyListingService {
       // Fetch the actual lowest available price for each property
       for (Property property : properties) {
         RoomAdjustedRatesDTO lowestRoomRate = peakSeasonRateService.findAvailableRoomRates(property.getId(), date).stream().findFirst()
-            .orElseThrow(() -> new DataNotFoundException("No room rates found for this property"));
+            .orElseThrow(() -> new PeakSeasonRateNotFoundException("No room rates found for this property"));
         propertyListings.add(new PropertyListingDTO(property, lowestRoomRate));
       }
       return propertyListings;

@@ -1,14 +1,16 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
+import com.finalproject.stayease.exceptions.properties.ConflictingRateException;
+import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
+import com.finalproject.stayease.exceptions.utils.InvalidDateException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
-import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
@@ -41,7 +43,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   @Override
   public PeakSeasonRate setPeakSeasonRate(Long propertyId, SetPeakSeasonRateRequestDTO requestDTO) {
     Property property = propertyService.findPropertyById(propertyId)
-        .orElseThrow(() -> new DataNotFoundException("Property not found"));
+        .orElseThrow(() -> new PropertyNotFoundException("Property not found"));
     return setRate(property, requestDTO);
   }
 
@@ -61,9 +63,8 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
 
   @Override
   public PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO) {
-    // TODO PeakSeasonRateNotFoundException
     PeakSeasonRate existingRate = peakSeasonRateRepository.findById(rateId)
-        .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
+        .orElseThrow(() -> new PeakSeasonRateNotFoundException("Peak season rate not found"));
     log.info("Updating peak season rate with ID {}", rateId);
 
     // Get property while also checking ownership of property and rate
@@ -75,7 +76,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   @Override
   public void removePeakSeasonRate(Long rateId) {
     PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
-        .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
+        .orElseThrow(() -> new PeakSeasonRateNotFoundException("Peak season rate not found"));
     rate.setDeletedAt(Instant.now());
     peakSeasonRateRepository.save(rate);
     log.info("Deleted peak season rate with ID {}", rateId);
@@ -84,7 +85,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   @Override
   public void removePeakSeasonRate(Users tenant, Long rateId) {
     PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
-        .orElseThrow(() -> new DataNotFoundException("Peak season rate not found"));
+        .orElseThrow(() -> new PeakSeasonRateNotFoundException("Peak season rate not found"));
     Property property = getProperty(tenant, rate.getProperty().getId());
     log.info("Deleting peak season rate with ID {}", rateId);
     rate.setDeletedAt(Instant.now());
@@ -212,9 +213,8 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   }
 
   private Property getProperty(Users tenant, Long propertyId) {
-    // TODO : PropertyNotFoundException
     Property property = propertyService.findPropertyById(propertyId)
-        .orElseThrow(() -> new DataNotFoundException("Property not found"));
+        .orElseThrow(() -> new PropertyNotFoundException("Property not found"));
     if (property.getTenant() != tenant) {
       throw new BadCredentialsException("You are not the owner of this property");
     }
@@ -236,7 +236,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   private void checkDateRangeValid(Long propertyId, LocalDate startDate, LocalDate endDate) {
     boolean existsConflictingRate = peakSeasonRateRepository.existsConflictingRate(propertyId, startDate, endDate);
     if (existsConflictingRate) {
-      throw new DuplicateEntryException("Rates for this date range already set");
+      throw new ConflictingRateException("Rates for this date range already set");
     }
   }
 
@@ -244,8 +244,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     LocalDate startDate = requestDTO.getStartDate();
     if (startDate != null) {
       if (LocalDate.now().isAfter(startDate)) {
-        // TODO InvalidDateException
-        throw new BadCredentialsException("Start date cannot be changed");
+        throw new InvalidDateException("Start date cannot be changed");
       } else {
         return startDate;
       }
@@ -275,14 +274,14 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
 
   private void validateDate(LocalDate date) {
     if (date.isBefore(LocalDate.now())) {
-      throw new IllegalArgumentException("Date is out of valid range: " + date);
+      throw new InvalidDateException("Date is out of valid range: " + date);
     }
   }
 
   private void validateDate(LocalDate startDate, LocalDate endDate) {
     validateDate(startDate);
     if (startDate.isAfter(endDate)) {
-      throw new IllegalArgumentException("Start date cannot be after end date");
+      throw new InvalidDateException("Start date cannot be after end date");
     }
   }
 }

@@ -11,7 +11,7 @@ import com.finalproject.stayease.bookings.repository.BookingItemRepository;
 import com.finalproject.stayease.bookings.repository.BookingRepository;
 import com.finalproject.stayease.bookings.repository.BookingRequestRepository;
 import com.finalproject.stayease.bookings.service.BookingService;
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
 import com.finalproject.stayease.mail.model.MailTemplate;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.property.entity.Room;

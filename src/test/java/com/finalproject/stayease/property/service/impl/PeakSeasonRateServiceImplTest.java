@@ -9,8 +9,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
+import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
+import com.finalproject.stayease.exceptions.utils.DuplicateEntryException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;

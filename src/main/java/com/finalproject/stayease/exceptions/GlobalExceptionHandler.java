@@ -5,11 +5,13 @@ import com.finalproject.stayease.exceptions.auth.InvalidRefreshTokenException;
 import com.finalproject.stayease.exceptions.auth.PasswordDoesNotMatchException;
 import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
 import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
+import com.finalproject.stayease.exceptions.properties.ConflictingRateException;
 import com.finalproject.stayease.exceptions.properties.DuplicateCategoryException;
 import com.finalproject.stayease.exceptions.properties.DuplicatePropertyException;
 import com.finalproject.stayease.exceptions.properties.DuplicateRoomException;
 import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
 import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
+import com.finalproject.stayease.exceptions.properties.RoomAvailabilityNotFoundException;
 import com.finalproject.stayease.exceptions.properties.RoomNotFoundException;
 import com.finalproject.stayease.exceptions.properties.RoomUnavailableException;
 import com.finalproject.stayease.exceptions.users.NoLinkedSocialLoginException;
@@ -39,6 +41,7 @@ public class GlobalExceptionHandler {
 
   static {
     EXCEPTION_STATUS_MAP.put(CategoryNotFoundException.class, HttpStatus.NOT_FOUND);
+    EXCEPTION_STATUS_MAP.put(ConflictingRateException.class, HttpStatus.BAD_REQUEST);
     EXCEPTION_STATUS_MAP.put(DataNotFoundException.class, HttpStatus.NOT_FOUND);
     EXCEPTION_STATUS_MAP.put(DuplicateCategoryException.class, HttpStatus.BAD_REQUEST);
     EXCEPTION_STATUS_MAP.put(DuplicateEntryException.class, HttpStatus.BAD_REQUEST);
@@ -54,6 +57,7 @@ public class GlobalExceptionHandler {
     EXCEPTION_STATUS_MAP.put(PeakSeasonRateNotFoundException.class, HttpStatus.NOT_FOUND);
     EXCEPTION_STATUS_MAP.put(PasswordDoesNotMatchException.class, HttpStatus.BAD_REQUEST);
     EXCEPTION_STATUS_MAP.put(PropertyNotFoundException.class, HttpStatus.NOT_FOUND);
+    EXCEPTION_STATUS_MAP.put(RoomAvailabilityNotFoundException.class, HttpStatus.NOT_FOUND);
     EXCEPTION_STATUS_MAP.put(RoomNotFoundException.class, HttpStatus.NOT_FOUND);
     EXCEPTION_STATUS_MAP.put(RoomUnavailableException.class, HttpStatus.BAD_REQUEST);
     EXCEPTION_STATUS_MAP.put(TenantInfoNotFoundException.class, HttpStatus.NOT_FOUND);

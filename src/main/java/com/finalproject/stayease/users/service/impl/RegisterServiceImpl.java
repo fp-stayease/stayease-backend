@@ -1,9 +1,9 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.auth.service.RegisterRedisService;
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.PasswordDoesNotMatchException;
+import com.finalproject.stayease.exceptions.auth.PasswordDoesNotMatchException;
+import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
+import com.finalproject.stayease.exceptions.utils.DuplicateEntryException;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.TenantInfo;
@@ -191,7 +191,6 @@ public class RegisterServiceImpl implements RegisterService {
     // Replace placeholders with actual values
     String htmlContent = htmlTemplate
         .replace("${verificationUrl}", url)
-        // TODO : Replace with FE URL
         .replace("${feURL}", feUrl);
 
     String subject = "Verify your account!";
@@ -202,7 +201,6 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   private String buildVerificationUrl(UserType userType, String token) {
-    // TODO : replace this with FE URL later
     String t = userType == UserType.TENANT ? "t" : "u";
     return feUrl + "/register/verify?t=" + t + "&token=" + token;
   }

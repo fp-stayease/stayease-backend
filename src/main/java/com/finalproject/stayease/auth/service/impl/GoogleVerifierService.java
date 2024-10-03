@@ -5,7 +5,7 @@ import com.finalproject.stayease.auth.model.dto.OAuth2RegisterRequestDTO;
 import com.finalproject.stayease.auth.model.dto.SocialLoginRequest;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.service.JwtService;
-import com.finalproject.stayease.exceptions.InvalidCredentialsException;
+import com.finalproject.stayease.exceptions.auth.InvalidCredentialsException;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.service.SocialLoginService;

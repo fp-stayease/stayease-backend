@@ -1,6 +1,6 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
@@ -102,7 +102,7 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
 
   private PropertyRateSetting createDefaultPropertyRateSettings(Long propertyId) {
     Property property = propertyService.findPropertyById(propertyId)
-        .orElseThrow(() -> new DataNotFoundException("Property not found with id: " + propertyId));
+        .orElseThrow(() -> new PropertyNotFoundException("Property not found with id: " + propertyId));
 
     log.info("Creating default property rate settings for property ID: {}", property.getId());
 
