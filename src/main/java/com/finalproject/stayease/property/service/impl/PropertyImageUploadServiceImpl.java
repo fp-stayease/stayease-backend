@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.service.impl;
 
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
@@ -50,13 +51,13 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
 
   private void validateFile(MultipartFile file) {
     if (file.isEmpty()) {
-      throw new IllegalArgumentException("File is empty");
+      throw new InvalidRequestException("File is empty");
     }
     if (!ALLOWED_FILE_TYPES.contains(file.getContentType())) {
-      throw new IllegalArgumentException("Invalid file type");
+      throw new InvalidRequestException("Invalid file type");
     }
     if (file.getSize() > MAX_FILE_SIZE) {
-      throw new IllegalArgumentException("File size exceeds maximum limit");
+      throw new InvalidRequestException("File size exceeds maximum limit");
     }
   }
 }

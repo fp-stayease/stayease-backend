@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.service.impl;
 
+import com.finalproject.stayease.exceptions.properties.DuplicateRoomException;
 import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.exceptions.properties.RoomNotFoundException;
 import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
@@ -43,7 +44,7 @@ public class RoomServiceImpl implements RoomService {
     Property property = checkProperty(propertyId);
     List<Room> roomList = roomRepository.findAllByPropertyAndDeletedAtIsNull(property);
     if (roomList.isEmpty()) {
-      throw new InvalidRequestException("No room found for property id " + propertyId);
+      throw new RoomNotFoundException("No room found for property id " + propertyId);
     }
     return roomList;
   }
@@ -136,7 +137,7 @@ public class RoomServiceImpl implements RoomService {
   private void checkDuplicateRoom(Long PropertyId, String name) {
     List<String> roomList = roomRepository.findAllRoomNamesByPropertyId(PropertyId);
     if (roomList.contains(name)) {
-      throw new RoomNotFoundException("Room with name " + name + " already exists");
+      throw new DuplicateRoomException("Room with name " + name + " already exists");
     }
   }
 

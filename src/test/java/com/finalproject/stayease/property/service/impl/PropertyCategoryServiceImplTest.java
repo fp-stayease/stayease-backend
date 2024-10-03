@@ -1,7 +1,14 @@
 package com.finalproject.stayease.property.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.when;
 
 import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
 import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
@@ -11,7 +18,6 @@ import com.finalproject.stayease.property.entity.dto.createRequests.CreateCatego
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyCategoryRepository;
 import com.finalproject.stayease.users.entity.Users;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +27,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
 class PropertyCategoryServiceImplTest {
@@ -128,7 +133,7 @@ class PropertyCategoryServiceImplTest {
 
     when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(category));
 
-    assertThrows(BadCredentialsException.class, () -> propertyCategoryService.updateCategory(1L, tenant, updateDTO));
+    assertThrows(UnauthorizedOperationsException.class, () -> propertyCategoryService.updateCategory(1L, tenant, updateDTO));
   }
 
   @Test
@@ -156,7 +161,7 @@ class PropertyCategoryServiceImplTest {
 
     when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(category));
 
-    assertThrows(BadCredentialsException.class, () -> propertyCategoryService.deleteCategory(1L, tenant));
+    assertThrows(UnauthorizedOperationsException.class, () -> propertyCategoryService.deleteCategory(1L, tenant));
   }
 
   @Test

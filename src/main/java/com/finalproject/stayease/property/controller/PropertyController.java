@@ -1,6 +1,6 @@
 package com.finalproject.stayease.property.controller;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.RoomAvailability;
@@ -126,7 +126,7 @@ public class PropertyController {
     List<Property> tenantsProperties = propertyService.findAllByTenant(tenant);
       List<PropertyDTO> propertyDTOList = tenantsProperties.stream().map(PropertyDTO::new).toList();
       return Response.successfulResponse(200, "Listing tenant properties", propertyDTOList);
-    } catch (DataNotFoundException e) {
+    } catch (PropertyNotFoundException e) {
       return Response.successfulResponse(200, "No properties found for tenant", List.of());
     }
   }
@@ -234,7 +234,7 @@ public class PropertyController {
     Users tenant = usersService.getLoggedUser();
     RoomAvailability availability = roomAvailabilityService.setUnavailability(tenant, roomId, requestDTO.getStartDate(),
         requestDTO.getEndDate());
-    log.info("Room unavailability set for room ID: " + roomId);
+    log.info("Room unavailability set for room ID: {}", roomId);
     return Response.successfulResponse(HttpStatus.CREATED.value(), "Room unavailability set!",
         new RoomAvailabilityDTO(availability));
   }
@@ -243,7 +243,7 @@ public class PropertyController {
   public ResponseEntity<Response<Object>> removeRoomUnavailability(@RequestParam Long roomId, @RequestParam Long availabilityId) {
     Users tenant = usersService.getLoggedUser();
     roomAvailabilityService.removeUnavailability(tenant, roomId, availabilityId);
-    log.info("Room unavailability removed for room ID: " + roomId);
+    log.info("Room unavailability removed for room ID: {}", roomId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Room unavailability removed!", null);
   }
 

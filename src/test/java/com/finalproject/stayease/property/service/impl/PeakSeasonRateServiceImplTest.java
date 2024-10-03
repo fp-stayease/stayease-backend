@@ -11,8 +11,9 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
-import com.finalproject.stayease.exceptions.utils.DuplicateEntryException;
+import com.finalproject.stayease.exceptions.properties.ConflictingRateException;
+import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
@@ -96,7 +97,7 @@ class PeakSeasonRateServiceImplTest {
   void setPeakSeasonRate_PropertyNotFound() {
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(DataNotFoundException.class, () -> peakSeasonRateService.setPeakSeasonRate(1L, requestDTO));
+    assertThrows(PropertyNotFoundException.class, () -> peakSeasonRateService.setPeakSeasonRate(1L, requestDTO));
   }
 
   @Test
@@ -105,7 +106,7 @@ class PeakSeasonRateServiceImplTest {
     when(peakSeasonRateRepository.existsConflictingRate(anyLong(), any(LocalDate.class), any(LocalDate.class)))
         .thenReturn(true);
 
-    assertThrows(DuplicateEntryException.class, () -> peakSeasonRateService.setPeakSeasonRate(tenant, 1L, requestDTO));
+    assertThrows(ConflictingRateException.class, () -> peakSeasonRateService.setPeakSeasonRate(tenant, 1L, requestDTO));
   }
 
   @Test
@@ -125,7 +126,7 @@ class PeakSeasonRateServiceImplTest {
   void updatePeakSeasonRate_RateNotFound() {
     when(peakSeasonRateRepository.findById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(DataNotFoundException.class, () -> peakSeasonRateService.updatePeakSeasonRate(tenant, 1L, requestDTO));
+    assertThrows(PeakSeasonRateNotFoundException.class, () -> peakSeasonRateService.updatePeakSeasonRate(tenant, 1L, requestDTO));
   }
 
   @Test
@@ -154,7 +155,7 @@ class PeakSeasonRateServiceImplTest {
   void removePeakSeasonRate_RateNotFound() {
     when(peakSeasonRateRepository.findById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(DataNotFoundException.class, () -> peakSeasonRateService.removePeakSeasonRate(1L));
+    assertThrows(PeakSeasonRateNotFoundException.class, () -> peakSeasonRateService.removePeakSeasonRate(1L));
   }
 
   @Test

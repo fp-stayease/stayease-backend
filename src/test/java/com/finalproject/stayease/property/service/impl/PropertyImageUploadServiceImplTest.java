@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,17 +53,17 @@ class PropertyImageUploadServiceImplTest {
   void uploadImage_EmptyFile() {
     MultipartFile emptyFile = new MockMultipartFile("empty.jpg", new byte[0]);
 
-    assertThrows(IllegalArgumentException.class, () -> imageUploadService.uploadImage(1L, emptyFile));
+    assertThrows(InvalidRequestException.class, () -> imageUploadService.uploadImage(1L, emptyFile));
   }
 
   @Test
   void uploadImage_InvalidFileType() {
-    assertThrows(IllegalArgumentException.class, () -> imageUploadService.uploadImage(1L, invalidTypeImage));
+    assertThrows(InvalidRequestException.class, () -> imageUploadService.uploadImage(1L, invalidTypeImage));
   }
 
   @Test
   void uploadImage_FileTooLarge() {
-    assertThrows(IllegalArgumentException.class, () -> imageUploadService.uploadImage(1L, largeSizeImage));
+    assertThrows(InvalidRequestException.class, () -> imageUploadService.uploadImage(1L, largeSizeImage));
   }
 
   @Test
@@ -77,6 +78,6 @@ class PropertyImageUploadServiceImplTest {
 
   @Test
   void uploadRoomImage_InvalidFileType() {
-    assertThrows(IllegalArgumentException.class, () -> imageUploadService.uploadRoomImage(1L, 2L, invalidTypeImage));
+    assertThrows(InvalidRequestException.class, () -> imageUploadService.uploadRoomImage(1L, 2L, invalidTypeImage));
   }
 }

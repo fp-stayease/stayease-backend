@@ -1,10 +1,22 @@
 package com.finalproject.stayease.property.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
+import com.finalproject.stayease.exceptions.properties.RoomAvailabilityNotFoundException;
+import com.finalproject.stayease.exceptions.properties.RoomNotFoundException;
+import com.finalproject.stayease.exceptions.utils.InvalidDateException;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.RoomAvailability;
@@ -14,15 +26,18 @@ import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 public class RoomAvailabilityServiceImplTest {
@@ -89,7 +104,8 @@ public class RoomAvailabilityServiceImplTest {
   void setUnavailability_RoomNotFound() {
     lenient().when(roomService.findRoomById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(DataNotFoundException.class, () -> roomAvailabilityService.setUnavailability(1L, LocalDate.now(), LocalDate.now().plusDays(1)));
+    assertThrows(RoomNotFoundException.class, () -> roomAvailabilityService.setUnavailability(1L, LocalDate.now(),
+        LocalDate.now().plusDays(1)));
   }
 
   @Test
@@ -112,7 +128,8 @@ public class RoomAvailabilityServiceImplTest {
 
     when(roomService.findRoomById(1L)).thenReturn(Optional.of(room));
 
-    assertThrows(InvalidRequestException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L, LocalDate.now(), LocalDate.now().plusDays(1)));
+    assertThrows(UnauthorizedOperationsException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L, LocalDate.now(),
+        LocalDate.now().plusDays(1)));
   }
 
   @Test
@@ -127,7 +144,9 @@ public class RoomAvailabilityServiceImplTest {
   void removeUnavailability_NotFound() {
     when(roomAvailabilityRepository.findByRoomIdAndDates(anyLong(), any(LocalDate.class), any(LocalDate.class))).thenReturn(Optional.empty());
 
-    assertThrows(DataNotFoundException.class, () -> roomAvailabilityService.removeUnavailability(1L, LocalDate.now(), LocalDate.now().plusDays(1)));
+    assertThrows(
+        RoomAvailabilityNotFoundException.class, () -> roomAvailabilityService.removeUnavailability(1L, LocalDate.now(),
+        LocalDate.now().plusDays(1)));
   }
 
   @Test
@@ -146,7 +165,8 @@ public class RoomAvailabilityServiceImplTest {
 
     when(roomAvailabilityRepository.findById(1L)).thenReturn(Optional.of(roomAvailability));
 
-    assertThrows(InvalidRequestException.class, () -> roomAvailabilityService.removeUnavailability(tenant, 1L, 1L));
+    assertThrows(
+        UnauthorizedOperationsException.class, () -> roomAvailabilityService.removeUnavailability(tenant, 1L, 1L));
   }
 
   @Test
@@ -195,21 +215,24 @@ public class RoomAvailabilityServiceImplTest {
   void removeUnavailabilityByRoomsDeletedAtNotNull_BookedRooms() {
     when(roomAvailabilityRepository.findAllByPropertyIdAndIsManualFalse(1L)).thenReturn(Collections.singletonList(roomAvailability));
 
-    assertThrows(InvalidRequestException.class, () -> roomAvailabilityService.removeUnavailabilityByRoomsDeletedAtNotNull(tenant, 1L));
+    assertThrows(InvalidRequestException.class,
+        () -> roomAvailabilityService.removeUnavailabilityByRoomsDeletedAtNotNull(tenant, 1L));
   }
 
   @Test
   void validateDateRange_InvalidDates() {
     when(roomService.findRoomById(1L)).thenReturn(Optional.of(room));
 
-    assertThrows(InvalidRequestException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L, LocalDate.now().plusDays(1), LocalDate.now()));
+    assertThrows(InvalidDateException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L,
+        LocalDate.now().plusDays(1), LocalDate.now()));
   }
 
   @Test
   void validateDateRange_PastDate() {
     when(roomService.findRoomById(1L)).thenReturn(Optional.of(room));
 
-    assertThrows(InvalidRequestException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L, LocalDate.now().minusDays(1), LocalDate.now().plusDays(1)));
+    assertThrows(InvalidDateException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L,
+        LocalDate.now().minusDays(1), LocalDate.now().plusDays(1)));
   }
 
   @Test
@@ -217,6 +240,7 @@ public class RoomAvailabilityServiceImplTest {
     when(roomService.findRoomById(1L)).thenReturn(Optional.of(room));
     when(roomAvailabilityRepository.existsOverlappingAvailability(anyLong(), any(LocalDate.class), any(LocalDate.class))).thenReturn(true);
 
-    assertThrows(InvalidRequestException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L, LocalDate.now(), LocalDate.now().plusDays(1)));
+    assertThrows(InvalidDateException.class, () -> roomAvailabilityService.setUnavailability(tenant, 1L, LocalDate.now(),
+        LocalDate.now().plusDays(1)));
   }
 }

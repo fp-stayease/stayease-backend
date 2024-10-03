@@ -9,7 +9,9 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
+import com.finalproject.stayease.exceptions.utils.InvalidDateException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
@@ -123,7 +125,7 @@ public class PropertyListingServiceImplTest {
   void findAvailablePropertyOnDate_PropertyNotFound() {
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(DataNotFoundException.class,
+    assertThrows(PropertyNotFoundException.class,
         () -> propertyListingService.findAvailablePropertyOnDate(1L, LocalDate.now()));
   }
 
@@ -146,19 +148,19 @@ public class PropertyListingServiceImplTest {
     when(peakSeasonRateService.findAvailableRoomRates(anyLong(), any()))
         .thenReturn(Collections.emptyList());
 
-    assertThrows(DataNotFoundException.class,
+    assertThrows(PeakSeasonRateNotFoundException.class,
         () -> propertyListingService.findPropertiesWithLowestRoomRate(LocalDate.now()));
   }
 
   @Test
   void validateDate_InvalidDate() {
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(InvalidDateException.class,
         () -> propertyListingService.findAvailablePropertyOnDate(1L, LocalDate.now().minusDays(1)));
   }
 
   @Test
   void validateDate_InvalidDateRange() {
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(InvalidDateException.class,
         () -> propertyListingService.findAvailableProperties(
             LocalDate.now().plusDays(1), LocalDate.now(), null, null,
             null, null, null, 0, 10, "price", "ASC"));

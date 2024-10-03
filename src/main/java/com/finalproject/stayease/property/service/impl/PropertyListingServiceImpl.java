@@ -2,6 +2,7 @@ package com.finalproject.stayease.property.service.impl;
 
 import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
 import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
+import com.finalproject.stayease.exceptions.utils.InvalidDateException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
@@ -45,7 +46,7 @@ public class PropertyListingServiceImpl implements PropertyListingService {
     List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
         minPrice,
         maxPrice);
-    log.info("Properties fetched: " + properties.size());
+    log.info("Properties fetched: {}", properties.size());
     applyPeakSeasonRates(properties, checkInDate);
     sortProperties(properties, sortBy, sortDirection);
     return createPage(properties, page, size, sortBy, sortDirection);
@@ -123,14 +124,14 @@ public class PropertyListingServiceImpl implements PropertyListingService {
 
   private void validateDate(LocalDate date) {
     if (date.isBefore(LocalDate.now())) {
-      throw new IllegalArgumentException("Date is out of valid range: " + date);
+      throw new InvalidDateException("Date is out of valid range: " + date);
     }
   }
 
   private void validateDate(LocalDate startDate, LocalDate endDate) {
     validateDate(startDate);
     if (startDate.isAfter(endDate)) {
-      throw new IllegalArgumentException("Start date cannot be after end date");
+      throw new InvalidDateException("Start date cannot be after end date");
     }
   }
 }

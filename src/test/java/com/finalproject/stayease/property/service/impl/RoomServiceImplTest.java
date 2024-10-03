@@ -1,34 +1,36 @@
 package com.finalproject.stayease.property.service.impl;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.finalproject.stayease.exceptions.properties.DuplicateRoomException;
-import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.exceptions.properties.RoomNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateRoomRequestDTO;
 import com.finalproject.stayease.property.repository.RoomRepository;
+import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
-import java.math.BigDecimal;
-import java.util.Optional;
+import com.finalproject.stayease.users.entity.TenantInfo;
+import com.finalproject.stayease.users.entity.Users;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+
 @ExtendWith(MockitoExtension.class)
-public class RoomServiceImplTest {
+class RoomServiceImplTest {
 
   @Mock
   private RoomRepository roomRepository;
@@ -36,141 +38,177 @@ public class RoomServiceImplTest {
   @Mock
   private PropertyService propertyService;
 
+  @Mock
+  private PeakSeasonRateService peakSeasonRateService;
+
   @InjectMocks
   private RoomServiceImpl roomService;
 
+  private Property property;
+  private Room room;
+  private CreateRoomRequestDTO createRoomDTO;
+  private UpdateRoomRequestDTO updateRoomDTO;
+  private Users tenant;
+
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
-  }
+    TenantInfo tenantInfo = new TenantInfo();
+    tenantInfo.setId(1L);
+    tenantInfo.setBusinessName("Test Business");
 
-  @Test
-  void testCreateRoom_ValidRequest() {
-    CreateRoomRequestDTO requestDTO = new CreateRoomRequestDTO();
-    requestDTO.setName("Room A");
-    requestDTO.setDescription("Cozy room");
-    requestDTO.setBasePrice(BigDecimal.valueOf(100000));
-    requestDTO.setCapacity(2);
+    PropertyCategory category = new PropertyCategory();
+    category.setId(1L);
+    category.setName("Test Category");
 
-    Long propertyId = 1L;
-
-    Property property = new Property();
+    property = new Property();
     property.setId(1L);
 
-    Room expectedRoom = new Room();
-    expectedRoom.setName("Room A");
-    expectedRoom.setDescription("Cozy room");
-    expectedRoom.setBasePrice(BigDecimal.valueOf(100000));
-    expectedRoom.setCapacity(2);
-    expectedRoom.setProperty(property);
+    room = new Room();
+    room.setId(1L);
+    room.setProperty(property);
+    room.setName("Test Room");
 
+    createRoomDTO = new CreateRoomRequestDTO();
+    createRoomDTO.setName("New Room");
+
+    updateRoomDTO = new UpdateRoomRequestDTO();
+    updateRoomDTO.setName("Updated Room");
+
+    tenant = new Users();
+    tenant.setId(1L);
+    tenant.setTenantInfo(tenantInfo);
+    tenantInfo.setUser(tenant);
+    property.setTenant(tenant);
+    property.setCategory(category);
+  }
+
+  @Test
+  void getRoomsOfProperty_Success() {
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
-    when(roomRepository.save(any(Room.class))).thenReturn(expectedRoom);
+    when(roomRepository.findAllByPropertyAndDeletedAtIsNull(property)).thenReturn(Collections.singletonList(room));
 
-    Room createdRoom = roomService.createRoom(propertyId, requestDTO);
-
-    assertEquals(expectedRoom.getName(), createdRoom.getName());
-    assertEquals(expectedRoom.getId(), createdRoom.getId());
-    verify(propertyService, times(1)).findPropertyById(1L);
-    verify(roomRepository, times(1)).save(any(Room.class));
+    List<Room> result = roomService.getRoomsOfProperty(1L);
+    assertFalse(result.isEmpty());
+    assertEquals(1, result.size());
   }
 
   @Test
-  void testCreateRoom_DuplicateRoomName() {
-    CreateRoomRequestDTO requestDTO = new CreateRoomRequestDTO();
-    requestDTO.setName("Room A");
-    requestDTO.setDescription("Cozy room");
-    requestDTO.setBasePrice(BigDecimal.valueOf(100000));
-    requestDTO.setCapacity(2);
-
-    Long propertyId = 1L;
-
-    Room existingRoom = new Room();
-    existingRoom.setName("Room A");
-
-    when(roomRepository.findByNameIgnoreCaseAndDeletedAtIsNull("Room A")).thenReturn(Optional.of(existingRoom));
-
-    assertThrows(DuplicateRoomException.class, () -> roomService.createRoom(propertyId, requestDTO));
-    verify(roomRepository, times(1)).findByNameIgnoreCaseAndDeletedAtIsNull("Room A");
-  }
-
-  @Test
-  void testCreateRoom_PropertyNotFound() {
-    CreateRoomRequestDTO requestDTO = new CreateRoomRequestDTO();
-    requestDTO.setName("Room A");
-    requestDTO.setDescription("Cozy room");
-    requestDTO.setBasePrice(BigDecimal.valueOf(100000));
-    requestDTO.setCapacity(2);
-
-    Long propertyId = 1L;
-
-    when(propertyService.findPropertyById(1L)).thenReturn(Optional.empty());
-
-    assertThrows(PropertyNotFoundException.class, () -> roomService.createRoom(propertyId, requestDTO));
-    verify(propertyService, times(1)).findPropertyById(1L);
-  }
-
-  @Test
-  void testUpdateRoom_ValidRequest() {
-    UpdateRoomRequestDTO requestDTO = new UpdateRoomRequestDTO();
-    requestDTO.setName("Room A");
-    requestDTO.setDescription("Cozy room");
-    requestDTO.setBasePrice(BigDecimal.valueOf(100000));
-    requestDTO.setCapacity(2);
-
-    Long roomId = 1L;
-
-    Long propertyId = 1L;
-    Property property = new Property();
-    property.setId(propertyId);
-
-    Room existingRoom = new Room();
-    existingRoom.setId(roomId);
-    existingRoom.setName("Room 1");
-    existingRoom.setProperty(property);
-
+  void getRoomsOfProperty_NoRooms() {
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
-    when(roomRepository.findByIdAndDeletedAtIsNull(roomId)).thenReturn(Optional.of(existingRoom));
-    Room expectedRoom = roomService.updateRoom(propertyId, roomId, requestDTO);
+    when(roomRepository.findAllByPropertyAndDeletedAtIsNull(property)).thenReturn(Collections.emptyList());
 
-    assertEquals(existingRoom.getId(), expectedRoom.getId());
-    assertEquals(existingRoom.getName(), "Room A");
+    assertThrows(RoomNotFoundException.class, () -> roomService.getRoomsOfProperty(1L));
   }
 
   @Test
-  void testUpdateRoom_RoomDoesNotExist() {
-    Long roomId = 1L;
+  void getUnavailableRoomsByPropertyIdAndDate_Success() {
+    LocalDate date = LocalDate.now();
+    when(roomRepository.findUnavailableRoomsByPropertyIdAndDate(1L, date)).thenReturn(Collections.singletonList(room));
 
-    Long propertyId = 1L;
+    List<Room> result = roomService.getUnavailableRoomsByPropertyIdAndDate(1L, date);
+    assertFalse(result.isEmpty());
+    assertEquals(1, result.size());
+  }
 
+  @Test
+  void findRoomById_Success() {
+    when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(room));
+
+    Optional<Room> result = roomService.findRoomById(1L);
+    assertTrue(result.isPresent());
+    assertEquals(room.getId(), result.get().getId());
+  }
+
+  @Test
+  void createRoom_Success() {
+    when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
+    when(roomRepository.findAllRoomNamesByPropertyId(1L)).thenReturn(Collections.emptyList());
+    when(roomRepository.save(any(Room.class))).thenReturn(room);
+
+    Room result = roomService.createRoom(1L, createRoomDTO);
+    assertNotNull(result);
+    assertEquals(createRoomDTO.getName(), result.getName());
+  }
+
+  @Test
+  void createRoom_DuplicateName() {
+    when(roomRepository.findAllRoomNamesByPropertyId(1L)).thenReturn(List.of("New Room"));
+
+    assertThrows(DuplicateRoomException.class, () -> roomService.createRoom(1L, createRoomDTO));
+  }
+
+  @Test
+  void updateRoom_Success() {
+    when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
+    when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(room));
+    when(roomRepository.save(any(Room.class))).thenReturn(room);
+
+    Room result = roomService.updateRoom(1L, 1L, updateRoomDTO);
+    assertNotNull(result);
+    assertEquals(updateRoomDTO.getName(), result.getName());
+  }
+
+  @Test
+  void updateRoom_RoomNotFound() {
+    when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
     when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
-    assertThrows(RoomNotFoundException.class, () -> roomService.updateRoom(propertyId, roomId,
-        new UpdateRoomRequestDTO()));
+    assertThrows(RoomNotFoundException.class, () -> roomService.updateRoom(1L, 1L, updateRoomDTO));
   }
 
   @Test
-  void testDeleteRoom() {
-    //Arrange
-    Long roomId = 1L;
-
-    Long propertyId = 1L;
-    Property property = new Property();
-    property.setId(propertyId);
-
-    Room existingRoom = new Room();
-    existingRoom.setId(roomId);
-    existingRoom.setProperty(property);
-
+  void deleteRoom_Success() {
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
-    when(roomRepository.findByIdAndDeletedAtIsNull(roomId)).thenReturn(Optional.of(existingRoom));
+    when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(room));
 
-    // Act
-    roomService.deleteRoom(propertyId, roomId);
-
-    // Assert
-    verify(roomRepository, times(1)).findByIdAndDeletedAtIsNull(1L);
+    assertDoesNotThrow(() -> roomService.deleteRoom(1L, 1L));
     verify(roomRepository, times(1)).save(any(Room.class));
-    assertNotNull(existingRoom.getDeletedAt());
+  }
+
+  @Test
+  void deletePropertyAndRoom_Success() {
+    Set<Room> rooms = new HashSet<>(Collections.singletonList(room));
+    property.setRooms(rooms);
+
+    when(propertyService.deleteProperty(tenant, 1L)).thenReturn(property);
+
+    Set<Room> result = roomService.deletePropertyAndRoom(tenant, 1L);
+    assertFalse(result.isEmpty());
+    assertEquals(1, result.size());
+    verify(roomRepository, times(1)).save(any(Room.class));
+  }
+
+  @Test
+  void getTenantRooms_Success() {
+    when(roomRepository.findRoomByTenantIdAndDeletedAtIsNull(1L)).thenReturn(Collections.singletonList(room));
+
+    List<Room> result = roomService.getTenantRooms(1L);
+    assertFalse(result.isEmpty());
+    assertEquals(1, result.size());
+  }
+
+  @Test
+  void getPropertyCurrent_Success() {
+    when(propertyService.findPropertyById(1L)).thenReturn(Optional.of(property));
+    when(roomRepository.findAllByPropertyAndDeletedAtIsNull(property)).thenReturn(Collections.singletonList(room));
+
+    PropertyCurrentDTO result = roomService.getPropertyCurrent(1L);
+    assertNotNull(result);
+    assertEquals(property.getName(), result.getPropertyName());
+    assertFalse(result.getRooms().isEmpty());
+  }
+
+  @Test
+  void getRoomRateAndAvailability_Success() {
+    LocalDate date = LocalDate.now();
+    RoomPriceRateDTO rateDTO = new RoomPriceRateDTO();
+    rateDTO.setBasePrice(BigDecimal.valueOf(100));
+
+    when(roomRepository.findRoomRateAndAvailability(1L, date)).thenReturn(rateDTO);
+    when(peakSeasonRateService.applyPeakSeasonRate(rateDTO)).thenReturn(BigDecimal.valueOf(120));
+
+    RoomAdjustedRatesDTO result = roomService.getRoomRateAndAvailability(1L, date);
+    assertNotNull(result);
+    assertEquals(BigDecimal.valueOf(120), result.getAdjustedPrice());
   }
 }

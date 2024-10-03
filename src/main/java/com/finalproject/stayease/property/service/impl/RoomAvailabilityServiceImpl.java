@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.service.impl;
 
+import com.finalproject.stayease.exceptions.utils.InvalidDateException;
 import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
 import com.finalproject.stayease.exceptions.properties.RoomAvailabilityNotFoundException;
@@ -50,7 +51,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   @Override
   public RoomAvailability setUnavailability(Users tenant, Long roomId, LocalDate startDate, LocalDate endDate) {
     Room existingRoom = roomService.findRoomById(roomId).orElseThrow(() -> new RoomNotFoundException("Room does not exist!"));
-    if (existingRoom.getProperty().getTenant().getId() != tenant.getId()) {
+    if (!Objects.equals(existingRoom.getProperty().getTenant().getId(), tenant.getId())) {
       throw new UnauthorizedOperationsException("You are not authorized to set unavailability for this room");
     }
     validateDateRange(roomId, startDate, endDate);
@@ -132,13 +133,13 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
 
   private void validateDateRange(Long roomId, LocalDate startDate, LocalDate endDate) {
     if (startDate.isAfter(endDate)) {
-      throw new InvalidRequestException("Start date cannot be after end date");
+      throw new InvalidDateException("Start date cannot be after end date");
     }
     if (startDate.isBefore(LocalDate.now())) {
-      throw new InvalidRequestException("Start date cannot be in the past");
+      throw new InvalidDateException("Start date cannot be in the past");
     }
     if (roomAvailabilityRepository.existsOverlappingAvailability(roomId, startDate, endDate)) {
-      throw new InvalidRequestException("Room is already unavailable in this date range");
+      throw new InvalidDateException("Room is already unavailable in this date range");
     }
   }
 
@@ -152,12 +153,6 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
     return roomAvailabilityRepository.save(roomAvailability);
   }
 
-  private void checkOwnership(Users tenant, Long roomId) {
-    Room room = roomService.findRoomById(roomId).orElseThrow(() -> new RoomNotFoundException("Room does not exist!"));
-    if (!Objects.equals(room.getProperty().getTenant().getId(), tenant.getId())) {
-      throw new InvalidRequestException("You are not authorized to set unavailability for this room");
-    }
-  }
 
   private RoomAvailability checkOwnership(Users tenant, Long roomId, Long unavailabilityId) {
     RoomAvailability roomAvailability = roomAvailabilityRepository.findById(unavailabilityId)
