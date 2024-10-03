@@ -1,10 +1,17 @@
 package com.finalproject.stayease.property.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
+import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
+import com.finalproject.stayease.exceptions.properties.DuplicateCategoryException;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
@@ -85,7 +92,7 @@ public class PropertyCategoryServiceImplTest {
 
     when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull("Apartment")).thenReturn(Optional.of(existingCategory));
 
-    assertThrows(DuplicateEntryException.class, () -> propertyCategoryService.createCategory(tenant, requestDTO));
+    assertThrows(DuplicateCategoryException.class, () -> propertyCategoryService.createCategory(tenant, requestDTO));
     verify(propertyCategoryRepository, times(1)).findByNameIgnoreCaseAndDeletedAtIsNull("Apartment");
   }
 
@@ -97,7 +104,8 @@ public class PropertyCategoryServiceImplTest {
     CreateCategoryRequestDTO requestDTO = new CreateCategoryRequestDTO();
     requestDTO.setName("Apartment");
 
-    assertThrows(InvalidRequestException.class, () -> propertyCategoryService.createCategory(nonTenant, requestDTO));
+    assertThrows(
+        UnauthorizedOperationsException.class, () -> propertyCategoryService.createCategory(nonTenant, requestDTO));
   }
 
   @Test
@@ -165,7 +173,9 @@ public class PropertyCategoryServiceImplTest {
 
     when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(requestedCategoryId)).thenReturn(Optional.empty());
 
-    assertThrows(InvalidRequestException.class, () -> propertyCategoryService.updateCategory(requestedCategoryId, tenant, requestDTO));
+    assertThrows(
+        CategoryNotFoundException.class, () -> propertyCategoryService.updateCategory(requestedCategoryId, tenant,
+        requestDTO));
     verify(propertyCategoryRepository, times(1)).findByIdAndDeletedAtIsNull(requestedCategoryId);
   }
 

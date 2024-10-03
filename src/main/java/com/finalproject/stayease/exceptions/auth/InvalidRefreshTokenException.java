@@ -1,4 +1,4 @@
-package com.finalproject.stayease.exceptions;
+package com.finalproject.stayease.exceptions.auth;
 
 public class InvalidRefreshTokenException extends RuntimeException {
 

@@ -3,9 +3,10 @@ package com.finalproject.stayease.property.service.impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
+import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
+import com.finalproject.stayease.exceptions.properties.DuplicatePropertyException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
@@ -16,12 +17,15 @@ import com.finalproject.stayease.users.entity.Users;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.locationtech.jts.geom.Point;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 
+@ExtendWith(MockitoExtension.class)
 public class PropertyServiceImplTest {
 
   @Mock
@@ -97,7 +101,7 @@ public class PropertyServiceImplTest {
     requestDTO.setLatitude(-73.935242);
     requestDTO.setCategoryId(1L);
 
-    assertThrows(InvalidRequestException.class, () -> propertyService.createProperty(nonTenant, requestDTO));
+    assertThrows(UnauthorizedOperationsException.class, () -> propertyService.createProperty(nonTenant, requestDTO));
   }
 
   @Test
@@ -118,7 +122,7 @@ public class PropertyServiceImplTest {
 
     when(propertyCategoryService.findCategoryByIdAndNotDeleted(1L)).thenReturn(Optional.empty());
 
-    assertThrows(DataNotFoundException.class, () -> propertyService.createProperty(tenant, requestDTO));
+    assertThrows(CategoryNotFoundException.class, () -> propertyService.createProperty(tenant, requestDTO));
     verify(propertyCategoryService, times(1)).findCategoryByIdAndNotDeleted(1L);
   }
 
@@ -145,7 +149,7 @@ public class PropertyServiceImplTest {
     when(propertyRepository.findByLocationAndDeletedAtIsNull(any(Point.class))).thenReturn(
         Optional.of(existingProperty));
 
-    assertThrows(DuplicateEntryException.class, () -> propertyService.createProperty(tenant, requestDTO));
+    assertThrows(DuplicatePropertyException.class, () -> propertyService.createProperty(tenant, requestDTO));
     verify(propertyRepository, times(1)).findByLocationAndDeletedAtIsNull(any(Point.class));
   }
 
@@ -206,7 +210,7 @@ public class PropertyServiceImplTest {
     when(propertyRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.empty());
 
     // Act & Assert
-    assertThrows(InvalidRequestException.class, () -> propertyService.updateProperty(tenant, propertyId, requestDTO));
+    assertThrows(PropertyNotFoundException.class, () -> propertyService.updateProperty(tenant, propertyId, requestDTO));
   }
 
   @Test

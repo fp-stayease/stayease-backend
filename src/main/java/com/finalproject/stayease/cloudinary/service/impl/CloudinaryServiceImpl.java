@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
+import com.finalproject.stayease.exceptions.utils.ImageRetrievalException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -73,8 +74,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         nextCursor = (String) response.get("next_cursor");
       } while (nextCursor != null);
     } catch (Exception e) {
-      // TODO : make exception handling more specific ImageRetrievalException
-      throw new RuntimeException("Failed to retrieve images from folder: " + folderName, e);
+      throw new ImageRetrievalException("Failed to retrieve images from folder: " + folderName, e);
     }
 
     log.info("Found {} images in folder: {}", imageUrls.size(), folderName);

@@ -1,8 +1,10 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
+import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
+import com.finalproject.stayease.exceptions.properties.DuplicatePropertyException;
+import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
@@ -26,7 +28,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,7 +44,7 @@ public class PropertyServiceImpl implements PropertyService {
   public List<Property> findAll() {
     List<Property> propertyList = propertyRepository.findAll();
     if (propertyList.isEmpty()) {
-      throw new DataNotFoundException("No property found");
+      throw new PropertyNotFoundException("No property found");
     }
     return propertyList;
   }
@@ -53,7 +54,7 @@ public class PropertyServiceImpl implements PropertyService {
     isTenant(tenant);
     List<Property> tenantsProperties = propertyRepository.findByTenantAndDeletedAtIsNull(tenant);
     if (tenantsProperties.isEmpty()) {
-      throw new DataNotFoundException("You have no properties yet");
+      throw new PropertyNotFoundException("You have no properties yet");
     }
     return tenantsProperties;
   }
@@ -103,7 +104,7 @@ public class PropertyServiceImpl implements PropertyService {
     // Properties with at least one room available
     List<Property> availableProperties = propertyRepository.findAvailablePropertiesOnDate(date);
     if (availableProperties.isEmpty()) {
-      throw new DataNotFoundException("No properties found for this date");
+      throw new PropertyNotFoundException("No properties found for this date");
     }
     return availableProperties;
   }
@@ -112,7 +113,7 @@ public class PropertyServiceImpl implements PropertyService {
   public RoomPriceRateDTO findLowestRoomRate(Long propertyId, LocalDate date) {
     validateDate(date);
     return propertyRepository.findAvailableRoomRates(propertyId, date).stream().findFirst().orElseThrow(
-        () -> new DataNotFoundException("No room rates found for this property")
+        () -> new PeakSeasonRateNotFoundException("No room rates found for this property")
     );
   }
 
@@ -120,7 +121,7 @@ public class PropertyServiceImpl implements PropertyService {
   public List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
     validateDate(date);
     Property property = propertyRepository.findByIdAndDeletedAtIsNull(propertyId).orElseThrow(
-        () -> new DataNotFoundException("Property with this ID does not exist or is deleted")
+        () -> new PropertyNotFoundException("Property with this ID does not exist or is deleted")
     );
     return propertyRepository.findAvailableRoomRates(propertyId, date);
   }
@@ -149,7 +150,7 @@ public class PropertyServiceImpl implements PropertyService {
 
   private void isTenant(Users tenant) {
     if (tenant.getUserType() != UserType.TENANT) {
-      throw new InvalidRequestException("Only Tenants can create properties");
+      throw new UnauthorizedOperationsException("Only Tenants can create properties");
     }
   }
 
@@ -177,7 +178,7 @@ public class PropertyServiceImpl implements PropertyService {
   private PropertyCategory getCategoryById(Long propertyCategoryId) {
     return
         propertyCategoryService.findCategoryByIdAndNotDeleted(propertyCategoryId)
-            .orElseThrow(() -> new DataNotFoundException(
+            .orElseThrow(() -> new CategoryNotFoundException(
                 "Category not found, please enter a valid category ID"));
   }
 
@@ -187,22 +188,19 @@ public class PropertyServiceImpl implements PropertyService {
 
     Optional<Property> checkProp = propertyRepository.findByLocationAndDeletedAtIsNull(point);
     if (checkProp.isPresent()) {
-      // TODO : make ex DuplicatePropertyException
-      throw new DuplicateEntryException("Property at this location already exist.");
+      throw new DuplicatePropertyException("Property at this location already exist.");
     }
     return point;
   }
 
   private Property checkIfValid(Users tenant, Long categoryId) {
-    // TODO : make ex PropertyNotFoundException
     Property existingProperty = propertyRepository.findByIdAndDeletedAtIsNull(categoryId).orElseThrow(
-        () -> new InvalidRequestException("Property with this ID does not exist or is deleted")
+        () -> new PropertyNotFoundException("Property with this ID does not exist or is deleted")
     );
     isTenant(tenant);
     Users propertyOwner = existingProperty.getTenant();
     if (tenant != propertyOwner) {
-      // TODO : make ex UnauthorizedOperationException
-      throw new BadCredentialsException("You are not the owner of this property");
+      throw new UnauthorizedOperationsException("You are not the owner of this property");
     }
     return existingProperty;
   }
