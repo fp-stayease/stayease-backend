@@ -191,7 +191,6 @@ public class RegisterServiceImpl implements RegisterService {
     // Replace placeholders with actual values
     String htmlContent = htmlTemplate
         .replace("${verificationUrl}", url)
-        // TODO : Replace with FE URL
         .replace("${feURL}", feUrl);
 
     String subject = "Verify your account!";
@@ -202,7 +201,6 @@ public class RegisterServiceImpl implements RegisterService {
   }
 
   private String buildVerificationUrl(UserType userType, String token) {
-    // TODO : replace this with FE URL later
     String t = userType == UserType.TENANT ? "t" : "u";
     return feUrl + "/register/verify?t=" + t + "&token=" + token;
   }
@@ -245,7 +243,7 @@ public class RegisterServiceImpl implements RegisterService {
     user.setIsVerified(true);
     usersService.save(user);
 
-    // ? delete or marked as verified?
+    // delete pending registration once users are verified
     pendingRegistrationService.deleteById(pendingRegistration.getId());
 
     if (pendingRegistration.getUserType() == UserType.TENANT) {

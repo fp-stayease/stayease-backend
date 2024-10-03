@@ -100,7 +100,6 @@ public class EmailChangeServiceImpl implements EmailChangeService {
   }
 
   private String buildVerificationUrl(String tokenUUID) {
-    // TODO :configure fe url accordingly here
     return feUrl + "/profile/settings/verify-email?token=" + tokenUUID;
   }
 

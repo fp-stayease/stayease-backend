@@ -58,7 +58,7 @@ public class Property {
   private String description;
 
   @Column(name = "image_url", length = Integer.MAX_VALUE)
-  @NotNull(message = "Must include picture") //TODO: update with picture inclusion
+  @NotNull(message = "Must include picture")
   private String imageUrl;
 
   @Size(max = 255)

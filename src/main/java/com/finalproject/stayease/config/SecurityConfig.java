@@ -52,7 +52,6 @@ public class SecurityConfig {
   private String API_VERSION;
 
 
-  // TODO : configure later, only here for starter
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     return http
