@@ -35,6 +35,9 @@ public class PropertyListingServiceImpl implements PropertyListingService {
   private final PeakSeasonRateService peakSeasonRateService;
   private final RoomService roomService;
 
+  /**
+   * Finds available properties based on various criteria and returns a paginated result.
+   */
   @Override
   public Page<PropertyListingDTO> findAvailableProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
@@ -43,15 +46,19 @@ public class PropertyListingServiceImpl implements PropertyListingService {
     LocalDate checkInDate = startDate != null ? startDate : LocalDate.now();
     LocalDate checkOutDate = endDate != null ? endDate : checkInDate.plusYears(100);
     validateDate(checkInDate, checkOutDate);
-    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
-        minPrice,
-        maxPrice);
+
+    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm, minPrice, maxPrice);
     log.info("Properties fetched: {}", properties.size());
+
     applyPeakSeasonRates(properties, checkInDate);
     sortProperties(properties, sortBy, sortDirection);
+
     return createPage(properties, page, size, sortBy, sortDirection);
   }
 
+  /**
+   * Finds an available property on a specific date.
+   */
   @Override
   public PropertyAvailableOnDateDTO findAvailablePropertyOnDate(Long propertyId, LocalDate date) {
     validateDate(date);
@@ -62,19 +69,23 @@ public class PropertyListingServiceImpl implements PropertyListingService {
     return new PropertyAvailableOnDateDTO(property, rooms, unavailableRooms);
   }
 
- @Override
-    public List<PropertyListingDTO> findPropertiesWithLowestRoomRate(LocalDate date) {
+  /**
+   * Finds properties with the lowest room rate on a specific date.
+   */
+  @Override
+  public List<PropertyListingDTO> findPropertiesWithLowestRoomRate(LocalDate date) {
     validateDate(date);
-      List<Property> properties = propertyService.getAllAvailablePropertiesOnDate(date);
-      List<PropertyListingDTO> propertyListings = new ArrayList<>();
-      // Fetch the actual lowest available price for each property
-      for (Property property : properties) {
-        RoomAdjustedRatesDTO lowestRoomRate = peakSeasonRateService.findAvailableRoomRates(property.getId(), date).stream().findFirst()
-            .orElseThrow(() -> new PeakSeasonRateNotFoundException("No room rates found for this property"));
-        propertyListings.add(new PropertyListingDTO(property, lowestRoomRate));
-      }
-      return propertyListings;
+    List<Property> properties = propertyService.getAllAvailablePropertiesOnDate(date);
+    List<PropertyListingDTO> propertyListings = new ArrayList<>();
+
+    for (Property property : properties) {
+      RoomAdjustedRatesDTO lowestRoomRate = peakSeasonRateService.findAvailableRoomRates(property.getId(), date).stream().findFirst()
+          .orElseThrow(() -> new PeakSeasonRateNotFoundException("No room rates found for this property"));
+      propertyListings.add(new PropertyListingDTO(property, lowestRoomRate));
     }
+    return propertyListings;
+  }
+
 
   private List<PropertyListingDTO> fetchProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
