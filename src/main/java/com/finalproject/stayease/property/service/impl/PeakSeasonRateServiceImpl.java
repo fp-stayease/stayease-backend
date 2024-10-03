@@ -40,6 +40,14 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
   private final PeakSeasonRateRepository peakSeasonRateRepository;
   private final PropertyService propertyService;
 
+  // Basic CRUD operations
+
+  /**
+   * Sets a new peak season rate for a property.
+   * @param propertyId The ID of the property
+   * @param requestDTO The DTO containing rate details
+   * @return The created PeakSeasonRate
+   */
   @Override
   public PeakSeasonRate setPeakSeasonRate(Long propertyId, SetPeakSeasonRateRequestDTO requestDTO) {
     Property property = propertyService.findPropertyById(propertyId)
@@ -47,6 +55,13 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return setRate(property, requestDTO);
   }
 
+  /**
+   * Sets a new peak season rate for a property owned by a specific tenant.
+   * @param tenant The tenant user
+   * @param propertyId The ID of the property
+   * @param requestDTO The DTO containing rate details
+   * @return The created PeakSeasonRate
+   */
   @Override
   public PeakSeasonRate setPeakSeasonRate(Users tenant, Long propertyId, SetPeakSeasonRateRequestDTO requestDTO) {
     Property property = getProperty(tenant, propertyId);
@@ -54,6 +69,13 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return setRate(property, requestDTO);
   }
 
+  /**
+   * Updates an existing peak season rate.
+   * @param peakSeasonRate The PeakSeasonRate to update
+   * @param adjustmentRate The new adjustment rate
+   * @param adjustmentType The new adjustment type
+   * @return The updated PeakSeasonRate
+   */
   @Override
   public PeakSeasonRate updatePeakSeasonRate(PeakSeasonRate peakSeasonRate, BigDecimal adjustmentRate, AdjustmentType adjustmentType) {
     peakSeasonRate.setAdjustmentRate(adjustmentRate);
@@ -61,18 +83,26 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return peakSeasonRateRepository.save(peakSeasonRate);
   }
 
+  /**
+   * Updates an existing peak season rate for a property owned by a specific tenant.
+   * @param tenant The tenant user
+   * @param rateId The ID of the rate to update
+   * @param requestDTO The DTO containing updated rate details
+   * @return The updated PeakSeasonRate
+   */
   @Override
   public PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO) {
     PeakSeasonRate existingRate = peakSeasonRateRepository.findById(rateId)
         .orElseThrow(() -> new PeakSeasonRateNotFoundException("Peak season rate not found"));
     log.info("Updating peak season rate with ID {}", rateId);
-
-    // Get property while also checking ownership of property and rate
     Property property = getProperty(tenant, existingRate.getProperty().getId());
-
-   return updateRate(existingRate, requestDTO);
+    return updateRate(existingRate, requestDTO);
   }
 
+  /**
+   * Removes (soft deletes) a peak season rate.
+   * @param rateId The ID of the rate to remove
+   */
   @Override
   public void removePeakSeasonRate(Long rateId) {
     PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
@@ -81,6 +111,11 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     peakSeasonRateRepository.save(rate);
   }
 
+  /**
+   * Removes (soft deletes) a peak season rate for a property owned by a specific tenant.
+   * @param tenant The tenant user
+   * @param rateId The ID of the rate to remove
+   */
   @Override
   public void removePeakSeasonRate(Users tenant, Long rateId) {
     PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
@@ -92,35 +127,65 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     log.info("Deleted peak season rate with ID {}", rateId);
   }
 
+  /**
+   * Permanently deletes stale peak season rates.
+   * @param timestamp The timestamp before which rates are considered stale
+   * @return The number of deleted rates
+   */
   @Override
   public int hardDeleteStaleRates(Instant timestamp) {
     return peakSeasonRateRepository.hardDeleteStaleRates(timestamp);
   }
 
+  // Query operations
+
+  /**
+   * Retrieves current rates for all properties owned by a tenant.
+   * @param tenant The tenant user
+   * @return List of current PeakSeasonRates
+   */
   @Override
   public List<PeakSeasonRate> getTenantCurrentRates(Users tenant) {
     List<Property> properties = propertyService.findAllByTenant(tenant);
     List<PeakSeasonRate> currentRates = new ArrayList<>();
     for (Property property : properties) {
-      List<PeakSeasonRate> rates = peakSeasonRateRepository.findByPropertyAndEndDateAfterAndDeletedAtIsNull(property,
-          LocalDate.now());
+      List<PeakSeasonRate> rates = peakSeasonRateRepository.findByPropertyAndEndDateAfterAndDeletedAtIsNull(property, LocalDate.now());
       currentRates.addAll(rates);
     }
     return currentRates;
   }
 
+  /**
+   * Finds valid rates for a property on a specific date.
+   * @param propertyId The ID of the property
+   * @param startDate The start date
+   * @param bookingDate The booking date
+   * @param endDate The end date
+   * @return List of valid PeakSeasonRates
+   */
   @Override
-  public List<PeakSeasonRate> findValidRatesByPropertyAndDate(Long propertyId, LocalDate startDate, Instant bookingDate,
-      Instant endDate) {
+  public List<PeakSeasonRate> findValidRatesByPropertyAndDate(Long propertyId, LocalDate startDate, Instant bookingDate, Instant endDate) {
     return peakSeasonRateRepository.findValidRatesByPropertyAndDate(propertyId, startDate, bookingDate, endDate);
   }
 
+  /**
+   * Finds automatic rates for a property within a date range.
+   * @param propertyId The ID of the property
+   * @param startDate The start date of the range
+   * @param endDate The end date of the range
+   * @return List of automatic PeakSeasonRates
+   */
   @Override
-  public List<PeakSeasonRate> findAutomaticRatesByPropertyAndDateRange(Long propertyId, LocalDate startDate,
-      LocalDate endDate) {
+  public List<PeakSeasonRate> findAutomaticRatesByPropertyAndDateRange(Long propertyId, LocalDate startDate, LocalDate endDate) {
     return peakSeasonRateRepository.findAutomaticRatesByPropertyAndDateRange(propertyId, startDate, endDate);
   }
 
+  /**
+   * Finds available room rates with adjustments for a property on a specific date.
+   * @param propertyId The ID of the property
+   * @param date The date to check
+   * @return List of RoomAdjustedRatesDTO
+   */
   @Override
   public List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
     validateDate(date);
@@ -139,7 +204,6 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
             room.getBasePrice(), adjustedPrice, date, room.getIsAvailable()
         ));
       } else {
-        // If the room already exists, update the adjusted price if it's higher
         RoomAdjustedRatesDTO existingRoom = adjustedPrices.get(room.getRoomId());
         if (adjustedPrice.compareTo(existingRoom.getAdjustedPrice()) > 0) {
           existingRoom.setAdjustedPrice(adjustedPrice);
@@ -151,6 +215,13 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return new ArrayList<>(adjustedPrices.values());
   }
 
+  /**
+   * Finds the lowest daily room rates for a property within a date range.
+   * @param propertyId The ID of the property
+   * @param startDate The start date of the range
+   * @param endDate The end date of the range
+   * @return List of DailyPriceDTO
+   */
   @Override
   public List<DailyPriceDTO> findLowestDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
     validateDate(startDate, endDate);
@@ -163,6 +234,13 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return dailyPrices;
   }
 
+  /**
+   * Finds the cumulative room rates for a property within a date range.
+   * @param propertyId The ID of the property
+   * @param startDate The start date of the range
+   * @param endDate The end date of the range
+   * @return List of DailyPriceDTO with cumulative prices
+   */
   @Override
   public List<DailyPriceDTO> findCumulativeRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
     validateDate(startDate, endDate);
@@ -172,13 +250,18 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
       BigDecimal cumulativePrice = lowestDailyRoomRates.stream()
           .map(DailyPriceDTO::getLowestPrice)
           .reduce(BigDecimal.ZERO, BigDecimal::add);
-      cumulativeDailyPrice.add(new DailyPriceDTO(date, cumulativePrice, lowestDailyRoomRates.getLast()
-          .isHasAdjustment()));
+      cumulativeDailyPrice.add(new DailyPriceDTO(date, cumulativePrice, lowestDailyRoomRates.getLast().isHasAdjustment()));
     }
     return cumulativeDailyPrice;
   }
 
+  // Price adjustments
 
+  /**
+   * Applies peak season rate adjustments to a room rate.
+   * @param roomRate The RoomPriceRateDTO to adjust
+   * @return The adjusted price
+   */
   @Override
   public BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
     BigDecimal adjustedPrice = roomRate.getBasePrice();
@@ -188,6 +271,14 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }
 
+  /**
+   * Applies peak season rate adjustments to a base price for a property on a specific date.
+   * @param propertyId The ID of the property
+   * @param date The date to check
+   * @param basePrice The base price to adjust
+   * @param bookingTime The time of booking
+   * @return The adjusted price
+   */
   @Override
   public BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice, Instant bookingTime) {
     validateDate(date);
@@ -211,6 +302,16 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }
 
+  // Helper methods
+
+  /**
+   * Retrieves a property and checks if the tenant is the owner.
+   * @param tenant The tenant user
+   * @param propertyId The ID of the property
+   * @return The Property if the tenant is the owner
+   * @throws PropertyNotFoundException if the property is not found
+   * @throws BadCredentialsException if the tenant is not the owner
+   */
   private Property getProperty(Users tenant, Long propertyId) {
     Property property = propertyService.findPropertyById(propertyId)
         .orElseThrow(() -> new PropertyNotFoundException("Property not found"));
@@ -220,6 +321,12 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
     return property;
   }
 
+  /**
+   * Creates a new PeakSeasonRate entity from the provided data.
+   * @param property The Property to associate with the rate
+   * @param requestDTO The DTO containing rate details
+   * @return The created PeakSeasonRate
+   */
   private PeakSeasonRate setRate(Property property, SetPeakSeasonRateRequestDTO requestDTO) {
     PeakSeasonRate peakSeasonRate = new PeakSeasonRate();
     peakSeasonRate.setProperty(property);

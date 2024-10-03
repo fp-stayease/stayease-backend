@@ -14,41 +14,25 @@ import java.util.List;
 
 public interface PeakSeasonRateService {
 
-  // Region - basic CRUD operations
-
+  // Basic CRUD operations
   PeakSeasonRate setPeakSeasonRate(Long propertyId, SetPeakSeasonRateRequestDTO requestDTO);
-
   PeakSeasonRate setPeakSeasonRate(Users tenant, Long propertyId, SetPeakSeasonRateRequestDTO requestDTO);
-
-  PeakSeasonRate updatePeakSeasonRate(PeakSeasonRate peakSeasonRate, BigDecimal adjustmentRate,
-      AdjustmentType adjustmentType);
-
+  PeakSeasonRate updatePeakSeasonRate(PeakSeasonRate peakSeasonRate, BigDecimal adjustmentRate, AdjustmentType adjustmentType);
   PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO);
-
   void removePeakSeasonRate(Long rateId);
-
   void removePeakSeasonRate(Users tenant, Long rateId);
-
   int hardDeleteStaleRates(Instant timestamp);
 
-  // Region - query operations
-
+  // Query operations
   List<PeakSeasonRate> getTenantCurrentRates(Users tenant);
-
-  List<PeakSeasonRate> findValidRatesByPropertyAndDate(Long propertyId, LocalDate startDate,
-      Instant bookingDate, Instant endDate);
-
+  List<PeakSeasonRate> findValidRatesByPropertyAndDate(Long propertyId, LocalDate startDate, Instant bookingDate, Instant endDate);
   List<PeakSeasonRate> findAutomaticRatesByPropertyAndDateRange(Long propertyId, LocalDate startDate, LocalDate endDate);
-
   List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date);
-
   List<DailyPriceDTO> findLowestDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
-
   List<DailyPriceDTO> findCumulativeRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate);
 
-  // Region - price adjustments
+  // Price adjustments
   BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate);
-
   BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice, Instant bookingTime);
 
 }
