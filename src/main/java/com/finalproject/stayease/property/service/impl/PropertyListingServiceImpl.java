@@ -1,0 +1,135 @@
+package com.finalproject.stayease.property.service.impl;
+
+import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.property.entity.Property;
+import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
+import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomAdjustedRatesDTO;
+import com.finalproject.stayease.property.service.PeakSeasonRateService;
+import com.finalproject.stayease.property.service.PropertyListingService;
+import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.RoomService;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+@Service
+@Slf4j
+@Data
+public class PropertyListingServiceImpl implements PropertyListingService {
+
+  private final PropertyService propertyService;
+  private final PeakSeasonRateService peakSeasonRateService;
+  private final RoomService roomService;
+
+  @Override
+  public Page<PropertyListingDTO> findAvailableProperties(
+      LocalDate startDate, LocalDate endDate, String city, Long categoryId,
+      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, int page, int size, String sortBy, String sortDirection
+  ) {
+    LocalDate checkInDate = startDate != null ? startDate : LocalDate.now();
+    LocalDate checkOutDate = endDate != null ? endDate : checkInDate.plusYears(100);
+    validateDate(checkInDate, checkOutDate);
+    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
+        minPrice,
+        maxPrice);
+    log.info("Properties fetched: " + properties.size());
+    applyPeakSeasonRates(properties, checkInDate);
+    sortProperties(properties, sortBy, sortDirection);
+    return createPage(properties, page, size, sortBy, sortDirection);
+  }
+
+  @Override
+  public PropertyAvailableOnDateDTO findAvailablePropertyOnDate(Long propertyId, LocalDate date) {
+    validateDate(date);
+    Property property = propertyService.findPropertyById(propertyId)
+        .orElseThrow(() -> new DataNotFoundException("Property not found"));
+    List<RoomAdjustedRatesDTO> rooms = peakSeasonRateService.findAvailableRoomRates(propertyId, date);
+    List<Room> unavailableRooms = roomService.getUnavailableRoomsByPropertyIdAndDate(propertyId, date);
+    return new PropertyAvailableOnDateDTO(property, rooms, unavailableRooms);
+  }
+
+ @Override
+    public List<PropertyListingDTO> findPropertiesWithLowestRoomRate(LocalDate date) {
+    validateDate(date);
+      List<Property> properties = propertyService.getAllAvailablePropertiesOnDate(date);
+      List<PropertyListingDTO> propertyListings = new ArrayList<>();
+      // Fetch the actual lowest available price for each property
+      for (Property property : properties) {
+        RoomAdjustedRatesDTO lowestRoomRate = peakSeasonRateService.findAvailableRoomRates(property.getId(), date).stream().findFirst()
+            .orElseThrow(() -> new DataNotFoundException("No room rates found for this property"));
+        propertyListings.add(new PropertyListingDTO(property, lowestRoomRate));
+      }
+      return propertyListings;
+    }
+
+  private List<PropertyListingDTO> fetchProperties(
+      LocalDate startDate, LocalDate endDate, String city, Long categoryId,
+      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice
+  ) {
+    String lowerCaseSearchTerm = searchTerm != null ? searchTerm.toLowerCase() : null;
+    String lowerCaseCity = city != null ? city.toLowerCase() : null;
+    return propertyService.findAvailableProperties(
+        startDate, endDate, lowerCaseCity, categoryId, lowerCaseSearchTerm, minPrice, maxPrice);
+  }
+
+  private void applyPeakSeasonRates(List<PropertyListingDTO> properties, LocalDate checkDate) {
+    for (PropertyListingDTO property : properties) {
+      BigDecimal adjustedPrice = applyPeakSeasonRate(property.getPropertyId(), checkDate, property.getLowestBasePrice());
+      property.setLowestAdjustedPrice(adjustedPrice);
+    }
+  }
+
+  private void sortProperties(List<PropertyListingDTO> properties, String sortBy, String sortDirection) {
+    Comparator<PropertyListingDTO> comparator = getComparator(sortBy);
+    if (sortDirection.equalsIgnoreCase("DESC")) {
+      comparator = comparator.reversed();
+    }
+    properties.sort(comparator);
+  }
+
+  private Comparator<PropertyListingDTO> getComparator(String sortBy) {
+    if (sortBy.equalsIgnoreCase("price")) {
+      return Comparator.comparing(PropertyListingDTO::getLowestAdjustedPrice);
+    } else {
+      return Comparator.comparing(PropertyListingDTO::getPropertyName);
+    }
+  }
+
+  private Page<PropertyListingDTO> createPage(List<PropertyListingDTO> properties, int page, int size, String sortBy, String sortDirection) {
+    int start = page * size;
+    int end = Math.min((page + 1) * size, properties.size());
+    List<PropertyListingDTO> pageContent = properties.subList(start, end);
+    log.info("Creating page: start={}, end={}, pageContentSize={}, totalSize={}",
+        start, end, pageContent.size(), properties.size());
+    return new PageImpl<>(pageContent, PageRequest.of(page, size, Sort.by(sortDirection, sortBy)), properties.size());
+  }
+
+  private BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice) {
+    return peakSeasonRateService.applyPeakSeasonRate(propertyId, date, basePrice, Instant.now());
+  }
+
+  private void validateDate(LocalDate date) {
+    if (date.isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("Date is out of valid range: " + date);
+    }
+  }
+
+  private void validateDate(LocalDate startDate, LocalDate endDate) {
+    validateDate(startDate);
+    if (startDate.isAfter(endDate)) {
+      throw new IllegalArgumentException("Start date cannot be after end date");
+    }
+  }
+}
