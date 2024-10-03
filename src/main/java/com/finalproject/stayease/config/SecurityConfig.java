@@ -52,7 +52,6 @@ public class SecurityConfig {
   private String API_VERSION;
 
 
-  // TODO : configure later, only here for starter
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     return http
@@ -71,8 +70,6 @@ public class SecurityConfig {
 
   private void configureAuthorization(
       AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
-    // Deny all access to the role endpoint
-    auth.requestMatchers(API_VERSION + "/role").denyAll();
 
     // Permit all access to certain GET endpoints
     auth.requestMatchers(HttpMethod.GET,
@@ -107,11 +104,10 @@ public class SecurityConfig {
 
     // Role-based access control
     auth.requestMatchers(
-        API_VERSION + "/role/user",
         API_VERSION + "/payments/payment-proof/{bookingId}",
         API_VERSION + "/bookings/user").hasRole("USER");
 
-    auth.requestMatchers(API_VERSION + "/role/tenant",
+    auth.requestMatchers(
         API_VERSION + "/properties/**",
         API_VERSION + "/profile/tenant",
         API_VERSION + "/bookings/tenant",
@@ -132,8 +128,6 @@ public class SecurityConfig {
     // Authenticate any other request
     auth.anyRequest().authenticated();
 
-//    auth.anyRequest().permitAll();
-    // TODO !! THIS IS STILL FOR TESTING, PLEASE SECURE THE ENDPOINTS
   }
 
   private void configureOAuth2Login(OAuth2LoginConfigurer<HttpSecurity> oauth2) {

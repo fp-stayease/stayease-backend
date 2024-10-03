@@ -55,4 +55,13 @@ public interface RoomAvailabilityRepository extends JpaRepository<RoomAvailabili
           AND ra.deletedAt IS NULL
       """)
 List<RoomAvailability> findAllByPropertyId(@Param("propertyId") Long propertyId);
+
+@Query("""
+          SELECT ra
+          FROM RoomAvailability ra
+          WHERE ra.room.property.id = :propertyId
+          AND ra.isManual = false
+          AND ra.deletedAt IS NULL
+      """)
+List<RoomAvailability> findAllByPropertyIdAndIsManualFalse(@Param("propertyId") Long propertyId);
 }

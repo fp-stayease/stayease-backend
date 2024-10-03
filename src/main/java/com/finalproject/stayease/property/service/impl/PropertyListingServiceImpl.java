@@ -1,6 +1,8 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
+import com.finalproject.stayease.exceptions.utils.InvalidDateException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyAvailableOnDateDTO;
@@ -33,6 +35,9 @@ public class PropertyListingServiceImpl implements PropertyListingService {
   private final PeakSeasonRateService peakSeasonRateService;
   private final RoomService roomService;
 
+  /**
+   * Finds available properties based on various criteria and returns a paginated result.
+   */
   @Override
   public Page<PropertyListingDTO> findAvailableProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
@@ -41,38 +46,46 @@ public class PropertyListingServiceImpl implements PropertyListingService {
     LocalDate checkInDate = startDate != null ? startDate : LocalDate.now();
     LocalDate checkOutDate = endDate != null ? endDate : checkInDate.plusYears(100);
     validateDate(checkInDate, checkOutDate);
-    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
-        minPrice,
-        maxPrice);
-    log.info("Properties fetched: " + properties.size());
+
+    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm, minPrice, maxPrice);
+    log.info("Properties fetched: {}", properties.size());
+
     applyPeakSeasonRates(properties, checkInDate);
     sortProperties(properties, sortBy, sortDirection);
+
     return createPage(properties, page, size, sortBy, sortDirection);
   }
 
+  /**
+   * Finds an available property on a specific date.
+   */
   @Override
   public PropertyAvailableOnDateDTO findAvailablePropertyOnDate(Long propertyId, LocalDate date) {
     validateDate(date);
     Property property = propertyService.findPropertyById(propertyId)
-        .orElseThrow(() -> new DataNotFoundException("Property not found"));
+        .orElseThrow(() -> new PropertyNotFoundException("Property not found"));
     List<RoomAdjustedRatesDTO> rooms = peakSeasonRateService.findAvailableRoomRates(propertyId, date);
     List<Room> unavailableRooms = roomService.getUnavailableRoomsByPropertyIdAndDate(propertyId, date);
     return new PropertyAvailableOnDateDTO(property, rooms, unavailableRooms);
   }
 
- @Override
-    public List<PropertyListingDTO> findPropertiesWithLowestRoomRate(LocalDate date) {
+  /**
+   * Finds properties with the lowest room rate on a specific date.
+   */
+  @Override
+  public List<PropertyListingDTO> findPropertiesWithLowestRoomRate(LocalDate date) {
     validateDate(date);
-      List<Property> properties = propertyService.getAllAvailablePropertiesOnDate(date);
-      List<PropertyListingDTO> propertyListings = new ArrayList<>();
-      // Fetch the actual lowest available price for each property
-      for (Property property : properties) {
-        RoomAdjustedRatesDTO lowestRoomRate = peakSeasonRateService.findAvailableRoomRates(property.getId(), date).stream().findFirst()
-            .orElseThrow(() -> new DataNotFoundException("No room rates found for this property"));
-        propertyListings.add(new PropertyListingDTO(property, lowestRoomRate));
-      }
-      return propertyListings;
+    List<Property> properties = propertyService.getAllAvailablePropertiesOnDate(date);
+    List<PropertyListingDTO> propertyListings = new ArrayList<>();
+
+    for (Property property : properties) {
+      RoomAdjustedRatesDTO lowestRoomRate = peakSeasonRateService.findAvailableRoomRates(property.getId(), date).stream().findFirst()
+          .orElseThrow(() -> new PeakSeasonRateNotFoundException("No room rates found for this property"));
+      propertyListings.add(new PropertyListingDTO(property, lowestRoomRate));
     }
+    return propertyListings;
+  }
+
 
   private List<PropertyListingDTO> fetchProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
@@ -122,14 +135,14 @@ public class PropertyListingServiceImpl implements PropertyListingService {
 
   private void validateDate(LocalDate date) {
     if (date.isBefore(LocalDate.now())) {
-      throw new IllegalArgumentException("Date is out of valid range: " + date);
+      throw new InvalidDateException("Date is out of valid range: " + date);
     }
   }
 
   private void validateDate(LocalDate startDate, LocalDate endDate) {
     validateDate(startDate);
     if (startDate.isAfter(endDate)) {
-      throw new IllegalArgumentException("Start date cannot be after end date");
+      throw new InvalidDateException("Start date cannot be after end date");
     }
   }
 }

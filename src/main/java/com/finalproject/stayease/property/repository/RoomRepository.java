@@ -3,7 +3,6 @@ package com.finalproject.stayease.property.repository;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
-import com.finalproject.stayease.users.entity.Users;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -18,28 +17,29 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
   Optional<Room> findByNameIgnoreCaseAndDeletedAtIsNull(String roomName);
 
   Optional<Room> findByIdAndDeletedAtIsNull(Long id);
+
   List<Room> findAllByPropertyAndDeletedAtIsNull(Property propertyId);
 
   @Query("""
-    SELECT r FROM Room r
-    JOIN r.property p
-    WHERE r.deletedAt IS NULL
-    AND p.tenant.id = :tenantId
-    ORDER BY p.name
-    """)
+      SELECT r FROM Room r
+      JOIN r.property p
+      WHERE r.deletedAt IS NULL
+      AND p.tenant.id = :tenantId
+      ORDER BY p.name
+      """)
   List<Room> findRoomByTenantIdAndDeletedAtIsNull(@Param("tenantId") Long tenantId);
 
   @Query("""
-    SELECT r FROM Room r
-    JOIN r.property p
-    JOIN r.roomAvailabilities ra
-    WHERE r.deletedAt IS NULL
-    AND p.deletedAt IS NULL
-    AND ra.deletedAt IS NULL
-    AND ra.isAvailable = FALSE
-    AND p.tenant.id = :tenantId
-    ORDER BY ra.startDate
-    """)
+      SELECT r FROM Room r
+      JOIN r.property p
+      JOIN r.roomAvailabilities ra
+      WHERE r.deletedAt IS NULL
+      AND p.deletedAt IS NULL
+      AND ra.deletedAt IS NULL
+      AND ra.isAvailable = FALSE
+      AND p.tenant.id = :tenantId
+      ORDER BY ra.startDate
+      """)
   List<Room> findRoomAvailabilitiesByTenantIdAndDeletedAtIsNull(@Param("tenantId") Long tenantId);
 
   @Query("""
@@ -96,5 +96,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
       LIMIT 1
       """)
   RoomPriceRateDTO findRoomRateAndAvailability(@Param("roomId") Long roomId, @Param("date") LocalDate date);
+
 
 }

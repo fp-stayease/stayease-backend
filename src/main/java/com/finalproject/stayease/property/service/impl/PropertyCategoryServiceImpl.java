@@ -1,8 +1,8 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
+import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
+import com.finalproject.stayease.exceptions.properties.DuplicateCategoryException;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
@@ -24,7 +24,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.apache.commons.text.similarity.LevenshteinDistance;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -66,36 +65,41 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     return synonymMap;
   }
 
+  /**
+   * Retrieves all property categories.
+   */
   @Override
   public List<PropertyCategory> findAll() {
     List<PropertyCategory> categoryList = propertyCategoryRepository.findAll();
     if (categoryList.isEmpty()) {
-      // TODO: make PropertyCategoryNotFoundException
-      throw new DataNotFoundException("No PropertyCategory found");
+      throw new CategoryNotFoundException("No PropertyCategory found");
     }
     return categoryList;
   }
 
+  /**
+   * Creates a new property category.
+   */
   @Override
   public PropertyCategory createCategory(Users tenant, CreateCategoryRequestDTO requestDTO) {
-    // * validity checks
     isTenant(tenant);
     checkMatch(requestDTO.getName());
-
-    // * if pass
     return toPropertyCategoryEntity(tenant, requestDTO);
   }
 
+  /**
+   * Updates an existing property category.
+   */
   @Override
   public PropertyCategory updateCategory(Long categoryId, Users tenant, UpdateCategoryRequestDTO requestDTO) {
     PropertyCategory existingCategory = checkIfValid(tenant, categoryId);
-
-    // update category
     Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingCategory::setDescription);
-    propertyCategoryRepository.save(existingCategory);
-    return existingCategory;
+    return propertyCategoryRepository.save(existingCategory);
   }
 
+  /**
+   * Deletes a property category.
+   */
   @Override
   public void deleteCategory(Long categoryId, Users tenant) {
     PropertyCategory existingCategory = checkIfValid(tenant, categoryId);
@@ -103,14 +107,19 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     propertyCategoryRepository.save(existingCategory);
   }
 
+  /**
+   * Finds a non-deleted property category by its ID.
+   */
   @Override
   public Optional<PropertyCategory> findCategoryByIdAndNotDeleted(Long id) {
     return propertyCategoryRepository.findByIdAndDeletedAtIsNull(id);
   }
 
+  // Region - helper methods
+
   private void isTenant(Users tenant) {
     if (tenant.getUserType() != UserType.TENANT) {
-      throw new InvalidRequestException("Only Tenants can create properties");
+      throw new UnauthorizedOperationsException("Only Tenants can create properties");
     }
   }
 
@@ -122,8 +131,7 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     // * 1 exact match
     Optional<PropertyCategory> categoryOptional = propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull(requestedName);
     if (categoryOptional.isPresent()) {
-      // TODO: make DuplicateCategoryException
-      throw new DuplicateEntryException("Category already exist.");
+      throw new DuplicateCategoryException("Category already exist.");
     }
 
     // * similar names
@@ -135,8 +143,7 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
       }
     }
     if (!similarCategories.isEmpty()) {
-      // TODO: make SimilarCategoryException
-      throw new DuplicateEntryException("Similar categories exist: " + String.join(", ", similarCategories));
+      throw new DuplicateCategoryException("Similar categories exist: " + String.join(", ", similarCategories));
     }
   }
 
@@ -161,7 +168,6 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     return similarity > 0.9;
   }
 
-  // TODO : consider if need
   private boolean areSynonyms(String word1, String word2) {
     for (Set<String> synSet : synonyms.values()) {
       if (synSet.contains(word1) && synSet.contains(word2)) {
@@ -193,15 +199,13 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
   }
 
   private PropertyCategory checkIfValid(Users tenant, Long categoryId) {
-    // TODO : make ex CategoryNotFoundException
     PropertyCategory existingCategory = propertyCategoryRepository.findByIdAndDeletedAtIsNull(categoryId).orElseThrow(
-        () -> new InvalidRequestException("Category with this ID does not exist")
+        () -> new CategoryNotFoundException("Category with this ID does not exist")
     );
     isTenant(tenant);
     Users categoryAuthor = existingCategory.getAddedBy();
     if (tenant != categoryAuthor) {
-      // TODO : make ex UnauthorizedOperationException
-      throw new BadCredentialsException("You are not the creator of this category");
+      throw new UnauthorizedOperationsException("You are not the creator of this category");
     }
     return existingCategory;
   }
