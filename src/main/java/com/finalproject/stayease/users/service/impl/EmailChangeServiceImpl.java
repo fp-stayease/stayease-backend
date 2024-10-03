@@ -44,7 +44,7 @@ public class EmailChangeServiceImpl implements EmailChangeService {
   @Value("${FE_URL}")
   private String feUrl;
   @Value("${token.expiration.hours:1}")
-  private int tokenExpirationHours;
+  private int TOKEN_EXPIRATION_HOURS;
 
   public EmailChangeServiceImpl(EmailChangeRedisRepository emailChangeRedisRepository, MailService mailService, JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, UsersService usersService,
       AuthRedisRepository authRedisRepository) {
@@ -108,7 +108,7 @@ public class EmailChangeServiceImpl implements EmailChangeService {
     JwtClaimsSet claimsSet = JwtClaimsSet.builder()
         .issuer("self")
         .issuedAt(Instant.now())
-        .expiresAt(Instant.now().plus(tokenExpirationHours, ChronoUnit.HOURS))
+        .expiresAt(Instant.now().plus(TOKEN_EXPIRATION_HOURS, ChronoUnit.HOURS))
         .subject(user.getEmail())
         .claim("newEmail", newEmail)
         .build();
