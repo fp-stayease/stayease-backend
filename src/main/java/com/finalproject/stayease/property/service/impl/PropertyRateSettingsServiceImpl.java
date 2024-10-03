@@ -34,17 +34,26 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
   private final PeakSeasonRateService peakSeasonRateService;
   private final HolidayService holidayService;
 
+  /**
+   * Retrieves existing property rate settings or creates default settings if not found.
+   * @param propertyId The ID of the property
+   * @return The property rate settings
+   */
   @Override
   public PropertyRateSetting getOrCreatePropertyRateSettings(Long propertyId) {
-    // Check if the settings exist, if not create default settings
     return propertyRateSettingsRepository.findByPropertyId(propertyId)
         .orElseGet(() -> createDefaultPropertyRateSettings(propertyId));
   }
 
+  /**
+   * Updates the property rate settings based on the provided request.
+   * @param propertyId The ID of the property
+   * @param request The request containing new settings
+   * @return The updated property rate settings
+   */
   @Override
   public PropertyRateSetting updatePropertyRateSettings(Long propertyId, SetPropertyRateSettingsDTO request) {
     PropertyRateSetting propertyRateSetting = getOrCreatePropertyRateSettings(propertyId);
-
     log.info("Setting request: " + request);
 
     // Update the settings
@@ -55,51 +64,55 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
     propertyRateSetting.setLongWeekendAdjustmentType(request.getLongWeekendAdjustmentType());
     propertyRateSettingsRepository.save(propertyRateSetting);
 
-    // apply the settings
+    // Apply the settings
     applySettingForProperty(propertyRateSetting);
 
     return propertyRateSetting;
   }
 
+  /**
+   * Applies the property rate settings for the next 6 months.
+   * @param setting The property rate settings to apply
+   */
   @Override
   public void applySettingForProperty(PropertyRateSetting setting) {
-    // initial application, for the next 6 months
     log.info("Initial application of property rate settings for property ID: {}", setting.getProperty().getId());
     LocalDate startDate = LocalDate.now();
     LocalDate endDate = startDate.plusMonths(6);
     applySettingForProperty(setting, startDate, endDate);
   }
 
+  /**
+   * Applies the property rate settings for a specific date range.
+   * @param setting The property rate settings to apply
+   * @param startDate The start date of the range
+   * @param endDate The end date of the range
+   */
   @Override
-  public void applySettingForProperty(PropertyRateSetting setting, LocalDate startDate,
-      LocalDate endDate) {
-
+  public void applySettingForProperty(PropertyRateSetting setting, LocalDate startDate, LocalDate endDate) {
     log.info("Request to apply: {}", setting);
-
     Long propertyId = setting.getProperty().getId();
 
-    // * get existing auto rates
-    List<PeakSeasonRate> existingAutoRates = peakSeasonRateService.findAutomaticRatesByPropertyAndDateRange(propertyId,
-        startDate,
-        endDate);
+    List<PeakSeasonRate> existingAutoRates = peakSeasonRateService.findAutomaticRatesByPropertyAndDateRange(propertyId, startDate, endDate);
 
-    // * handle !useAutoRates or deactivation
     if (!setting.getUseAutoRates()) {
       log.info("Existing auto rates: {} for property ID: {} will be deactivated", existingAutoRates, propertyId);
       handleDeactivation(existingAutoRates);
       return;
     }
 
-    // * handle useAutoRates
     handleAutoRatesApplication(setting, startDate, endDate, existingAutoRates);
   }
 
+  /**
+   * Deactivates auto rates for a specific property.
+   * @param propertyId The ID of the property
+   */
   @Override
   public void deactivateAutoRates(Long propertyId) {
     log.info("Deactivating auto rates for property ID: {}", propertyId);
     updatePropertyRateSettings(propertyId, new SetPropertyRateSettingsDTO(false, null, null, null, null));
   }
-
   private PropertyRateSetting createDefaultPropertyRateSettings(Long propertyId) {
     Property property = propertyService.findPropertyById(propertyId)
         .orElseThrow(() -> new PropertyNotFoundException("Property not found with id: " + propertyId));
