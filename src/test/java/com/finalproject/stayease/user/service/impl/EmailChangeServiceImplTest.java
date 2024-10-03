@@ -32,14 +32,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-class EmailChangeServiceImplTest {
+public class EmailChangeServiceImplTest {
 
   @Mock
   private EmailChangeRedisRepository emailChangeRedisRepository;
@@ -57,8 +56,7 @@ class EmailChangeServiceImplTest {
   @InjectMocks
   private EmailChangeServiceImpl emailChangeService;
 
-  @Value("${FE_URL}")
-  private String FE_URL;
+  private final String FE_URL = "http://localhost:3000";
 
   @BeforeEach
   void setUp() {

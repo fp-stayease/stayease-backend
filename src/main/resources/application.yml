@@ -112,3 +112,7 @@ token:
     hours: 1
     access: 3600 # 1 hour
     refresh: 2592000 # 30 days
+path:
+  backend: ${BASE_URL}
+  api-version: ${API_VERSION}
+  frontend: ${FRONTEND_URL}
