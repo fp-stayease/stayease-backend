@@ -1,7 +1,9 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.auth.repository.AuthRedisRepository;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.users.UserNotFoundException;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
+import com.finalproject.stayease.exceptions.utils.InvalidTokenException;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.dto.RequestEmailChangeDTO;
@@ -69,8 +71,7 @@ public class EmailChangeServiceImpl implements EmailChangeService {
   @Override
   public Users verifyEmailChange(String tokenUUID) {
     if (!emailChangeRedisRepository.isValid(tokenUUID)) {
-      // TODO : create InvalidTokenException
-      throw new RuntimeException("Invalid token");
+      throw new InvalidTokenException("Invalid token");
     }
 
     String emailChangeJwt = emailChangeRedisRepository.getJwt(tokenUUID);
@@ -123,8 +124,7 @@ public class EmailChangeServiceImpl implements EmailChangeService {
   }
 
   private Users getUserByEmail(String email) {
-    // TODO : make UserNotFoundException
-    return usersService.findByEmail(email).orElseThrow(() -> new InvalidRequestException("User not found"));
+    return usersService.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
   }
 
   private void validateEmailChangeRequest(Users user, RequestEmailChangeDTO requestDTO) {

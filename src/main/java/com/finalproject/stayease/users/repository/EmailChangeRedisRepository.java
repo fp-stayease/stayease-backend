@@ -1,6 +1,6 @@
 package com.finalproject.stayease.users.repository;
 
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

@@ -8,9 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.properties.DuplicatePropertyException;
+import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
@@ -87,7 +87,7 @@ class PropertyServiceImplTest {
   @Test
   void findAll_NoPropertiesFound() {
     when(propertyRepository.findAll()).thenReturn(Collections.emptyList());
-    assertThrows(DataNotFoundException.class, () -> propertyService.findAll());
+    assertThrows(PropertyNotFoundException.class, () -> propertyService.findAll());
   }
 
   @Test
@@ -101,7 +101,7 @@ class PropertyServiceImplTest {
   @Test
   void findAllByTenant_NoPropertiesFound() {
     when(propertyRepository.findByTenantAndDeletedAtIsNull(tenant)).thenReturn(Collections.emptyList());
-    assertThrows(DataNotFoundException.class, () -> propertyService.findAllByTenant(tenant));
+    assertThrows(PropertyNotFoundException.class, () -> propertyService.findAllByTenant(tenant));
   }
 
   @Test
@@ -119,7 +119,7 @@ class PropertyServiceImplTest {
   void createProperty_DuplicateLocation() {
     when(propertyRepository.findByLocationAndDeletedAtIsNull(any(Point.class))).thenReturn(Optional.of(property));
 
-    assertThrows(DuplicateEntryException.class, () -> propertyService.createProperty(tenant, createDTO));
+    assertThrows(DuplicatePropertyException.class, () -> propertyService.createProperty(tenant, createDTO));
   }
 
   @Test
@@ -136,7 +136,7 @@ class PropertyServiceImplTest {
   void updateProperty_PropertyNotFound() {
     when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
-    assertThrows(InvalidRequestException.class, () -> propertyService.updateProperty(tenant, 1L, updateDTO));
+    assertThrows(PropertyNotFoundException.class, () -> propertyService.updateProperty(tenant, 1L, updateDTO));
   }
 
   @Test
@@ -153,7 +153,7 @@ class PropertyServiceImplTest {
   void deleteProperty_PropertyNotFound() {
     when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
-    assertThrows(InvalidRequestException.class, () -> propertyService.deleteProperty(tenant, 1L));
+    assertThrows(PropertyNotFoundException.class, () -> propertyService.deleteProperty(tenant, 1L));
   }
 
   @Test
@@ -187,7 +187,7 @@ class PropertyServiceImplTest {
   void getAllAvailablePropertiesOnDate_NoPropertiesFound() {
     when(propertyRepository.findAvailablePropertiesOnDate(any(LocalDate.class))).thenReturn(Collections.emptyList());
 
-    assertThrows(DataNotFoundException.class, () -> propertyService.getAllAvailablePropertiesOnDate(LocalDate.now().plusDays(1)));
+    assertThrows(PropertyNotFoundException.class, () -> propertyService.getAllAvailablePropertiesOnDate(LocalDate.now().plusDays(1)));
   }
 
   @Test
@@ -203,7 +203,7 @@ class PropertyServiceImplTest {
   void findLowestRoomRate_NoRatesFound() {
     when(propertyRepository.findAvailableRoomRates(1L, LocalDate.now().plusDays(1))).thenReturn(Collections.emptyList());
 
-    assertThrows(DataNotFoundException.class, () -> propertyService.findLowestRoomRate(1L, LocalDate.now().plusDays(1)));
+    assertThrows(PeakSeasonRateNotFoundException.class, () -> propertyService.findLowestRoomRate(1L, LocalDate.now().plusDays(1)));
   }
 
   @Test

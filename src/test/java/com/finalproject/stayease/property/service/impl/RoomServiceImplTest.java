@@ -8,8 +8,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.properties.DuplicateRoomException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
+import com.finalproject.stayease.exceptions.properties.RoomNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateRoomRequestDTO;
@@ -89,7 +90,7 @@ public class RoomServiceImplTest {
 
     when(roomRepository.findByNameIgnoreCaseAndDeletedAtIsNull("Room A")).thenReturn(Optional.of(existingRoom));
 
-    assertThrows(DuplicateEntryException.class, () -> roomService.createRoom(propertyId, requestDTO));
+    assertThrows(DuplicateRoomException.class, () -> roomService.createRoom(propertyId, requestDTO));
     verify(roomRepository, times(1)).findByNameIgnoreCaseAndDeletedAtIsNull("Room A");
   }
 
@@ -105,7 +106,7 @@ public class RoomServiceImplTest {
 
     when(propertyService.findPropertyById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(InvalidRequestException.class, () -> roomService.createRoom(propertyId, requestDTO));
+    assertThrows(PropertyNotFoundException.class, () -> roomService.createRoom(propertyId, requestDTO));
     verify(propertyService, times(1)).findPropertyById(1L);
   }
 
@@ -144,7 +145,7 @@ public class RoomServiceImplTest {
 
     when(roomRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
 
-    assertThrows(InvalidRequestException.class, () -> roomService.updateRoom(propertyId, roomId,
+    assertThrows(RoomNotFoundException.class, () -> roomService.updateRoom(propertyId, roomId,
         new UpdateRoomRequestDTO()));
   }
 

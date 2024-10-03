@@ -1,7 +1,7 @@
 package com.finalproject.stayease.auth.service.impl;
 
 import com.finalproject.stayease.auth.repository.OtcRedisRepository;
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;

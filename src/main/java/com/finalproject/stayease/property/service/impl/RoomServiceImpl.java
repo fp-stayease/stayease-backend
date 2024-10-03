@@ -1,8 +1,8 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
+import com.finalproject.stayease.exceptions.properties.RoomNotFoundException;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.dto.PropertyCurrentDTO;
@@ -106,7 +106,7 @@ public class RoomServiceImpl implements RoomService {
   @Override
   public PropertyCurrentDTO getPropertyCurrent(Long id) {
     Property property = propertyService.findPropertyById(id).orElseThrow(
-        () -> new DataNotFoundException("Property with this ID does not exist or is deleted")
+        () -> new PropertyNotFoundException("Property with this ID does not exist or is deleted")
     );
     List<Room> availableRooms = getRoomsOfProperty(id);
     return new PropertyCurrentDTO(property, availableRooms);
@@ -136,16 +136,14 @@ public class RoomServiceImpl implements RoomService {
   private void checkDuplicateRoom(Long PropertyId, String name) {
     List<String> roomList = roomRepository.findAllRoomNamesByPropertyId(PropertyId);
     if (roomList.contains(name)) {
-      // TODO : make new DuplicateRoomException
-      throw new DuplicateEntryException("Room with name " + name + " already exists");
+      throw new RoomNotFoundException("Room with name " + name + " already exists");
     }
   }
 
   private Property checkProperty(Long propertyId) {
     Optional<Property> checkProperty = propertyService.findPropertyById(propertyId);
     if (checkProperty.isEmpty()) {
-      // TODO : make new PropertyNotFoundException
-      throw new InvalidRequestException("This property does not exist");
+      throw new PropertyNotFoundException("This property does not exist");
     }
     return checkProperty.get();
   }
@@ -165,8 +163,7 @@ public class RoomServiceImpl implements RoomService {
   private Room checkRoom(Long roomId) {
     Optional<Room> checkRoom = roomRepository.findByIdAndDeletedAtIsNull(roomId);
     if (checkRoom.isEmpty()) {
-      // TODO : make RoomDoesNotExistException
-      throw new InvalidRequestException("This room does not exist");
+      throw new RoomNotFoundException("This room does not exist");
     }
     return checkRoom.get();
   }

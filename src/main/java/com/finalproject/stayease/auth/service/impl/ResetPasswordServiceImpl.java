@@ -5,10 +5,10 @@ import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPas
 import com.finalproject.stayease.auth.model.dto.forgorPassword.reset.ResetPasswordRequestDTO;
 import com.finalproject.stayease.auth.repository.ResetPasswordRedisRepository;
 import com.finalproject.stayease.auth.service.ResetPasswordService;
-import com.finalproject.stayease.exceptions.InvalidCredentialsException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
-import com.finalproject.stayease.exceptions.PasswordDoesNotMatchException;
-import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
+import com.finalproject.stayease.exceptions.auth.InvalidCredentialsException;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
+import com.finalproject.stayease.exceptions.auth.PasswordDoesNotMatchException;
+import com.finalproject.stayease.exceptions.utils.InvalidTokenException;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.SocialLogin;
 import com.finalproject.stayease.users.entity.Users;
@@ -129,7 +129,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
 
   private void checkResetValidity(String email, String randomKey, ResetPasswordRequestDTO requestDTO) {
     if (email == null) {
-      throw new TokenDoesNotExistException("You have not requested to reset your password");
+      throw new InvalidTokenException("You have not requested to reset your password");
     }
     if (!redisRepository.isValid(email, randomKey)) {
       throw new InvalidRequestException("Request not valid, please send a new request");
@@ -144,7 +144,6 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
   private void checkUser(String email) {
     Optional<Users> usersOptional = usersService.findByEmail(email);
     if (usersOptional.isEmpty()) {
-      // TODO : make UserNotFoundException
       throw new UsernameNotFoundException("User not found");
     }
     Optional<SocialLogin> socialLoginOptional = socialLoginService.findByUser(usersOptional.get());

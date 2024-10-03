@@ -1,9 +1,9 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.auth.service.RegisterRedisService;
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
-import com.finalproject.stayease.exceptions.PasswordDoesNotMatchException;
+import com.finalproject.stayease.exceptions.auth.PasswordDoesNotMatchException;
+import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
+import com.finalproject.stayease.exceptions.utils.DuplicateEntryException;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.TenantInfo;

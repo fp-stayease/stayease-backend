@@ -1,7 +1,9 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
+import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
+import com.finalproject.stayease.exceptions.properties.RoomAvailabilityNotFoundException;
+import com.finalproject.stayease.exceptions.properties.RoomNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
 import com.finalproject.stayease.property.entity.RoomAvailability;
@@ -36,8 +38,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
 
   @Override
   public RoomAvailability setUnavailability(Long roomId, LocalDate startDate, LocalDate endDate) {
-    // TODO: RoomDoesNotExistException
-    Room bookedRoom = roomService.findRoomById(roomId).orElseThrow(() -> new DataNotFoundException("Room does not exist!"));
+    Room bookedRoom = roomService.findRoomById(roomId).orElseThrow(() -> new RoomNotFoundException("Room does not exist!"));
     RoomAvailability roomAvailability = new RoomAvailability();
     roomAvailability.setRoom(bookedRoom);
     roomAvailability.setStartDate(checkDate(startDate));
@@ -48,9 +49,9 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
 
   @Override
   public RoomAvailability setUnavailability(Users tenant, Long roomId, LocalDate startDate, LocalDate endDate) {
-    Room existingRoom = roomService.findRoomById(roomId).orElseThrow(() -> new DataNotFoundException("Room does not exist!"));
-    if (!Objects.equals(existingRoom.getProperty().getTenant().getId(), tenant.getId())) {
-      throw new InvalidRequestException("You are not authorized to set unavailability for this room");
+    Room existingRoom = roomService.findRoomById(roomId).orElseThrow(() -> new RoomNotFoundException("Room does not exist!"));
+    if (existingRoom.getProperty().getTenant().getId() != tenant.getId()) {
+      throw new UnauthorizedOperationsException("You are not authorized to set unavailability for this room");
     }
     validateDateRange(roomId, startDate, endDate);
     return setTenantUnavailability(roomId, startDate, endDate);
@@ -59,7 +60,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   @Override
   public void removeUnavailability(Long roomId, LocalDate startDate, LocalDate endDate) {
     RoomAvailability roomAvailability = roomAvailabilityRepository.findByRoomIdAndDates(roomId, startDate, endDate)
-            .orElseThrow(() -> new DataNotFoundException("Data not exist"));
+            .orElseThrow(() -> new RoomAvailabilityNotFoundException("No availability found for this room in this date range"));
 
     roomAvailability.preRemove();
 
@@ -123,7 +124,6 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
   private LocalDate checkDate(LocalDate date) {
     RoomAvailability roomAvailability = roomAvailabilityRepository.findRoomAvailabilityByDate(date);
     if (roomAvailability != null) {
-      // TODO : RoomUnavailableException
       throw new InvalidRequestException("Room is already unavailable in this date: " + date + ". Data: " +
                                         new RoomAvailabilityDTO(roomAvailability));
     }
@@ -144,7 +144,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
 
   private RoomAvailability setTenantUnavailability(Long roomId, LocalDate startDate, LocalDate endDate) {
     RoomAvailability roomAvailability = new RoomAvailability();
-    roomAvailability.setRoom(roomService.findRoomById(roomId).orElseThrow(() -> new DataNotFoundException("Room does not exist!")));
+    roomAvailability.setRoom(roomService.findRoomById(roomId).orElseThrow(() -> new RoomNotFoundException("Room does not exist!")));
     roomAvailability.setStartDate(startDate);
     roomAvailability.setEndDate(endDate);
     roomAvailability.setIsAvailable(false);
@@ -152,14 +152,21 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
     return roomAvailabilityRepository.save(roomAvailability);
   }
 
+  private void checkOwnership(Users tenant, Long roomId) {
+    Room room = roomService.findRoomById(roomId).orElseThrow(() -> new RoomNotFoundException("Room does not exist!"));
+    if (!Objects.equals(room.getProperty().getTenant().getId(), tenant.getId())) {
+      throw new InvalidRequestException("You are not authorized to set unavailability for this room");
+    }
+  }
+
   private RoomAvailability checkOwnership(Users tenant, Long roomId, Long unavailabilityId) {
     RoomAvailability roomAvailability = roomAvailabilityRepository.findById(unavailabilityId)
-            .orElseThrow(() -> new DataNotFoundException("Data not exist"));
+            .orElseThrow(() -> new RoomAvailabilityNotFoundException("Data not exist"));
     if (!Objects.equals(roomAvailability.getRoom().getId(), roomId)) {
-      throw new InvalidRequestException("You are not authorized to remove this unavailability");
+      throw new UnauthorizedOperationsException("You are not authorized to remove this unavailability");
     }
     if (!Objects.equals(roomAvailability.getRoom().getProperty().getTenant().getId(), tenant.getId())) {
-      throw new InvalidRequestException("You are not authorized to remove this unavailability");
+      throw new UnauthorizedOperationsException("You are not authorized to remove this unavailability");
     }
     return roomAvailability;
   }
