@@ -31,6 +31,9 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
   private static final long MAX_FILE_SIZE = 1024 * 1024;
 
 
+  /**
+   * Uploads an image for a tenant.
+   */
   @Override
   public String uploadImage(Long tenantId, MultipartFile image) throws IOException {
     log.info("Validating file: {}", image.getOriginalFilename());
@@ -40,6 +43,9 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
     return cloudinaryService.uploadFile(image, folderName);
   }
 
+  /**
+   * Uploads an image for a room in a property.
+   */
   @Override
   public String uploadRoomImage(Long propertyId, Long roomId, MultipartFile image) throws IOException {
     log.info("Validating file for room image: {}", image.getOriginalFilename());
@@ -49,6 +55,9 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
     return cloudinaryService.uploadFile(image, folderName);
   }
 
+  /**
+   * Validates the uploaded file.
+   */
   private void validateFile(MultipartFile file) {
     if (file.isEmpty()) {
       throw new InvalidRequestException("File is empty");
