@@ -1,7 +1,7 @@
 package com.finalproject.stayease.property.controller;
 
 import com.finalproject.stayease.property.entity.dto.PeakSeasonRateDTO;
-import com.finalproject.stayease.property.entity.dto.PropertyRateSettingsDTO;
+import com.finalproject.stayease.property.entity.dto.PropertyRateSettingDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPeakSeasonRateRequestDTO;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPropertyRateSettingsDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.DailyPriceDTO;
@@ -45,15 +45,14 @@ public class RatesController {
   @PreAuthorize("hasRole('TENANT')")
   public ResponseEntity<Response<List<PeakSeasonRateDTO>>> getTenantCurrentRates() {
     Users tenant = usersService.getLoggedUser();
-    log.info("Tenant: " + tenant.getTenantInfo().getBusinessName());
+    log.info("Tenant: {}", tenant.getTenantInfo().getBusinessName());
     List<PeakSeasonRateDTO> currentRatesDTO = rateService
         .getTenantCurrentRates(tenant)
         .stream()
         .map(PeakSeasonRateDTO::new)
         .sorted(Comparator.comparing(PeakSeasonRateDTO::getRateId))
         .toList();
-    log.info(
-        "Current Rates: " + (currentRatesDTO != null && !currentRatesDTO.isEmpty() ? currentRatesDTO.get(0) : null));
+    log.info("Current Rates: {}", !currentRatesDTO.isEmpty() ? currentRatesDTO.getFirst() : null);
     return Response.successfulResponse(200,
         "Listing all current rates for tenant: " + tenant.getTenantInfo().getBusinessName(), currentRatesDTO);
   }
@@ -125,18 +124,18 @@ public class RatesController {
   // End - Property Rates Settings
   @GetMapping(value = "/auto", params = {"propertyId"})
   @PreAuthorize("hasRole('TENANT')")
-  public ResponseEntity<Response<PropertyRateSettingsDTO>> getPropertyRateSettings(@RequestParam Long propertyId) {
+  public ResponseEntity<Response<PropertyRateSettingDTO>> getPropertyRateSettings(@RequestParam Long propertyId) {
     return Response.successfulResponse(HttpStatus.OK.value(), "Property Rate Settings Retrieved Successfully!",
-        new PropertyRateSettingsDTO(propertyRateSettingsService.getOrCreatePropertyRateSettings(propertyId)));
+        new PropertyRateSettingDTO(propertyRateSettingsService.getOrCreatePropertyRateSettings(propertyId)));
   }
 
   @PutMapping(value = "/auto", params = {"propertyId"})
   @PreAuthorize("hasRole('TENANT')")
-  public ResponseEntity<Response<PropertyRateSettingsDTO>> updatePropertyRateSettings(@RequestParam Long propertyId,
+  public ResponseEntity<Response<PropertyRateSettingDTO>> updatePropertyRateSettings(@RequestParam Long propertyId,
       @RequestBody SetPropertyRateSettingsDTO request) {
     log.info("Updating property rate settings for property ID: " + propertyId);
     return Response.successfulResponse(HttpStatus.OK.value(), "Property Rate Settings Updated Successfully!",
-        new PropertyRateSettingsDTO(propertyRateSettingsService.updatePropertyRateSettings(propertyId, request)));
+        new PropertyRateSettingDTO(propertyRateSettingsService.updatePropertyRateSettings(propertyId, request)));
   }
 
   @DeleteMapping(value = "/auto", params = {"propertyId"})

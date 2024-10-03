@@ -217,7 +217,6 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
   }
 
   private String buildUrl(String token) {
-    // TODO : replace this with FE URL later
     return feUrl + "/reset-password?token=" + token;
   }
 

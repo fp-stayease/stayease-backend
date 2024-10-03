@@ -65,6 +65,9 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     return synonymMap;
   }
 
+  /**
+   * Retrieves all property categories.
+   */
   @Override
   public List<PropertyCategory> findAll() {
     List<PropertyCategory> categoryList = propertyCategoryRepository.findAll();
@@ -74,26 +77,29 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     return categoryList;
   }
 
+  /**
+   * Creates a new property category.
+   */
   @Override
   public PropertyCategory createCategory(Users tenant, CreateCategoryRequestDTO requestDTO) {
-    // * validity checks
     isTenant(tenant);
     checkMatch(requestDTO.getName());
-
-    // * if pass
     return toPropertyCategoryEntity(tenant, requestDTO);
   }
 
+  /**
+   * Updates an existing property category.
+   */
   @Override
   public PropertyCategory updateCategory(Long categoryId, Users tenant, UpdateCategoryRequestDTO requestDTO) {
     PropertyCategory existingCategory = checkIfValid(tenant, categoryId);
-
-    // update category
     Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingCategory::setDescription);
-    propertyCategoryRepository.save(existingCategory);
-    return existingCategory;
+    return propertyCategoryRepository.save(existingCategory);
   }
 
+  /**
+   * Deletes a property category.
+   */
   @Override
   public void deleteCategory(Long categoryId, Users tenant) {
     PropertyCategory existingCategory = checkIfValid(tenant, categoryId);
@@ -101,10 +107,15 @@ public class PropertyCategoryServiceImpl implements PropertyCategoryService {
     propertyCategoryRepository.save(existingCategory);
   }
 
+  /**
+   * Finds a non-deleted property category by its ID.
+   */
   @Override
   public Optional<PropertyCategory> findCategoryByIdAndNotDeleted(Long id) {
     return propertyCategoryRepository.findByIdAndDeletedAtIsNull(id);
   }
+
+  // Region - helper methods
 
   private void isTenant(Users tenant) {
     if (tenant.getUserType() != UserType.TENANT) {

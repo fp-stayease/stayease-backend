@@ -243,7 +243,7 @@ public class RegisterServiceImpl implements RegisterService {
     user.setIsVerified(true);
     usersService.save(user);
 
-    // ? delete or marked as verified?
+    // delete pending registration once users are verified
     pendingRegistrationService.deleteById(pendingRegistration.getId());
 
     if (pendingRegistration.getUserType() == UserType.TENANT) {

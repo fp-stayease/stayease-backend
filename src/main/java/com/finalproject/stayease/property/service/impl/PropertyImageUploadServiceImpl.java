@@ -1,6 +1,7 @@
 package com.finalproject.stayease.property.service.impl;
 
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.property.service.PropertyImageUploadService;
 import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomService;
@@ -30,6 +31,9 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
   private static final long MAX_FILE_SIZE = 1024 * 1024;
 
 
+  /**
+   * Uploads an image for a tenant.
+   */
   @Override
   public String uploadImage(Long tenantId, MultipartFile image) throws IOException {
     log.info("Validating file: {}", image.getOriginalFilename());
@@ -39,6 +43,9 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
     return cloudinaryService.uploadFile(image, folderName);
   }
 
+  /**
+   * Uploads an image for a room in a property.
+   */
   @Override
   public String uploadRoomImage(Long propertyId, Long roomId, MultipartFile image) throws IOException {
     log.info("Validating file for room image: {}", image.getOriginalFilename());
@@ -48,15 +55,18 @@ public class PropertyImageUploadServiceImpl implements PropertyImageUploadServic
     return cloudinaryService.uploadFile(image, folderName);
   }
 
+  /**
+   * Validates the uploaded file.
+   */
   private void validateFile(MultipartFile file) {
     if (file.isEmpty()) {
-      throw new IllegalArgumentException("File is empty");
+      throw new InvalidRequestException("File is empty");
     }
     if (!ALLOWED_FILE_TYPES.contains(file.getContentType())) {
-      throw new IllegalArgumentException("Invalid file type");
+      throw new InvalidRequestException("Invalid file type");
     }
     if (file.getSize() > MAX_FILE_SIZE) {
-      throw new IllegalArgumentException("File size exceeds maximum limit");
+      throw new InvalidRequestException("File size exceeds maximum limit");
     }
   }
 }
