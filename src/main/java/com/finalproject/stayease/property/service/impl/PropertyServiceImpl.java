@@ -248,6 +248,12 @@ public class PropertyServiceImpl implements PropertyService {
     return true;
   }
 
+  @Override
+  public Long tenantPropertyCount(Users tenant) {
+    isTenant(tenant);
+    return propertyRepository.countPropertiesByTenantId(tenant.getId());
+  }
+
   // Region - helper methods
 
   private void isTenant(Users tenant) {

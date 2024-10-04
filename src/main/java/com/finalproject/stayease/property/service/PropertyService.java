@@ -46,5 +46,5 @@ public interface PropertyService {
 
   // Property ownership verification
   boolean isTenantPropertyOwner(Users tenant, Long propertyId);
-
+  Long tenantPropertyCount(Users tenant);
 }
