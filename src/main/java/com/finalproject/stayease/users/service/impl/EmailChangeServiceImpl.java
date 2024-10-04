@@ -21,7 +21,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -56,6 +55,15 @@ public class EmailChangeServiceImpl implements EmailChangeService {
     this.authRedisRepository = authRedisRepository;
   }
 
+  /**
+   * Initiates an email change request for a user.
+   *
+   * @param user The user requesting the email change
+   * @param requestDTO DTO containing the new email
+   * @return A verification URL for the email change
+   * @throws MessagingException If there's an error sending the verification email
+   * @throws IOException If there's an error reading the email template
+   */
   @Override
   public String requestEmailChange(Users user, RequestEmailChangeDTO requestDTO) throws MessagingException, IOException {
     validateEmailChangeRequest(user, requestDTO);
@@ -68,6 +76,13 @@ public class EmailChangeServiceImpl implements EmailChangeService {
     return buildVerificationUrl(tokenUUID);
   }
 
+  /**
+   * Verifies and processes an email change request.
+   *
+   * @param tokenUUID The UUID of the email change token
+   * @return The updated user with the new email
+   * @throws InvalidTokenException If the token is invalid or expired
+   */
   @Override
   public Users verifyEmailChange(String tokenUUID) {
     if (!emailChangeRedisRepository.isValid(tokenUUID)) {
@@ -87,17 +102,23 @@ public class EmailChangeServiceImpl implements EmailChangeService {
     return usersService.save(user);
   }
 
+  /**
+   * Checks if a given token is valid.
+   *
+   * @param token The token to check
+   * @return true if the token is valid, false otherwise
+   */
   @Override
   public boolean checkToken(String token) {
     return emailChangeRedisRepository.isValid(token);
   }
 
+  // Region - Helper methods
+
   private void sendVerificationEmail(String newEmail, String tokenUUID) throws MessagingException, IOException {
-    Resource resource = new ClassPathResource("templates/email-change.html");
-    String htmlTemplate = Files.readString(resource.getFile().toPath());
+    String htmlTemplate = Files.readString(new ClassPathResource("templates/email-change.html").getFile().toPath());
     String htmlContent = htmlTemplate.replace("${verificationUrl}", buildVerificationUrl(tokenUUID));
-    String subject = "Verify your new email!";
-    mailService.sendHtmlEmail(htmlContent, newEmail, subject);
+    mailService.sendHtmlEmail(htmlContent, newEmail, "Verify your new email!");
   }
 
   private String buildVerificationUrl(String tokenUUID) {
