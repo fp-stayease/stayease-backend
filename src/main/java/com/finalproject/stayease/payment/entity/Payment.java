@@ -30,13 +30,17 @@ public class Payment {
     private String paymentMethod;
 
     @Column(name = "payment_status")
-    private String paymentStatus;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
     @Column(name = "payment_proof")
     private String paymentProof;
 
     @Column(name = "bank_va")
     private String bankVa;
+
+    @Column(name = "bank_name")
+    private String bankName;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "payment_expiration_at")
@@ -68,17 +72,5 @@ public class Payment {
     @PreRemove
     public void preRemove() {
         this.deletedAt = Instant.now();
-    }
-
-    public PaymentDTO toResDto() {
-        PaymentDTO resDto = new PaymentDTO();
-        resDto.setId(id);
-        resDto.setAmount(amount);
-        resDto.setPaymentMethod(paymentMethod);
-        resDto.setPaymentStatus(paymentStatus);
-        resDto.setPaymentProof(paymentProof);
-        resDto.setBankVa(bankVa);
-        resDto.setPaymentExpirationAt(paymentExpirationAt);
-        return resDto;
     }
 }

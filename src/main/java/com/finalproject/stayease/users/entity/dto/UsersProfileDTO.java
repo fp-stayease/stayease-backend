@@ -33,18 +33,7 @@ public class UsersProfileDTO {
     this.isOAuth2 = !user.getSocialLogins().isEmpty();
     this.userType = user.getUserType();
     if (user.getTenantInfo() != null) {
-      this.tenantInfo = new TenantInfoDTO();
-      this.tenantInfo.setBusinessName(user.getTenantInfo().getBusinessName());
-      this.tenantInfo.setTaxId(user.getTenantInfo().getTaxId());
-      this.tenantInfo.setRegistrationDate(user.getTenantInfo().getRegistrationDate());
+      this.tenantInfo = new TenantInfoDTO(user.getTenantInfo());
     }
-  }
-
-
-  @Data
-  private static class TenantInfoDTO {
-    private String businessName;
-    private String taxId;
-    private Instant registrationDate;
   }
 }

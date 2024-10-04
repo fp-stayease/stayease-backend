@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.bookings.entity.BookingStatus;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
 import com.finalproject.stayease.payment.entity.Payment;
+import com.finalproject.stayease.payment.entity.PaymentStatus;
 import com.finalproject.stayease.payment.entity.dto.PaymentDTO;
 import com.finalproject.stayease.payment.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +48,7 @@ public class PaymentServiceImplTest {
     void createPaymentForManualTransfer() {
         Double amount = 2400000.00;
         String paymentMethod = "manual_transfer";
-        String paymentStatus = "pending";
+        PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
         Booking booking = new Booking();
         booking.setId(UUID.randomUUID());
@@ -54,7 +56,7 @@ public class PaymentServiceImplTest {
         Payment expectedPayment = new Payment();
         expectedPayment.setAmount(2400000.00);
         expectedPayment.setPaymentMethod("manual_transfer");
-        expectedPayment.setPaymentStatus("pending");
+        expectedPayment.setPaymentStatus(PaymentStatus.PENDING);
         expectedPayment.setPaymentExpirationAt(Instant.now().plus(1, ChronoUnit.HOURS));
         expectedPayment.setBooking(booking);
 
@@ -71,7 +73,8 @@ public class PaymentServiceImplTest {
         Double amount = 2400000.00;
         String paymentMethod = "bank_transfer";
         String bankVa = "9024769247";
-        String paymentStatus = "pending";
+        String bankName = "bca";
+        PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
         Booking booking = new Booking();
         booking.setId(UUID.randomUUID());
@@ -80,13 +83,13 @@ public class PaymentServiceImplTest {
         expectedPayment.setAmount(2400000.00);
         expectedPayment.setPaymentMethod("bank_transfer");
         expectedPayment.setBankVa("9024769247");
-        expectedPayment.setPaymentStatus("pending");
+        expectedPayment.setPaymentStatus(PaymentStatus.PENDING);
         expectedPayment.setPaymentExpirationAt(Instant.now().plus(30, ChronoUnit.MINUTES));
         expectedPayment.setBooking(booking);
 
         when(paymentRepository.save(any(Payment.class))).thenReturn(expectedPayment);
 
-        Payment createdPayment = paymentServiceImpl.createPayment(amount, paymentMethod, booking, paymentStatus, bankVa);
+        Payment createdPayment = paymentServiceImpl.createPayment(amount, paymentMethod, booking, paymentStatus, bankVa, bankName);
         assertEquals(expectedPayment.getPaymentMethod(), createdPayment.getPaymentMethod());
         assertEquals(expectedPayment.getId(), createdPayment.getId());
         verify(paymentRepository, times(1)).save(any(Payment.class));
@@ -139,7 +142,7 @@ public class PaymentServiceImplTest {
 
         assertEquals(cloudinaryUrl, updatedPayment.getPaymentProof());
         assertEquals("waiting for confirmation", updatedPayment.getPaymentStatus());
-        verify(bookingService, times(1)).updateBooking(any(), eq("waiting for confirmation"));
+        verify(bookingService, times(1)).updateBooking(any(), eq(BookingStatus.WAITING_FOR_CONFIRMATION));
     }
 
     @Test
@@ -170,7 +173,7 @@ public class PaymentServiceImplTest {
     @Test
     void updatePaymentStatus_validPayment_success() {
         Long paymentId = 1L;
-        String newStatus = "completed";
+        PaymentStatus newStatus = PaymentStatus.SETTLEMENT;
         Payment payment = new Payment();
 
         when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
@@ -186,7 +189,7 @@ public class PaymentServiceImplTest {
     @Test
     void updatePaymentStatus_paymentNotFound_throwsException() {
         Long paymentId = 1L;
-        String newStatus = "completed";
+        PaymentStatus newStatus = PaymentStatus.SETTLEMENT;
 
         when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
 

@@ -1,5 +1,6 @@
 package com.finalproject.stayease.bookings.service;
 
+import com.finalproject.stayease.bookings.entity.BookingStatus;
 import com.finalproject.stayease.bookings.entity.dto.request.BookingItemReqDTO;
 import com.finalproject.stayease.bookings.entity.dto.request.BookingReqDTO;
 import com.finalproject.stayease.bookings.entity.dto.request.BookingRequestReqDTO;
@@ -18,17 +19,16 @@ import java.util.UUID;
 
 public interface BookingService {
     Booking createBooking(BookingReqDTO reqDto, Long userId, Long roomId, Double amount);
-    void createBookingItem(BookingItemReqDTO reqDto, Booking newBooking, Room room);
-    void createBookingRequest(BookingRequestReqDTO reqDto, Booking newBooking);
     Booking findById(UUID bookingId);
     BookingDTO getBookingById(UUID bookingId);
     Page<BookingDTO> getUserBookings(Long userId, String search, Pageable pageable);
-    Booking updateBooking(UUID bookingId, String bookingStatus);
+    Booking updateBooking(UUID bookingId, BookingStatus bookingStatus);
     List<BookingDTO> getTenantBookings(Long userId);
-    void userBookingReminder();
     Long countCompletedBookingsByTenantId(Long userId, Month month);
     Long countUsersTrxByTenantId(Long userId, Month month);
     List<BookingDTO> findTenantRecentCompletedBookings(Long userId);
-    List<DailySummaryDTO> getDailySummaryForMonth(Long userId, Instant startDate, Instant endDate);
+    List<DailySummaryDTO> getDailySummaryForMonth(Long userId, Long propertyId, Instant startDate, Instant endDate);
     List<PopularRoomDTO> findMostPopularBookings(Long userId);
+    Double getTotalRevenueByMonth(Long userId, Long propertyId, Month month);
+    Double getTaxByMonthAndProperty(Long userId, Long propertyId, Month month);
 }

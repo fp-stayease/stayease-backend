@@ -91,8 +91,12 @@ public class SecurityConfig {
         API_VERSION + "/rates",
         API_VERSION + "/rates/daily",
         API_VERSION + "/rates/daily/cumulative",
-        API_VERSION + "/payment/{bookingId}",
-        API_VERSION + "/transactions/notification-handler").permitAll();
+        API_VERSION + "/payment/{bookingId}"
+        ).permitAll();
+
+    auth.requestMatchers(HttpMethod.POST,
+            API_VERSION + "/transactions/notification-handler"
+    ).permitAll();
 
     // Permit access to specific POST endpoint
     auth.requestMatchers(HttpMethod.POST, API_VERSION + "/transactions").hasRole("USER");

@@ -39,25 +39,32 @@ public class TransactionController {
         return Response.successfulResponse("Updated", response);
     }
 
-    @PutMapping("/{bookingId}")
-    public ResponseEntity<?> tenantRejectTransaction(@PathVariable String bookingId) {
-        Long userId = usersService.getLoggedUser().getId();
-        var response = transactionService.tenantRejectTransaction(UUID.fromString(bookingId), userId);
-
-        return Response.successfulResponse("Transaction cancelled by tenant", response);
-    }
-
     @PutMapping("/user/{bookingId}")
-    public ResponseEntity<?> userCancelTransaction(@PathVariable String bookingId) {
+    public ResponseEntity<?> userCancelTransaction(@PathVariable String bookingId) throws MessagingException {
         Long userId = usersService.getLoggedUser().getId();
         var response = transactionService.userCancelTransaction(UUID.fromString(bookingId), userId);
 
         return Response.successfulResponse("Transaction cancelled by user", response);
     }
 
+    @PutMapping("/{bookingId}")
+    public ResponseEntity<?> tenantRejectTransaction(@PathVariable String bookingId) throws MessagingException {
+        Long userId = usersService.getLoggedUser().getId();
+        var response = transactionService.tenantRejectTransaction(UUID.fromString(bookingId), userId);
+
+        return Response.successfulResponse("Transaction cancelled by tenant", response);
+    }
+
     @PatchMapping("/{bookingId}")
-    public ResponseEntity<?> approveTransaction(@PathVariable String bookingId) {
+    public ResponseEntity<?> approveTransaction(@PathVariable String bookingId) throws MessagingException {
         var response = transactionService.approveTransaction(UUID.fromString(bookingId));
         return Response.successfulResponse("Approved transaction", response);
+    }
+
+    @PostMapping("/tenant/{bookingId}")
+    public ResponseEntity<?> tenantCancelTransaction(@PathVariable String bookingId) throws MessagingException {
+        Long userId = usersService.getLoggedUser().getId();
+        var response = transactionService.tenantCancelTransaction(UUID.fromString(bookingId), userId);
+        return Response.successfulResponse("Transaction cancelled by tenant", response);
     }
 }

@@ -1,9 +1,11 @@
 package com.finalproject.stayease.payment.service.impl;
 
 import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.bookings.entity.BookingStatus;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.payment.entity.PaymentStatus;
 import com.finalproject.stayease.payment.entity.dto.PaymentDTO;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.payment.repository.PaymentRepository;
@@ -38,7 +40,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Payment createPayment(Double amount, String paymentMethod, Booking booking, String paymentStatus) {
+    public Payment createPayment(Double amount, String paymentMethod, Booking booking, PaymentStatus paymentStatus) {
         Payment payment = new Payment();
         payment.setBooking(booking);
         payment.setPaymentMethod(paymentMethod);
@@ -49,7 +51,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Payment createPayment(Double amount, String paymentMethod, Booking booking, String paymentStatus, String bankVa) {
+    public Payment createPayment(Double amount, String paymentMethod, Booking booking, PaymentStatus paymentStatus, String bankVa, String bank) {
         Payment payment = new Payment();
         payment.setBooking(booking);
         payment.setPaymentMethod(paymentMethod);
@@ -57,6 +59,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentExpirationAt(Instant.now().plus(30, ChronoUnit.MINUTES));
         payment.setPaymentStatus(paymentStatus);
         payment.setBankVa(bankVa);
+        payment.setBankName(bank);
         return paymentRepository.save(payment);
     }
 
@@ -73,10 +76,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = findPaymentByBookingId(bookingId);
         payment.setPaymentProof(imageUrl);
-        payment.setPaymentStatus("waiting for confirmation");
-        bookingService.updateBooking(payment.getBooking().getId(), "waiting for confirmation");
+        payment.setPaymentStatus(PaymentStatus.PENDING);
+        bookingService.updateBooking(payment.getBooking().getId(), BookingStatus.WAITING_FOR_CONFIRMATION);
 
-        return paymentRepository.save(payment).toResDto();
+        return new PaymentDTO(paymentRepository.save(payment));
     }
 
     @Override
@@ -86,7 +89,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Payment updatePaymentStatus(Long paymentId, String paymentStatus) {
+    public Payment updatePaymentStatus(Long paymentId, PaymentStatus paymentStatus) {
         Payment payment = findPaymentById(paymentId);
         payment.setPaymentStatus(paymentStatus);
         return paymentRepository.save(payment);
@@ -101,7 +104,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> findExpiredPendingPayment() {
         var now = Instant.now();
-        return paymentRepository.findByStatusAndExpirationBefore("pending", now);
+        return paymentRepository.findByStatusAndExpirationBefore(PaymentStatus.PENDING, now);
     }
 
     @Override
@@ -117,7 +120,7 @@ public class PaymentServiceImpl implements PaymentService {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(tenantId);
         int year = LocalDate.now().getYear();
 
-        List<MonthlySalesDTO> salesReport = paymentRepository.getYearlySalesReport(tenant.getId(), year);
+        List<MonthlySalesDTO> salesReport = paymentRepository.getMonthlySalesReport(tenant.getId(), year);
         List<MonthlySalesDTO> fullReport = new ArrayList<>();
 
         for (int month = 1; month <= 12; month++) {

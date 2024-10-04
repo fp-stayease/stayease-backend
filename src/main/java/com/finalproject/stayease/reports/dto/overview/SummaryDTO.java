@@ -7,10 +7,12 @@ public class SummaryDTO {
     TrxDiffDTO trxDiff;
     UsersDiffDTO usersDiff;
     Long totalProperties;
+    RevenueDiffDTO revenueDiff;
 
-    public SummaryDTO(TrxDiffDTO trxDiff, UsersDiffDTO usersDiff, Long totalProperties) {
+    public SummaryDTO(TrxDiffDTO trxDiff, UsersDiffDTO usersDiff, Long totalProperties, RevenueDiffDTO revenueDiff) {
         this.trxDiff = trxDiff;
         this.usersDiff = usersDiff;
         this.totalProperties = totalProperties;
+        this.revenueDiff = revenueDiff;
     }
 }

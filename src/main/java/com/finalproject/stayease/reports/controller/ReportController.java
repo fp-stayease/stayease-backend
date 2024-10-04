@@ -3,6 +3,7 @@ package com.finalproject.stayease.reports.controller;
 import com.finalproject.stayease.bookings.entity.dto.BookingDTO;
 import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
 import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
+import com.finalproject.stayease.reports.dto.properties.PropertiesSalesDTO;
 import com.finalproject.stayease.reports.service.ReportService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
@@ -56,12 +57,11 @@ public class ReportController {
     @GetMapping("/properties")
     public ResponseEntity<Response<List<DailySummaryDTO>>> getDailySalesReportByMonth(
             @RequestParam(required = false) String month,
-            @RequestParam(required = false) String year
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) Long propertyId
     ) {
-        log.info("month: " + month);
-        log.info("year: " + year);
         Users tenant = usersService.getLoggedUser();
-        var response = reportService.propertiesDailySalesSummary(tenant, year, month);
+        var response = reportService.propertiesDailySalesSummary(tenant, propertyId, year, month);
 
         return Response.successfulResponse("Daily sales report fetched", response);
     }
@@ -71,5 +71,16 @@ public class ReportController {
         Users tenant = usersService.getLoggedUser();
         var response = reportService.popularRooms(tenant);
         return Response.successfulResponse("Popular rooms fetched", response);
+    }
+
+    @GetMapping("/properties/sales")
+    public ResponseEntity<Response<PropertiesSalesDTO>> getPropertiesSales(
+            @RequestParam(required = false) Long propertyId,
+            @RequestParam(required = false) String month
+    ) {
+        Users tenant = usersService.getLoggedUser();
+        var response = reportService.getSalesReport(tenant, propertyId, month);
+
+        return Response.successfulResponse("Sales report fetched", response);
     }
 }
