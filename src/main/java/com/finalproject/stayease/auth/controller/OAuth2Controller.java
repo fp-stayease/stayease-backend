@@ -66,21 +66,4 @@ public class OAuth2Controller {
     return Response.successfulResponse(200, "Successfully registered user!",
         googleVerifierService.registerOAuth2User(requestDTO));
   }
-
-//  private void addRefreshTokenCookie(HttpServletResponse response, TokenResponseDto tokenResponseDto) {
-//    Cookie cookie = new Cookie("refresh_token", tokenResponseDto.getRefreshToken());
-//    cookie.setHttpOnly(true);
-//    cookie.setSecure(true);
-//    cookie.setPath("/");
-//    cookie.setMaxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS);
-//    response.addCookie(cookie);
-//    response.setHeader("Authorization", "Bearer " + tokenResponseDto.getAccessToken());
-//  }
-
-  // @PostMapping("/exchange-code")
-//  public ResponseEntity<Response<AuthResponseDto>> exchangeCode(@RequestBody CodeExchangeRequestDTO requestDTO) {
-//    UserTokenPair userTokenPair = oneTimeCodeService.getAndRemoveTokens(requestDTO.getCode());
-//    AuthResponseDto responseDto = new AuthResponseDto(userTokenPair.getUser(), new TokenResponseDto(userTokenPair.getAccessToken(), userTokenPair.getRefreshToken()));
-//    return Response.successfulResponse(200, "OAuth2 sign in successful!", responseDto);
-//  }
 }

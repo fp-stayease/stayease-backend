@@ -4,6 +4,7 @@ import com.finalproject.stayease.cloudinary.service.CloudinaryService;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.transaction.Transactional;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Data;
@@ -22,17 +23,21 @@ public class UsersImageCleanupService {
   private final UsersService usersService;
 
   @SneakyThrows
-//  @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}")
-//  @Scheduled(cron = "0 */1 * * * ?")
+  @Scheduled(cron = "${cron.cleanup.cloudinary:0 0 * * * ?}")
+
   public void cleanupOrphanedImages() {
+    log.info("Cleaning up users' orphaned images...");
+
     Set<String> allUsersImagesPublicIds = extractPublicIdsFromUrls(getAllUsersImages());
     log.info("All users images public IDs: {}", allUsersImagesPublicIds);
     Set<String> allImagesInCloudinaryPublicIds =
         extractPublicIdsFromUrls(new HashSet<>(cloudinaryService.findAllImagesFromFolder("users/")));
     log.info("All images in User's Folder Cloudinary public IDs: {}", allImagesInCloudinaryPublicIds == null ? "null" : allImagesInCloudinaryPublicIds.isEmpty() ? "empty" : allImagesInCloudinaryPublicIds);
 
+    assert allImagesInCloudinaryPublicIds != null;
     allImagesInCloudinaryPublicIds.removeAll(allUsersImagesPublicIds);
-    log.info("Orphaned images in User's Folder Cloudinary public IDs: {}", allImagesInCloudinaryPublicIds == null ? "null" : allImagesInCloudinaryPublicIds.isEmpty() ? "empty" : allImagesInCloudinaryPublicIds);
+    log.info("Orphaned images in User's Folder Cloudinary public IDs: {}",
+        allImagesInCloudinaryPublicIds.isEmpty() ? "empty" : allImagesInCloudinaryPublicIds);
 
     for (String imageUrl : allImagesInCloudinaryPublicIds) {
       cloudinaryService.deleteImage(imageUrl);
@@ -40,7 +45,11 @@ public class UsersImageCleanupService {
   }
 
   private Set<String> getAllUsersImages() {
-    return new HashSet<>(usersService.findAllAvatars());
+    List<String> allUsersAvatars = usersService.findAllAvatars()
+        .stream().filter(avatar -> avatar != null && !avatar.isEmpty())
+        .filter(avatar -> avatar.contains("res.cloudinary.com")).collect(Collectors.toList());
+    log.info("All users avatars: {}", allUsersAvatars);
+    return new HashSet<>(allUsersAvatars);
   }
 
   private Set<String> extractPublicIdsFromUrls(Set<String> urls) {

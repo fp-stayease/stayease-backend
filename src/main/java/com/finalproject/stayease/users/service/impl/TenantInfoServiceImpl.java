@@ -1,6 +1,6 @@
 package com.finalproject.stayease.users.service.impl;
 
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.users.TenantInfoNotFoundException;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.dto.TenantInfoDTO;
@@ -30,13 +30,13 @@ public class TenantInfoServiceImpl implements TenantInfoService {
   @Override
   public TenantInfo findTenantByUserId(Long userId) {
       return tenantInfoRepository.findByUserId(userId)
-            .orElseThrow(() -> new DataNotFoundException("Tenant not found"));
+            .orElseThrow(() -> new TenantInfoNotFoundException("Tenant not found"));
   }
 
   @Override
   public TenantInfoDTO getTenantDetail(Long tenantId) {
     var tenant = tenantInfoRepository.findById(tenantId)
-            .orElseThrow(() -> new DataNotFoundException("Tenant not found"));
-    return new TenantInfoDTO(tenant);
+            .orElseThrow(() -> new TenantInfoNotFoundException("Tenant not found"));
+      return new TenantInfoDTO(tenant);
   }
 }

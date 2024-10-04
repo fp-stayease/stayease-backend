@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.finalproject.stayease.auth.service.RegisterRedisService;
-import com.finalproject.stayease.exceptions.DuplicateEntryException;
+import com.finalproject.stayease.exceptions.utils.DuplicateEntryException;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.Users;

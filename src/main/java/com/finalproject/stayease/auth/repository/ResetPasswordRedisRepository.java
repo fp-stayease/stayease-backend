@@ -1,6 +1,6 @@
 package com.finalproject.stayease.auth.repository;
 
-import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
+import com.finalproject.stayease.exceptions.utils.InvalidTokenException;
 import jakarta.transaction.Transactional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,7 @@ public class ResetPasswordRedisRepository {
   public void blacklist(String email, String token) {
     String key = RESET_PASSWORD_KEY_PREFIX + token;
     if (getJwtKey(token) == null) {
-      throw new TokenDoesNotExistException("No token found for key " + key);
+      throw new InvalidTokenException("No token found for key " + key);
     }
     String blacklistKey = RESET_PASSWORD_KEY_PREFIX + BLACKLIST_PREFIX + token;
     String emailKey = RESET_PASSWORD_KEY_PREFIX + EMAIL_PREFIX + BLACKLIST_PREFIX + email;

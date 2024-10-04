@@ -1,4 +1,4 @@
-package com.finalproject.stayease.exceptions;
+package com.finalproject.stayease.exceptions.utils;
 
 public class DuplicateEntryException extends RuntimeException {
 

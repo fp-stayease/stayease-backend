@@ -5,11 +5,13 @@ import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListing
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.users.entity.Users;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,7 +25,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
   List<Property> findByTenantAndDeletedAtIsNull(Users tenant);
 
-  @Query("SELECT DISTINCT p.city FROM Property p")
+  @Query("SELECT DISTINCT p.city FROM Property p WHERE p.deletedAt IS NULL")
   List<String> findDistinctCities();
 
   @Query("""
@@ -175,112 +177,14 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       @Param("minPrice") BigDecimal minPrice,
       @Param("maxPrice") BigDecimal maxPrice
   );
+    @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId")
+    Long countPropertiesByTenantId(@Param("tenantId") Long tenantId);
 
-  @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId")
-  Long countPropertiesByTenantId(@Param("tenantId") Long tenantId);
-
-//  @Query("""
-//          SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
-//              p.id, p.tenant.tenantInfo.businessName, p.name, p.description, p.imageUrl, p.address, p.city, p.country, pc.name,
-//              p.longitude, p.latitude,
-//              (SELECT MIN(r.basePrice)
-//               FROM Room r
-//               WHERE r.property = p
-//               AND r.deletedAt IS NULL
-//               AND NOT EXISTS (
-//                   SELECT 1
-//                   FROM RoomAvailability ra
-//                   WHERE ra.room = r
-//                   AND ra.startDate <= :endDate
-//                   AND ra.endDate >= :startDate
-//                   AND ra.isAvailable = false
-//               )
-//               ),
-//              NULL
-//              )
-//          FROM Property p
-//          JOIN p.category pc
-//          WHERE p.deletedAt IS NULL
-//          AND (:city IS NULL OR p.city = :city)
-//          AND (:categoryId IS NULL OR pc.id = :categoryId)
-//          AND (:searchTerm IS NULL OR CAST(LOWER(p.name) AS string) LIKE CONCAT('%', CAST(:searchTerm AS string), '%'))
-//          AND EXISTS (
-//              SELECT 1
-//              FROM Room r
-//              WHERE r.property = p
-//              AND r.deletedAt IS NULL
-//              AND NOT EXISTS (
-//                  SELECT 1
-//                  FROM RoomAvailability ra
-//                  WHERE ra.room = r
-//                  AND ra.startDate <= :endDate
-//                  AND ra.endDate >= :startDate
-//                  AND ra.isAvailable = false
-//              )
-//          )
-//      """)
-//  List<PropertyListingDTO> findAvailableProperties(
-//      @Param("startDate") LocalDate startDate,
-//      @Param("endDate") LocalDate endDate,
-//      @Param("city") String city,
-//      @Param("categoryId") Long categoryId,
-//      @Param("searchTerm") String searchTerm
-//  );
-
-  // Quarantine
-//  @Query("""
-//    SELECT NEW com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO(
-//        p.id, p.name, p.description, p.imageUrl, p.city, pc.name,
-//        p.longitude, p.latitude,
-//        (SELECT MIN(r.basePrice)
-//         FROM Room r
-//         WHERE r.property = p
-//         AND r.deletedAt IS NULL
-//         AND NOT EXISTS (
-//             SELECT 1
-//             FROM RoomAvailability ra
-//             WHERE ra.room = r
-//             AND ra.startDate <= :endDate
-//             AND ra.endDate >= :startDate
-//             AND ra.isAvailable = false
-//         )),
-//        CASE
-//            WHEN :latitude IS NOT NULL AND :longitude IS NOT NULL
-//            THEN ST_Distance(p.location, ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326))
-//            ELSE NULL
-//        END
-//    )
-//    FROM Property p
-//    JOIN p.category pc
-//    WHERE p.deletedAt IS NULL
-//    AND (:city IS NULL OR p.city = :city)
-//    AND (:categoryId IS NULL OR pc.id = :categoryId)
-//    AND (:searchTerm IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
-//    AND EXISTS (
-//        SELECT 1
-//        FROM Room r
-//        WHERE r.property = p
-//        AND r.deletedAt IS NULL
-//        AND NOT EXISTS (
-//            SELECT 1
-//            FROM RoomAvailability ra
-//            WHERE ra.room = r
-//            AND ra.startDate <= :endDate
-//            AND ra.endDate >= :startDate
-//            AND ra.isAvailable = false
-//        )
-//    )
-//    AND (:radius IS NULL OR :latitude IS NULL OR :longitude IS NULL OR
-//             function('ST_DWithin', p.location, function('ST_SetSRID', function('ST_MakePoint', :longitude, :latitude), 4326), :radius) = true)
-//""")
-//  List<PropertyListingDTO> findAvailableProperties(
-//      @Param("startDate") LocalDate startDate,
-//      @Param("endDate") LocalDate endDate,
-//      @Param("city") String city,
-//      @Param("categoryId") Long categoryId,
-//      @Param("searchTerm") String searchTerm,
-//      @Param("longitude") Double longitude,
-//      @Param("latitude") Double latitude,
-//      @Param("radius") Double radius
-//  );
+  @Modifying
+  @Query("""
+      DELETE FROM Property p
+      WHERE p.deletedAt IS NOT NULL
+      AND p.deletedAt > :timestamp
+      """)
+  int deleteAllDeletedPropertiesOlderThan(@Param("timestamp") Instant timestamp);
 }

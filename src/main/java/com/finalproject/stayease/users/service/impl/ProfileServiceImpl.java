@@ -1,6 +1,8 @@
 package com.finalproject.stayease.users.service.impl;
 
-import com.finalproject.stayease.exceptions.InvalidRequestException;
+
+import com.finalproject.stayease.exceptions.users.TenantInfoNotFoundException;
+import com.finalproject.stayease.exceptions.users.UserNotFoundException;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.dto.UpdateTenantInfoRequestDTO;
@@ -60,10 +62,9 @@ public class ProfileServiceImpl implements ProfileService {
 
   private TenantInfo validateTenant(Users tenant) {
     if (tenant.getUserType() != Users.UserType.TENANT) {
-      throw new InvalidRequestException("User is not a tenant");
+      throw new UserNotFoundException("User is not a tenant");
     }
     return tenantInfoService.findByTenant(tenant).orElseThrow(
-        // TODO : make TenantInfoNotFound
-        () -> new RuntimeException("Tenant info not found for tenant: " + tenant.getEmail()));
+        () -> new TenantInfoNotFoundException("Tenant info not found for tenant: " + tenant.getEmail()));
   }
 }

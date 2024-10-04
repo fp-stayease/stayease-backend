@@ -8,7 +8,7 @@ import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
-import com.finalproject.stayease.exceptions.TokenDoesNotExistException;
+import com.finalproject.stayease.exceptions.utils.InvalidTokenException;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
 import com.finalproject.stayease.responses.Response;
@@ -86,7 +86,7 @@ public class AuthController {
   @PostMapping("/refresh")
   public ResponseEntity<Response<TokenResponseDto>> refreshTokens(@RequestBody String refreshToken, HttpServletResponse response) {
     if (refreshToken == null) {
-      throw new TokenDoesNotExistException("No refresh token found!");
+      throw new InvalidTokenException("No refresh token found!");
     }
     String email = jwtService.extractSubjectFromToken(refreshToken);
     if (jwtService.isRefreshTokenValid(refreshToken, email)) {

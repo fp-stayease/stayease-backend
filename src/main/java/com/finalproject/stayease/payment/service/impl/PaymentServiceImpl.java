@@ -4,7 +4,7 @@ import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.bookings.entity.BookingStatus;
 import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
-import com.finalproject.stayease.exceptions.DataNotFoundException;
+import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
 import com.finalproject.stayease.payment.entity.PaymentStatus;
 import com.finalproject.stayease.payment.entity.dto.PaymentDTO;
 import com.finalproject.stayease.payment.entity.Payment;
