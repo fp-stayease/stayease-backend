@@ -220,9 +220,6 @@ public class TransactionServiceImpl implements TransactionService {
         if (!Objects.equals(booking.getTenant().getUser().getId(), user.getId())) {
             throw new RuntimeException("This booking does not belong to this tenant");
         }
-        if (payment.getPaymentProof() != null) {
-            throw new RuntimeException("This booking already has a payment proof");
-        }
 
         var rejectedBooking = bookingService.updateBooking(bookingId, BookingStatus.IN_PROGRESS);
         var rejectedPayment = paymentService.updatePaymentStatus(payment.getId(), PaymentStatus.PENDING);
