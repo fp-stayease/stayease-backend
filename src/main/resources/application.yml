@@ -72,6 +72,8 @@ spring:
           auth: true
           starttls:
             enable: true
+server:
+  port: ${PORT:8080}
 
 midtrans:
   server:

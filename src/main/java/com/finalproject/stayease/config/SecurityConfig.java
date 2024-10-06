@@ -88,8 +88,12 @@ public class SecurityConfig {
         API_VERSION + "/rates",
         API_VERSION + "/rates/daily",
         API_VERSION + "/rates/daily/cumulative",
-        API_VERSION + "/payment/{bookingId}",
-        API_VERSION + "/transactions/notification-handler").permitAll();
+        API_VERSION + "/payment/{bookingId}"
+        ).permitAll();
+
+    auth.requestMatchers(HttpMethod.POST,
+            API_VERSION + "/transactions/notification-handler"
+    ).permitAll();
 
     // Permit access to specific POST endpoint
     auth.requestMatchers(HttpMethod.POST, API_VERSION + "/transactions").hasRole("USER");
@@ -111,7 +115,8 @@ public class SecurityConfig {
         API_VERSION + "/properties/**",
         API_VERSION + "/profile/tenant",
         API_VERSION + "/bookings/tenant",
-        API_VERSION + "/rates/auto/**").hasRole("TENANT");
+        API_VERSION + "/rates/auto/**",
+        API_VERSION + "/reports/**").hasRole("TENANT");
 
     // Permit all access to authentication and registration endpoints
     auth.requestMatchers(

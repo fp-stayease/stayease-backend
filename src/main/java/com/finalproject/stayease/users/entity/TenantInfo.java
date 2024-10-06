@@ -1,6 +1,5 @@
 package com.finalproject.stayease.users.entity;
 
-import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import com.finalproject.stayease.bookings.entity.Booking;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -75,15 +74,5 @@ public class TenantInfo {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = Instant.now();
-  }
-
-  public TenantInfoResDto toResDto() {
-    var resDto = new TenantInfoResDto();
-    resDto.setId(this.id);
-    resDto.setBusinessName(this.businessName);
-    resDto.setUser(this.user.toResDto());
-    resDto.setRegisterDate(this.registrationDate);
-
-    return resDto;
   }
 }

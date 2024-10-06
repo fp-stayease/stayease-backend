@@ -1,5 +1,6 @@
 package com.finalproject.stayease.payment.controller;
 
+import com.finalproject.stayease.payment.entity.dto.PaymentDTO;
 import com.finalproject.stayease.payment.service.PaymentService;
 import com.finalproject.stayease.responses.Response;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class PaymentController {
 
     @GetMapping("/{bookingId}")
     public ResponseEntity<?> getPaymentByBookingId(@PathVariable String bookingId) {
-        var response = paymentService.findPaymentByBookingId(UUID.fromString(bookingId)).toResDto();
-        return Response.successfulResponse(HttpStatus.OK.value(), "Payment found", response);
+        var response = paymentService.findPaymentByBookingId(UUID.fromString(bookingId));
+        return Response.successfulResponse(HttpStatus.OK.value(), "Payment found", new PaymentDTO(response));
     }
 }

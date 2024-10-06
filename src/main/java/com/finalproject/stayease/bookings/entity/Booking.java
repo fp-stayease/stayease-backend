@@ -39,11 +39,21 @@ public class Booking {
     @JoinColumn(name = "property_id")
     private Property property;
 
+    @Column(name = "total_base_price")
+    private Double totalBasePrice;
+
     @Column(name = "total_price")
     private Double totalPrice;
 
+    @Column(name = "service_fee")
+    private Double serviceFee;
+
+    @Column(name = "tax_fee")
+    private Double taxFee;
+
     @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status;
 
     @Column(name = "total_adults")
     private int totalAdults;
@@ -95,26 +105,5 @@ public class Booking {
     @PreRemove
     public void preRemove() {
         this.deletedAt = Instant.now();
-    }
-
-    public BookingDTO toResDto() {
-        BookingDTO resDto = new BookingDTO();
-        resDto.setId(this.id);
-        resDto.setUser(this.user.toResDto());
-        resDto.setTenant(this.tenant.toResDto());
-        resDto.setProperty(new PropertyDTO(this.property));
-        resDto.setCreatedAt(this.createdAt);
-        resDto.setStatus(this.status);
-        resDto.setTotalPrice(this.totalPrice);
-        resDto.setBookingItems(this.bookingItems.stream().map(BookingItem::toResDto).toList());
-        resDto.setBookingRequest(this.bookingRequest.toResDto());
-        resDto.setPayment(this.payment.toResDto());
-        resDto.setCheckInDate(this.checkInDate);
-        resDto.setCheckOutDate(this.checkOutDate);
-        resDto.setTotalAdults(this.totalAdults);
-        resDto.setTotalChildren(this.totalChildren);
-        resDto.setTotalInfants(this.totalInfants);
-
-        return resDto;
     }
 }

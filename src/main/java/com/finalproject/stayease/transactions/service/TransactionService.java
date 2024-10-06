@@ -11,8 +11,8 @@ import java.util.UUID;
 public interface TransactionService {
     TransactionDTO createTransaction(TransactionReqDTO reqDto, Long userId, Long roomId);
     TransactionDTO notificationHandler(NotificationReqDTO reqDto) throws IOException, InterruptedException, MessagingException;
-    TransactionDTO userCancelTransaction(UUID bookingId, Long userId);
-    TransactionDTO tenantRejectTransaction(UUID bookingId, Long userId);
-    void autoCancelTransaction();
-    TransactionDTO approveTransaction(UUID bookingId);
+    TransactionDTO userCancelTransaction(UUID bookingId, Long userId) throws MessagingException;
+    TransactionDTO tenantRejectTransaction(UUID bookingId, Long userId) throws MessagingException;
+    TransactionDTO approveTransaction(UUID bookingId) throws MessagingException;
+    TransactionDTO tenantCancelTransaction(UUID bookingId, Long userId) throws MessagingException;
 }

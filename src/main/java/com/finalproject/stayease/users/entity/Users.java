@@ -1,7 +1,6 @@
 package com.finalproject.stayease.users.entity;
 
 import jakarta.persistence.CascadeType;
-import com.finalproject.stayease.users.dto.UsersResDto;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyCategory;
@@ -115,17 +114,5 @@ public class Users {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = Instant.now();
-  }
-
-  public UsersResDto toResDto() {
-    var resDto = new UsersResDto();
-    resDto.setId(this.id);
-    resDto.setEmail(this.email);
-    resDto.setFirstName(this.firstName);
-    resDto.setLastName(this.lastName);
-    resDto.setPhoneNumber(this.phoneNumber);
-    resDto.setUserType(this.userType);
-    resDto.setCreatedAt(this.createdAt);
-    return resDto;
   }
 }

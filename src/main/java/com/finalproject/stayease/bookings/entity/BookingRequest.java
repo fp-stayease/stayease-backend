@@ -61,14 +61,4 @@ public class BookingRequest {
     public void preRemove() {
         this.deletedAt = Instant.now();
     }
-
-    public BookingRequestDTO toResDto() {
-        BookingRequestDTO resDto = new BookingRequestDTO();
-        resDto.setCheckInTime(this.checkInTime);
-        resDto.setCheckOutTime(this.checkOutTime);
-        resDto.setNonSmoking(this.nonSmoking);
-        resDto.setOther(this.other);
-
-        return resDto;
-    }
 }
