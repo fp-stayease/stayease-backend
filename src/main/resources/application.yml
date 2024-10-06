@@ -72,6 +72,7 @@ spring:
           auth: true
           starttls:
             enable: true
+
 server:
   port: ${PORT:8080}
 
@@ -117,6 +118,7 @@ token:
     access: 3600 # 1 hour
     refresh: 2592000 # 30 days
 
-server:
-  address: 0.0.0.0
-  port: 8080
+path:
+  backend: ${BASE_URL}
+  api-version: ${API_VERSION}
+  frontend: ${FRONTEND_URL}
