@@ -72,6 +72,7 @@ spring:
           auth: true
           starttls:
             enable: true
+
 server:
   port: ${PORT:8080}
 
@@ -105,15 +106,18 @@ cron:
     stale-data: 0 0 */12 * * ?
   auto-rates:
     weekly: 0 0 0 * * SUN
-    increment: 0 0 * * * ?
+    increment: 0 0 */4 * * ?
+
 rsa:
   private-key: ${PRIVATE_KEY}
   public-key: ${PUBLIC_KEY}
+
 token:
   expiration:
     hours: 1
     access: 3600 # 1 hour
     refresh: 2592000 # 30 days
+
 path:
   backend: ${BASE_URL}
   api-version: ${API_VERSION}
