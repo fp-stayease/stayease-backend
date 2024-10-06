@@ -1,35 +1,35 @@
 package com.finalproject.stayease.auth.controller;
 
-import static com.finalproject.stayease.util.SessionCookieUtil.invalidateSessionAndCookie;
+import static com.finalproject.stayease.auth.util.SessionCookieUtil.addRefreshTokenCookie;
+import static com.finalproject.stayease.auth.util.SessionCookieUtil.extractRefreshToken;
+import static com.finalproject.stayease.auth.util.SessionCookieUtil.invalidateSessionAndCookie;
 
 import com.finalproject.stayease.auth.model.dto.AuthResponseDto;
+import com.finalproject.stayease.auth.model.dto.request.EmailRequestDTO;
 import com.finalproject.stayease.auth.model.dto.LoginRequestDTO;
+import com.finalproject.stayease.auth.model.dto.request.TokenRequestDTO;
 import com.finalproject.stayease.auth.model.dto.TokenResponseDto;
 import com.finalproject.stayease.auth.service.AuthService;
 import com.finalproject.stayease.auth.service.JwtService;
 import com.finalproject.stayease.auth.service.impl.UserDetailsServiceImpl;
 import com.finalproject.stayease.exceptions.utils.InvalidTokenException;
+import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
-import com.finalproject.stayease.responses.Response;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Arrays;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Data
 @RestController
@@ -43,8 +43,6 @@ public class AuthController {
   private final JwtService jwtService;
   private final HttpSession session;
 
-  @Value("${token.expiration.refresh:2592000}")
-  private int REFRESH_TOKEN_EXPIRY_IN_SECONDS;
 
   @GetMapping("/status")
   public ResponseEntity<Response<AuthResponseDto>> getLoggedInUser(HttpServletRequest request) {
@@ -75,24 +73,29 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<Response<String>> logout(HttpServletRequest request, HttpServletResponse response,
-      @RequestBody String email) {
+      @RequestBody EmailRequestDTO requestDTO) {
     log.info("Logging out user");
-    authService.logout(email);
+    authService.logout(requestDTO.getEmail());
     invalidateSessionAndCookie(request, response);
+
     log.info("Logged out successfully!");
     return Response.successfulResponse("Logged out successfully!");
   }
 
   @PostMapping("/refresh")
-  public ResponseEntity<Response<TokenResponseDto>> refreshTokens(@RequestBody String refreshToken, HttpServletResponse response) {
+  public ResponseEntity<Response<TokenResponseDto>> refreshBothTokens(@RequestBody TokenRequestDTO refreshToken,
+      HttpServletResponse response) {
     if (refreshToken == null) {
       throw new InvalidTokenException("No refresh token found!");
     }
-    String email = jwtService.extractSubjectFromToken(refreshToken);
-    if (jwtService.isRefreshTokenValid(refreshToken, email)) {
-      log.info("Refreshing token for email: " + email);
+
+    String email = jwtService.extractSubjectFromToken(refreshToken.getToken());
+    if (jwtService.isRefreshTokenValid(refreshToken.getToken(), email)) {
+
+      log.info("Refreshing token for email: {}", email);
       TokenResponseDto tokenResponseDto = authService.generateTokenFromEmail(email);
       addRefreshTokenCookie(response, tokenResponseDto);
+
       log.info("Successfully refreshed token!");
       return Response.successfulResponse(HttpStatus.OK.value(), "Successfully refreshed token!", tokenResponseDto);
     } else {
@@ -101,13 +104,15 @@ public class AuthController {
   }
 
   @PostMapping("/refresh-access")
-  public ResponseEntity<Response<TokenResponseDto>> refreshAccessToken(@RequestBody String refreshToken
+  public ResponseEntity<Response<TokenResponseDto>> refreshAccessToken(@RequestBody TokenRequestDTO refreshToken
   , HttpServletResponse response) {
-    String email = jwtService.extractSubjectFromToken(refreshToken);
-    if (jwtService.isRefreshTokenValid(refreshToken, email)) {
-      log.info("Refreshing access token for email: " + email);
-      TokenResponseDto tokenResponseDto = authService.refreshAccessToken(refreshToken);
+    String email = jwtService.extractSubjectFromToken(refreshToken.getToken());
+    if (jwtService.isRefreshTokenValid(refreshToken.getToken(), email)) {
+
+      log.info("Refreshing access token for email: {}", email);
+      TokenResponseDto tokenResponseDto = authService.refreshAccessToken(refreshToken.getToken());
       addRefreshTokenCookie(response, tokenResponseDto);
+
       log.info("Successfully refreshed access token!");
       return Response.successfulResponse(HttpStatus.OK.value(), "Successfully refreshed access token!",
           tokenResponseDto);
@@ -124,32 +129,4 @@ public class AuthController {
     return null;
   }
 
-  private void authenticateUser(HttpServletRequest request, String email) {
-    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-  }
-
-  private void addRefreshTokenCookie(HttpServletResponse response, TokenResponseDto tokenResponseDto) {
-    Cookie cookie = new Cookie("refresh_token", tokenResponseDto.getRefreshToken());
-    cookie.setHttpOnly(true);
-    cookie.setSecure(true);
-    cookie.setPath("/");
-    cookie.setMaxAge(REFRESH_TOKEN_EXPIRY_IN_SECONDS);
-    response.addCookie(cookie);
-    response.setHeader("Authorization", "Bearer " + tokenResponseDto.getAccessToken());
-  }
-
-  private String extractRefreshToken(HttpServletRequest request) {
-    Cookie[] cookies = request.getCookies();
-    if (cookies != null) {
-      return Arrays.stream(cookies)
-          .filter(cookie -> "refresh_token".equals(cookie.getName()))
-          .findFirst()
-          .map(Cookie::getValue)
-          .orElse(null);
-    }
-    return null;
-  }
 }

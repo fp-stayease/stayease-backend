@@ -4,18 +4,22 @@ import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistratio
 import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
 import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
 import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
+import com.finalproject.stayease.auth.model.dto.request.TokenRequestDTO;
+import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users.UserType;
 import com.finalproject.stayease.users.service.RegisterService;
-import com.finalproject.stayease.responses.Response;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/v1/register")
@@ -35,7 +39,8 @@ public class RegistrationController {
   }
 
   @PostMapping("/check-token")
-  public ResponseEntity<Response<Boolean>> checkToken(@RequestBody String token) {
+  public ResponseEntity<Response<Boolean>> checkToken(@RequestBody TokenRequestDTO tokenRequestDTO) {
+    String token = tokenRequestDTO.getToken();
     String normalizedToken = token.replaceAll("=+$", "");
     boolean isValid = registerService.checkToken(normalizedToken);
     log.info("Token: {}, isValid: {}", normalizedToken, isValid);
