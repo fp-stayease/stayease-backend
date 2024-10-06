@@ -49,7 +49,7 @@ public class RoomAvailability {
 
   @ColumnDefault("false")
   @Column(name = "is_manual")
-  private Boolean isManual;
+  private Boolean isManual = false;
 
   @PrePersist
   protected void onCreate() {
