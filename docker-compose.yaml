@@ -3,6 +3,8 @@ services:
     image: stayease-app:latest
     container_name: stayease_app
     restart: always
+    environment:
+      allowed_origins: ${FE_URL}
     env_file:
       - .env
     ports:
@@ -42,3 +44,7 @@ services:
 volumes:
   db-data:
   redis-data:
+
+networks:
+  stayease_default:
+    name: stayease_default
