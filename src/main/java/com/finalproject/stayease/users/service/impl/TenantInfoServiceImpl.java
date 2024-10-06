@@ -1,9 +1,9 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.exceptions.users.TenantInfoNotFoundException;
-import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.dto.TenantInfoDTO;
 import com.finalproject.stayease.users.repository.TenantInfoRepository;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import jakarta.transaction.Transactional;
@@ -34,18 +34,9 @@ public class TenantInfoServiceImpl implements TenantInfoService {
   }
 
   @Override
-  public TenantInfoResDto getTenantDetail(Long tenantId) {
+  public TenantInfoDTO getTenantDetail(Long tenantId) {
     var tenant = tenantInfoRepository.findById(tenantId)
             .orElseThrow(() -> new TenantInfoNotFoundException("Tenant not found"));
-    return toResDto(tenant);
-  }
-
-  public TenantInfoResDto toResDto(TenantInfo tenantInfo) {
-    TenantInfoResDto resDto = new TenantInfoResDto();
-    resDto.setId(tenantInfo.getId());
-    resDto.setUser(tenantInfo.getUser().toResDto());
-    resDto.setBusinessName(tenantInfo.getBusinessName());
-    resDto.setRegisterDate(tenantInfo.getRegistrationDate());
-    return resDto;
+      return new TenantInfoDTO(tenant);
   }
 }

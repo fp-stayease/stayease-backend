@@ -1,5 +1,6 @@
 package com.finalproject.stayease.bookings.service.impl;
 
+import com.finalproject.stayease.bookings.entity.BookingStatus;
 import com.finalproject.stayease.bookings.entity.dto.request.BookingItemReqDTO;
 import com.finalproject.stayease.bookings.entity.dto.request.BookingReqDTO;
 import com.finalproject.stayease.bookings.entity.dto.request.BookingRequestReqDTO;
@@ -14,14 +15,19 @@ import com.finalproject.stayease.bookings.service.BookingService;
 import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
 import com.finalproject.stayease.mail.model.MailTemplate;
 import com.finalproject.stayease.mail.service.MailService;
+import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.Room;
+import com.finalproject.stayease.property.service.PropertyService;
 import com.finalproject.stayease.property.service.RoomAvailabilityService;
 import com.finalproject.stayease.property.service.RoomService;
+import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
+import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.TenantInfoService;
 import com.finalproject.stayease.users.service.UsersService;
 import lombok.Data;
+import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,12 +35,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Data
+@Log
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingItemRepository bookingItemRepository;
@@ -44,6 +57,9 @@ public class BookingServiceImpl implements BookingService {
     private final RoomService roomService;
     private final MailService mailService;
     private final RoomAvailabilityService roomAvailabilityService;
+    private final PropertyService propertyService;
+
+    // General Booking Section
 
     @Override
     @Transactional
@@ -58,8 +74,7 @@ public class BookingServiceImpl implements BookingService {
         var availableRoom = roomAvailabilityService.setUnavailability(room.getId(), reqDto.getCheckInDate(), reqDto.getCheckOutDate());
 
         newBooking.setUser(user);
-        newBooking.setTotalPrice(amount);
-        newBooking.setStatus("In progress");
+        newBooking.setStatus(BookingStatus.IN_PROGRESS);
         newBooking.setCheckInDate(reqDto.getCheckInDate());
         newBooking.setCheckOutDate(reqDto.getCheckOutDate());
         newBooking.setTotalAdults(reqDto.getTotalAdults());
@@ -67,6 +82,15 @@ public class BookingServiceImpl implements BookingService {
         newBooking.setTotalInfants(reqDto.getTotalInfants());
         newBooking.setTenant(tenant);
         newBooking.setProperty(property);
+
+        Double serviceFee = amount * 0.10;
+        Double taxFee = amount * 0.11;
+        Double finalPrice = serviceFee + taxFee + amount;
+
+        newBooking.setTotalBasePrice(amount);
+        newBooking.setTotalPrice(finalPrice);
+        newBooking.setTaxFee(taxFee);
+        newBooking.setServiceFee(serviceFee);
 
         bookingRepository.save(newBooking);
 
@@ -79,8 +103,7 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.save(newBooking);
     }
 
-    @Override
-    public void createBookingItem(BookingItemReqDTO bookingItemDto, Booking newBooking, Room room) {
+    private void createBookingItem(BookingItemReqDTO bookingItemDto, Booking newBooking, Room room) {
         BookingItem bookingItem = new BookingItem();
         bookingItem.setBooking(newBooking);
         bookingItem.setRoom(room);
@@ -91,8 +114,7 @@ public class BookingServiceImpl implements BookingService {
         bookingItemRepository.save(bookingItem);
     }
 
-    @Override
-    public void createBookingRequest(BookingRequestReqDTO reqDto, Booking newBooking) {
+    private void createBookingRequest(BookingRequestReqDTO reqDto, Booking newBooking) {
         BookingRequest bookingRequest = new BookingRequest();
         bookingRequest.setBooking(newBooking);
         if (reqDto.getCheckInTime() != null) {
@@ -118,23 +140,26 @@ public class BookingServiceImpl implements BookingService {
     public BookingDTO getBookingById(UUID bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new DataNotFoundException("Booking not found"));
-        return booking.toResDto();
+        return new BookingDTO(booking);
     }
 
     @Override
-    public Page<BookingDTO> getUserBookings(Long userId, String search, Pageable pageable) {
-        // TO DO: find and validate user
-        var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
-
-        return bookingRepository.findByUserIdAndStatusNotExpired(user.getId(), pageable).map(Booking::toResDto);
-    }
-
-    @Override
-    public Booking updateBooking(UUID bookingId, String bookingStatus) {
+    public Booking updateBooking(UUID bookingId, BookingStatus bookingStatus) {
         Booking booking = findById(bookingId);
         booking.setStatus(bookingStatus);
         return bookingRepository.save(booking);
     }
+
+    // User Booking Section
+
+    @Override
+    public Page<BookingDTO> getUserBookings(Long userId, String search, Pageable pageable) {
+        var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
+
+        return bookingRepository.findByUserIdAndStatusNotExpired(user.getId(), pageable).map(BookingDTO::new);
+    }
+
+    // Tenant Booking Section
 
     @Override
     public List<BookingDTO> getTenantBookings(Long userId) {
@@ -142,10 +167,9 @@ public class BookingServiceImpl implements BookingService {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
 
-        return bookingRepository.findByTenantId(tenant.getId(), sort).stream().map(Booking::toResDto).toList();
+        return bookingRepository.findByTenantId(tenant.getId(), sort).stream().map(BookingDTO::new).toList();
     }
 
-    @Override
     @Scheduled(cron = "0 0 7 * * ?")
     public void userBookingReminder() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
@@ -159,5 +183,97 @@ public class BookingServiceImpl implements BookingService {
             MailTemplate template = new MailTemplate(user.getEmail(), "Booking Reminder", message);
             mailService.sendMail(template);
         }
+    }
+
+    @Override
+    public Long countCompletedBookingsByTenantId(Long userId, Month month) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingRepository.countCompletedBookingsByTenantId(tenant.getId(), month.getValue());
+    }
+
+    @Override
+    public Long countUsersTrxByTenantId(Long userId, Month month) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingRepository.countUserBookingsByTenantId(tenant.getId(), month.getValue());
+    }
+
+    @Override
+    public List<BookingDTO> findTenantRecentCompletedBookings(Long userId) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingRepository.findRecentCompletedBookingsByTenantId(tenant.getId())
+                .stream().map(BookingDTO::new).toList();
+    }
+
+    @Override
+    public List<DailySummaryDTO> getDailySummaryForMonth(Long userId, Long propertyId, Instant startDate, Instant endDate) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        if (propertyId != null) {
+            propertyService.findPropertyById(propertyId)
+                    .orElseThrow(() -> new DataNotFoundException("Property not found"));
+        }
+
+        List<Object[]> results = bookingRepository.getDailySummaryForMonth(tenant.getId(), propertyId, startDate, endDate);
+        return results.stream()
+                .map(row -> new DailySummaryDTO(
+                        (String) row[0],
+                        ((Number) row[1]).doubleValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PopularRoomDTO> findMostPopularBookings(Long userId) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        return bookingItemRepository.findMostBookedRoomByTenantId(tenant.getId());
+    }
+
+    @Override
+    public Double getTotalRevenueByMonth(Long userId, Long propertyId, Month month) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        double marginFromAdjustmentPrice = 0.0;
+        Double totalServiceFee = 0.0;
+
+        if (propertyId != null) {
+            propertyService.findPropertyById(propertyId)
+                    .orElseThrow(() -> new DataNotFoundException("Property not found"));
+        }
+
+        List<Booking> bookings = bookingRepository.findCompletedPaymentBookings(tenant.getId(), propertyId, month.getValue());
+        for (Booking booking : bookings) {
+            long stayingTime = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
+            Set<Room> rooms = booking.getProperty().getRooms();
+
+            for (Room room : rooms) {
+                BigDecimal basePrice = room.getBasePrice();
+                double baseTotalPrice = basePrice.doubleValue() * stayingTime;
+                if (booking.getTotalBasePrice() == baseTotalPrice) {
+                    marginFromAdjustmentPrice += 0.0;
+                    break;
+                }
+                marginFromAdjustmentPrice += baseTotalPrice - basePrice.doubleValue();
+            }
+
+            totalServiceFee += booking.getServiceFee();
+        }
+
+        return marginFromAdjustmentPrice + totalServiceFee;
+    }
+
+    @Override
+    public Double getTaxByMonthAndProperty(Long userId, Long propertyId, Month month) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
+        Double totalTaxFee = 0.0;
+
+        if (propertyId != null) {
+            propertyService.findPropertyById(propertyId)
+                    .orElseThrow(() -> new DataNotFoundException("Property not found"));
+        }
+
+        List<Booking> bookings = bookingRepository.findCompletedPaymentBookings(tenant.getId(), propertyId, month.getValue());
+        for (Booking booking : bookings) {
+            totalTaxFee += booking.getTaxFee();
+        }
+
+        return totalTaxFee;
     }
 }

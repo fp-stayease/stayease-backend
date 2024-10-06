@@ -58,11 +58,4 @@ public class BookingItem {
     public void preRemove() {
         this.deletedAt = Instant.now();
     }
-
-    public BookingItemDTO toResDto() {
-        BookingItemDTO resDto = new BookingItemDTO();
-        resDto.setRoom(new RoomDTO(this.room));
-        resDto.setExtendingUntil(this.extendingUntil);
-        return resDto;
-    }
 }
