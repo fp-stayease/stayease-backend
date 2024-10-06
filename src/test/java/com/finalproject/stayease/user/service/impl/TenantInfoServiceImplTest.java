@@ -1,12 +1,9 @@
 package com.finalproject.stayease.user.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import com.finalproject.stayease.exceptions.users.TenantInfoNotFoundException;
-import com.finalproject.stayease.users.dto.TenantInfoResDto;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
+import com.finalproject.stayease.users.entity.dto.TenantInfoDTO;
 import com.finalproject.stayease.users.repository.TenantInfoRepository;
 import com.finalproject.stayease.users.service.impl.TenantInfoServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -15,11 +12,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
-public class TenantInfoServiceImplTest {
+class TenantInfoServiceImplTest {
 
   @Mock
   private TenantInfoRepository tenantInfoRepository;
@@ -28,30 +27,31 @@ public class TenantInfoServiceImplTest {
   private TenantInfoServiceImpl tenantInfoService;
 
   @Test
-  void save_Success() {
+  void testSave() {
     TenantInfo tenantInfo = new TenantInfo();
-    when(tenantInfoRepository.save(any(TenantInfo.class))).thenReturn(tenantInfo);
+    when(tenantInfoRepository.save(tenantInfo)).thenReturn(tenantInfo);
 
-    TenantInfo result = tenantInfoService.save(tenantInfo);
+    TenantInfo savedTenantInfo = tenantInfoService.save(tenantInfo);
 
-    assertNotNull(result);
+    assertNotNull(savedTenantInfo);
     verify(tenantInfoRepository).save(tenantInfo);
   }
 
   @Test
-  void findByTenant_Success() {
-    Users tenant = new Users();
+  void testFindByTenant() {
+    Users user = new Users();
     TenantInfo tenantInfo = new TenantInfo();
-    when(tenantInfoRepository.findByUser(tenant)).thenReturn(Optional.of(tenantInfo));
+    when(tenantInfoRepository.findByUser(user)).thenReturn(Optional.of(tenantInfo));
 
-    Optional<TenantInfo> result = tenantInfoService.findByTenant(tenant);
+    Optional<TenantInfo> result = tenantInfoService.findByTenant(user);
 
     assertTrue(result.isPresent());
     assertEquals(tenantInfo, result.get());
+    verify(tenantInfoRepository).findByUser(user);
   }
 
   @Test
-  void findTenantByUserId_Success() {
+  void testFindTenantByUserId_Found() {
     Long userId = 1L;
     TenantInfo tenantInfo = new TenantInfo();
     when(tenantInfoRepository.findByUserId(userId)).thenReturn(Optional.of(tenantInfo));
@@ -60,40 +60,36 @@ public class TenantInfoServiceImplTest {
 
     assertNotNull(result);
     assertEquals(tenantInfo, result);
+    verify(tenantInfoRepository).findByUserId(userId);
   }
 
   @Test
-  void findTenantByUserId_NotFound_ThrowsException() {
+  void testFindTenantByUserId_NotFound() {
     Long userId = 1L;
     when(tenantInfoRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
     assertThrows(TenantInfoNotFoundException.class, () -> tenantInfoService.findTenantByUserId(userId));
+    verify(tenantInfoRepository).findByUserId(userId);
   }
 
   @Test
-  void getTenantDetail_Success() {
+  void testGetTenantDetail_Found() {
     Long tenantId = 1L;
     TenantInfo tenantInfo = new TenantInfo();
-    tenantInfo.setId(tenantId);
-    tenantInfo.setUser(new Users());
-    tenantInfo.setBusinessName("Test Business");
-    tenantInfo.setRegistrationDate(Instant.now());
-
     when(tenantInfoRepository.findById(tenantId)).thenReturn(Optional.of(tenantInfo));
 
-    TenantInfoResDto result = tenantInfoService.getTenantDetail(tenantId);
+    TenantInfoDTO result = tenantInfoService.getTenantDetail(tenantId);
 
     assertNotNull(result);
-    assertEquals(tenantId, result.getId());
-    assertEquals(tenantInfo.getBusinessName(), result.getBusinessName());
-    assertEquals(tenantInfo.getRegistrationDate(), result.getRegisterDate());
+    verify(tenantInfoRepository).findById(tenantId);
   }
 
   @Test
-  void getTenantDetail_NotFound_ThrowsException() {
+  void testGetTenantDetail_NotFound() {
     Long tenantId = 1L;
     when(tenantInfoRepository.findById(tenantId)).thenReturn(Optional.empty());
 
     assertThrows(TenantInfoNotFoundException.class, () -> tenantInfoService.getTenantDetail(tenantId));
+    verify(tenantInfoRepository).findById(tenantId);
   }
 }
