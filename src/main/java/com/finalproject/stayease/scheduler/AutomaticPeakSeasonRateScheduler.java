@@ -45,7 +45,7 @@ public class AutomaticPeakSeasonRateScheduler {
     log.info("Automatic peak season rate updated");
   }
 
-  @Scheduled(cron = "${cron.auto-rates.incremental: 0 0 0 * * ?}")
+  @Scheduled(cron = "${cron.auto-rates.increment: 0 0 */4 * * ?}")
   public void incrementalAutomaticPeakSeasonRateUpdate() {
     log.info("Updating incremental automatic peak season rate...");
     LocalDate startDate = LocalDate.now();
