@@ -1,6 +1,7 @@
 package com.finalproject.stayease.users.service.impl;
 
 import com.finalproject.stayease.cloudinary.service.CloudinaryService;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersImageUploadService;
 import jakarta.transaction.Transactional;
@@ -37,13 +38,13 @@ public class UsersImageUploadServiceImpl implements UsersImageUploadService {
 
   private void validateFile(MultipartFile file) {
     if (file.isEmpty()) {
-      throw new IllegalArgumentException("File is empty");
+      throw new InvalidRequestException("File is empty");
     }
     if (!ALLOWED_FILE_TYPES.contains(file.getContentType())) {
-      throw new IllegalArgumentException("Invalid file type");
+      throw new InvalidRequestException("Invalid file type");
     }
     if (file.getSize() > MAX_FILE_SIZE) {
-      throw new IllegalArgumentException("File size exceeds maximum limit");
+      throw new InvalidRequestException("File size exceeds maximum limit");
     }
   }
 

@@ -3,6 +3,7 @@ package com.finalproject.stayease.auth.controller;
 import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPasswordRequestDTO;
 import com.finalproject.stayease.auth.model.dto.forgorPassword.request.ForgotPasswordResponseDTO;
 import com.finalproject.stayease.auth.model.dto.forgorPassword.reset.ResetPasswordRequestDTO;
+import com.finalproject.stayease.auth.model.dto.request.TokenRequestDTO;
 import com.finalproject.stayease.auth.service.ResetPasswordService;
 import com.finalproject.stayease.responses.Response;
 import jakarta.mail.MessagingException;
@@ -43,7 +44,8 @@ public class PasswordController {
   }
 
   @PostMapping("/check-token")
-  public ResponseEntity<Response<Boolean>> checkToken(@RequestBody String token) {
+  public ResponseEntity<Response<Boolean>> checkToken(@RequestBody TokenRequestDTO tokenRequestDTO) {
+    String token = tokenRequestDTO.getToken();
     String normalizedToken = token.replaceAll("=+$", "");
     boolean isValid = resetPasswordService.checkToken(normalizedToken);
     String responseMessage = isValid ? "Token is valid" : "Token is invalid, please check your email or try to resend"
