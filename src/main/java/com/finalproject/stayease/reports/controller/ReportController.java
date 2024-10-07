@@ -4,6 +4,7 @@ import com.finalproject.stayease.bookings.entity.dto.BookingDTO;
 import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
 import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import com.finalproject.stayease.reports.dto.properties.PropertiesSalesDTO;
+import com.finalproject.stayease.reports.dto.user.UserStatsDTO;
 import com.finalproject.stayease.reports.service.ReportService;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
@@ -82,5 +83,13 @@ public class ReportController {
         var response = reportService.getSalesReport(tenant, propertyId, month);
 
         return Response.successfulResponse("Sales report fetched", response);
+    }
+
+    @GetMapping("/user-stats")
+    public ResponseEntity<Response<UserStatsDTO>> getUserStats() {
+        Users user = usersService.getLoggedUser();
+        var response = reportService.getUserStats(user);
+
+        return Response.successfulResponse("User stats fetched", response);
     }
 }

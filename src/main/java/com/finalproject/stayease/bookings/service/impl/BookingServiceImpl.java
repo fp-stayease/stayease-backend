@@ -41,7 +41,6 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -241,16 +240,18 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> bookings = bookingRepository.findCompletedPaymentBookings(tenant.getId(), propertyId, month.getValue());
         for (Booking booking : bookings) {
             long stayingTime = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
-            Set<Room> rooms = booking.getProperty().getRooms();
+            List<BookingItem> bookingItems = booking.getBookingItems();
+            log.info("Booking ID: " + booking.getId() + " Staying time: " + stayingTime);
 
-            for (Room room : rooms) {
-                BigDecimal basePrice = room.getBasePrice();
+            for (BookingItem bookingItem : bookingItems) {
+                BigDecimal basePrice = bookingItem.getRoom().getBasePrice();
                 double baseTotalPrice = basePrice.doubleValue() * stayingTime;
+
                 if (booking.getTotalBasePrice() == baseTotalPrice) {
                     marginFromAdjustmentPrice += 0.0;
                     break;
                 }
-                marginFromAdjustmentPrice += baseTotalPrice - basePrice.doubleValue();
+                marginFromAdjustmentPrice += booking.getTotalBasePrice() - baseTotalPrice;
             }
 
             totalServiceFee += booking.getServiceFee();
@@ -275,5 +276,15 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return totalTaxFee;
+    }
+
+    @Override
+    public Double upcomingBookingsByUserId(Long userId) {
+        return bookingRepository.countUserUpcomingBookings(userId);
+    }
+
+    @Override
+    public Double pastBookingsByUserId(Long userId) {
+        return bookingRepository.countUserPastBookings(userId);
     }
 }

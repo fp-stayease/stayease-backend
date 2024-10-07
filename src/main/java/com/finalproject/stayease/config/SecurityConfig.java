@@ -109,7 +109,8 @@ public class SecurityConfig {
     // Role-based access control
     auth.requestMatchers(
         API_VERSION + "/payments/payment-proof/{bookingId}",
-        API_VERSION + "/bookings/user").hasRole("USER");
+        API_VERSION + "/bookings/user",
+        API_VERSION + "/reports/user-stats").hasRole("USER");
 
     auth.requestMatchers(
         API_VERSION + "/properties/**",
