@@ -1,25 +1,24 @@
 package com.finalproject.stayease.users.controller;
 
-import static com.finalproject.stayease.util.SessionCookieUtil.invalidateSessionAndCookie;
+import static com.finalproject.stayease.auth.util.SessionCookieUtil.invalidateSessionAndCookie;
 
+import com.finalproject.stayease.auth.model.dto.request.TokenRequestDTO;
 import com.finalproject.stayease.responses.Response;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.dto.EmailChangeResponseDTO;
 import com.finalproject.stayease.users.entity.dto.RequestEmailChangeDTO;
 import com.finalproject.stayease.users.entity.dto.UpdateTenantInfoRequestDTO;
 import com.finalproject.stayease.users.entity.dto.UpdateUserProfileRequestDTO;
-import com.finalproject.stayease.users.entity.dto.UsersProfileDTO;
 import com.finalproject.stayease.users.entity.dto.UsersImageDTO;
+import com.finalproject.stayease.users.entity.dto.UsersProfileDTO;
 import com.finalproject.stayease.users.service.EmailChangeService;
 import com.finalproject.stayease.users.service.ProfileService;
 import com.finalproject.stayease.users.service.UsersImageUploadService;
 import com.finalproject.stayease.users.service.UsersService;
 import jakarta.annotation.Nullable;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -119,7 +118,8 @@ public class UsersController {
   }
 
   @PostMapping("/profile/email/check-token")
-  public ResponseEntity<Response<Boolean>> checkEmailChangeToken(@RequestBody String token) {
+  public ResponseEntity<Response<Boolean>> checkEmailChangeToken(@RequestBody TokenRequestDTO tokenRequestDTO) {
+    String token = tokenRequestDTO.getToken();
     String normalizedToken = token.replaceAll("=+$", "");
     boolean isValid = emailChangeService.checkToken(normalizedToken);
     String message = isValid ? "Token is valid" : "Token is invalid, please check your email or try to resend an "

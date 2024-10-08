@@ -55,7 +55,7 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     user.setAvatar(request.getAvatar());
     user.setIsVerified(true);
     usersService.save(user);
-    log.info("user registered: " + request.getEmail());
+    log.info("user registered: {}", request.getEmail());
     return user;
   }
 
@@ -75,13 +75,6 @@ public class SocialLoginServiceImpl implements SocialLoginService {
     tenantInfo.setTaxId(request.getTaxId());
     tenantInfoService.save(tenantInfo);
     return tenantInfo;
-  }
-
-  // Region - Quarantine
-
-  @Override
-  public Optional<SocialLogin> findByKey(String provider, String providerUserId) {
-    return socialLoginRepository.findByProviderAndProviderUserId(provider, providerUserId);
   }
 
 }

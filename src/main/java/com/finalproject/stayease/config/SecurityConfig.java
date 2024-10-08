@@ -81,10 +81,10 @@ public class SecurityConfig {
         API_VERSION + "/properties/{propertyId}/rooms",
         API_VERSION + "/properties/{propertyId}/rooms/{roomId}/available",
         API_VERSION + "/properties/rooms",
-        API_VERSION + "/properties/categories",
         API_VERSION + "/properties/images",
         API_VERSION + "/properties/cities",
         API_VERSION + "/properties/available",
+        API_VERSION + "/categories",
         API_VERSION + "/rates",
         API_VERSION + "/rates/daily",
         API_VERSION + "/rates/daily/cumulative",
@@ -114,6 +114,7 @@ public class SecurityConfig {
 
     auth.requestMatchers(
         API_VERSION + "/properties/**",
+        API_VERSION + "/categories/**",
         API_VERSION + "/profile/tenant",
         API_VERSION + "/bookings/tenant",
         API_VERSION + "/rates/auto/**",

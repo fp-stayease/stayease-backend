@@ -26,18 +26,6 @@ public class SocialLoginRequest {
   private String businessName;
   private String taxId;
 
-  public SocialLoginRequest(String provider, String providerUserId, String email, UserType userType, String firstName,
-      String lastName,
-      String avatar) {
-    this.provider = provider;
-    this.providerUserId = providerUserId;
-    this.email = email;
-    this.userType = userType;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.avatar= avatar;
-  }
-
   // for tenants
   public SocialLoginRequest(String provider, String providerUserId, String email, UserType userType, String firstName,
       String lastName, String avatar, String businessName, String taxId) {

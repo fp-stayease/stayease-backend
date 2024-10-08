@@ -41,13 +41,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     try {
       String accessToken = extractTokenFromRequest(request);
-      log.info("Extracted token: " + (accessToken != null ? "Token present" : "Token absent"));
+      log.info("Extracted token: {}", accessToken != null ? "Token present" : "Token absent");
 
       if (accessToken != null && SecurityContextHolder.getContext().getAuthentication() == null) {
         try {
           log.info("Attempting to extract subject from token");
           String email = jwtService.extractSubjectFromToken(accessToken);
-          log.info("Extracted email: " + email);
+          log.info("Extracted email: {}", email);
 
           log.info("Checking if access token is valid");
           if (jwtService.isAccessTokenValid(accessToken, email)) {
@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
           }
         } catch (ExpiredJwtException e) {
-          log.info("Caught ExpiredJwtException, handling as expired token", e);
+          log.error("Caught ExpiredJwtException", e);
           filterChain.doFilter(request, response);
         } catch (BadJwtException e) {
           logger.error("Caught BadJwtException: Token is malformed", e);
@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private String extractTokenFromRequest(HttpServletRequest request) {
     String bearerToken = request.getHeader("Authorization");
-    log.info("bearer token: " + bearerToken);
+    log.info("bearer token: {}", bearerToken);
     if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
       return bearerToken.substring(7);
     }
