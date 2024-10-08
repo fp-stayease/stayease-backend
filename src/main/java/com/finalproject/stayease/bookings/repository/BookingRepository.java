@@ -50,7 +50,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
             UNION ALL
             SELECT date + INTERVAL '1 day'
             FROM date_series
-            WHERE date < DATE_TRUNC('month', CAST(:endDate AS timestamp)) + INTERVAL '1 month' - INTERVAL '1 day'
+            WHERE date < DATE_TRUNC('month', CAST(:endDate AS timestamp)) - INTERVAL '1 day'
         )
         SELECT
             TO_CHAR(ds.date, 'YYYY-MM-DD') AS date,
