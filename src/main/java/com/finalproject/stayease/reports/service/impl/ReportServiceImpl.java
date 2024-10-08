@@ -8,6 +8,7 @@ import com.finalproject.stayease.reports.dto.overview.*;
 import com.finalproject.stayease.reports.dto.properties.DailySummaryDTO;
 import com.finalproject.stayease.reports.dto.properties.PopularRoomDTO;
 import com.finalproject.stayease.reports.dto.properties.PropertiesSalesDTO;
+import com.finalproject.stayease.reports.dto.user.UserStatsDTO;
 import com.finalproject.stayease.reports.service.ReportService;
 import com.finalproject.stayease.users.entity.Users;
 import lombok.extern.java.Log;
@@ -109,6 +110,15 @@ public class ReportServiceImpl implements ReportService {
         Double tax = bookingService.getTaxByMonthAndProperty(user.getId(), propertyId, monthSearched);
 
         return new PropertiesSalesDTO(revenue, tax);
+    }
+
+    // User Reports Section
+
+    @Override
+    public UserStatsDTO getUserStats(Users user) {
+        Double upcomingStays = bookingService.upcomingBookingsByUserId(user.getId());
+        Double pastStays = bookingService.pastBookingsByUserId(user.getId());
+        return new UserStatsDTO(upcomingStays, pastStays);
     }
 
     // Helpers

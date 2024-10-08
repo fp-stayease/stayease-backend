@@ -31,4 +31,6 @@ public interface BookingService {
     List<PopularRoomDTO> findMostPopularBookings(Long userId);
     Double getTotalRevenueByMonth(Long userId, Long propertyId, Month month);
     Double getTaxByMonthAndProperty(Long userId, Long propertyId, Month month);
+    Double upcomingBookingsByUserId(Long userId);
+    Double pastBookingsByUserId(Long userId);
 }
