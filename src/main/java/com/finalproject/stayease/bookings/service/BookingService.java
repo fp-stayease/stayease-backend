@@ -33,4 +33,5 @@ public interface BookingService {
     Double getTaxByMonthAndProperty(Long userId, Long propertyId, Month month);
     Double upcomingBookingsByUserId(Long userId);
     Double pastBookingsByUserId(Long userId);
+    List<Booking> findFinishedBookings();
 }

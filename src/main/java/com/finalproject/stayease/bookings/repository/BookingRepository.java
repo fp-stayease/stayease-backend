@@ -96,11 +96,18 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     """)
     Double countUserUpcomingBookings(@Param("userId") Long userId);
     @Query("""
-    SELECT COUNT(b.id) FROM Booking b
-    WHERE b.user.id = :userId
-    AND b.checkOutDate <= CURRENT_DATE
-    AND b.status = 'PAYMENT_COMPLETE'
-    AND b.deletedAt IS NULL
+        SELECT COUNT(b.id) FROM Booking b
+        WHERE b.user.id = :userId
+        AND b.checkOutDate <= CURRENT_DATE
+        AND b.status = 'PAYMENT_COMPLETE'
+        AND b.deletedAt IS NULL
     """)
     Double countUserPastBookings(@Param("userId") Long userId);
+    @Query("""
+        SELECT b FROM Booking b
+        WHERE b.status = 'PAYMENT_COMPLETE'
+        AND b.checkOutDate <= CURRENT_DATE
+        AND b.deletedAt IS NULL
+    """)
+    List<Booking> findFinishedBookings();
 }

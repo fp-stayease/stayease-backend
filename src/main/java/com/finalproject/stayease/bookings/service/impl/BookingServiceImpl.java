@@ -287,4 +287,15 @@ public class BookingServiceImpl implements BookingService {
     public Double pastBookingsByUserId(Long userId) {
         return bookingRepository.countUserPastBookings(userId);
     }
+
+    @Override
+    public List<Booking> findFinishedBookings() {
+        List<Booking> bookings = bookingRepository.findFinishedBookings();
+
+        for (Booking booking : bookings) {
+            booking.setStatus(BookingStatus.COMPLETED);
+            bookingRepository.save(booking);
+        }
+        return bookings;
+    }
 }

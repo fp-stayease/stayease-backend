@@ -1,5 +1,7 @@
 package com.finalproject.stayease.users.entity;
 
+import com.finalproject.stayease.reviews.entity.Reply;
+import com.finalproject.stayease.reviews.entity.Review;
 import jakarta.persistence.CascadeType;
 import com.finalproject.stayease.bookings.entity.Booking;
 import com.finalproject.stayease.property.entity.Property;
@@ -99,6 +101,12 @@ public class Users {
 
   @OneToMany(mappedBy = "addedBy")
   private Set<PropertyCategory> propertyCategories = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Review> reviews = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Reply> replies = new LinkedHashSet<>();
 
   public enum UserType {
     USER,
