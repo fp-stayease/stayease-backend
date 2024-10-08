@@ -14,6 +14,8 @@ import com.finalproject.stayease.reviews.service.ReviewService;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.TenantInfoService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -113,24 +115,24 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewDTO> getALLUserReviews(Users user) {
-        return reviewRepository.findByUserIdAndDeletedAtIsNull(user.getId())
-                .stream().map(ReviewDTO::new).toList();
+    public Page<ReviewDTO> getUserReviews(Users user, String search, Pageable pageable) {
+        return reviewRepository.findByUserIdAndDeletedAtIsNull(user.getId(), search, pageable)
+                .map(ReviewDTO::new);
     }
 
     @Override
-    public List<ReviewDTO> getTenantReviews(Users user) {
+    public Page<ReviewDTO> getTenantReviews(Users user, String search, Pageable pageable) {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
-        return reviewRepository.findTenantReviewsAndDeletedAtIsNull(tenant.getId())
-                .stream().map(ReviewDTO::new).toList();
+        return reviewRepository.findTenantReviewsAndDeletedAtIsNull(tenant.getId(), search, pageable)
+                .map(ReviewDTO::new);
     }
 
     @Override
-    public List<ReviewDTO> getPropertiesReviews(Long propertyId) {
+    public Page<ReviewDTO> getPropertiesReviews(Long propertyId, Pageable pageable) {
         Property property = propertyService.findPropertyById(propertyId)
                 .orElseThrow(() -> new DataNotFoundException("Property not found"));
-        return reviewRepository.findPropertiesReviewsAndDeletedAtIsNull(property.getId())
-                .stream().map(ReviewDTO::new).toList();
+        return reviewRepository.findPropertiesReviewsAndDeletedAtIsNull(property.getId(), pageable)
+                .map(ReviewDTO::new);
     }
 
     @Override

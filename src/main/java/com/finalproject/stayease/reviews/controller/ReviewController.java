@@ -5,6 +5,9 @@ import com.finalproject.stayease.reviews.entity.dto.request.UserReviewReqDTO;
 import com.finalproject.stayease.reviews.service.ReviewService;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.UsersService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,20 +51,40 @@ public class ReviewController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<?> getUserReviews() {
+    public ResponseEntity<?> getUserReviews(@RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "5") int size,
+                                            @RequestParam(defaultValue = "DESC") Sort.Direction direction,
+                                            @RequestParam(required = false) String search) {
         Users user = usersService.getLoggedUser();
-        return Response.successfulResponse("User reviews fetched", reviewService.getALLUserReviews(user));
+        Sort sort = Sort.by(direction, "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        var response = reviewService.getUserReviews(user, search, pageable);
+        return Response.successfulResponse("User reviews fetched", response);
     }
 
     @GetMapping("/tenant")
-    public ResponseEntity<?> getTenantReviews() {
+    public ResponseEntity<?> getTenantReviews(@RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "5") int size,
+                                              @RequestParam(defaultValue = "DESC") Sort.Direction direction,
+                                              @RequestParam(required = false) String search) {
         Users user = usersService.getLoggedUser();
-        return Response.successfulResponse("Tenant reviews fetched", reviewService.getTenantReviews(user));
+        Sort sort = Sort.by(direction, "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        var response = reviewService.getTenantReviews(user, search, pageable);
+        return Response.successfulResponse("Tenant reviews fetched", response);
     }
 
     @GetMapping("/properties/{propertyId}")
-    public ResponseEntity<?> getPropertyReviews(@PathVariable Long propertyId) {
-        var response = reviewService.getPropertiesReviews(propertyId);
+    public ResponseEntity<?> getPropertyReviews(@PathVariable Long propertyId,
+                                                @RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "5") int size,
+                                                @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+        Sort sort = Sort.by(direction, "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        var response = reviewService.getPropertiesReviews(propertyId, pageable);
         return Response.successfulResponse("Properties reviews fetched", response);
     }
 

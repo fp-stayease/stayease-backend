@@ -26,7 +26,7 @@ public class BookingController {
     public ResponseEntity<?> getUserBookings(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "ASC") Sort.Direction direction,
+            @RequestParam(defaultValue = "DESC") Sort.Direction direction,
             @RequestParam(required = false) String search
     ) {
         Long userId = usersService.getLoggedUser().getId();
