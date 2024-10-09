@@ -124,17 +124,34 @@ public class ReportServiceImpl implements ReportService {
     // Helpers
 
     private TrxDiffDTO trxDiffGen(Long userId, Month thisMonth, Month prevMonth) {
-        Long thisMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, thisMonth);
-        Long prevMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, prevMonth);
-        Long trxDiffPercent = ((thisMonthTrx - prevMonthTrx) / (thisMonthTrx + prevMonthTrx)) * 100;
+        Double thisMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, thisMonth);
+        Double prevMonthTrx = bookingService.countCompletedBookingsByTenantId(userId, prevMonth);
+        double trxDiffPercent;
+
+        if (thisMonthTrx == 0 && prevMonthTrx == 0) {
+            trxDiffPercent = 0L;
+            return new TrxDiffDTO(thisMonthTrx, trxDiffPercent);
+        }
+
+        trxDiffPercent = ((thisMonthTrx - prevMonthTrx) / ((thisMonthTrx + prevMonthTrx) / 2)) * 100;
 
         return new TrxDiffDTO(thisMonthTrx, trxDiffPercent);
     }
 
     private UsersDiffDTO usersDiffGen(Long userId, Month thisMonth, Month prevMonth) {
-        Long totalUsersThisMonth = bookingService.countUsersTrxByTenantId(userId, thisMonth);
-        Long totalUsersPrevMonth = bookingService.countUsersTrxByTenantId(userId, prevMonth);
-        Long usersDiffPercent = ((totalUsersThisMonth - totalUsersPrevMonth) / (totalUsersThisMonth + totalUsersPrevMonth)) * 100;
+        Double totalUsersThisMonth = bookingService.countUsersTrxByTenantId(userId, thisMonth);
+        Double totalUsersPrevMonth = bookingService.countUsersTrxByTenantId(userId, prevMonth);
+        double usersDiffPercent;
+
+        log.info("user this month: " + totalUsersThisMonth);
+        log.info("user previous month: " + totalUsersPrevMonth);
+
+        if (totalUsersThisMonth == 0 && totalUsersPrevMonth == 0) {
+            usersDiffPercent = 0;
+            return new UsersDiffDTO(totalUsersThisMonth, usersDiffPercent);
+        }
+
+        usersDiffPercent = ((totalUsersThisMonth - totalUsersPrevMonth) / ((totalUsersThisMonth + totalUsersPrevMonth) / 2)) * 100;
 
         return new UsersDiffDTO(totalUsersThisMonth, usersDiffPercent);
     }
@@ -142,7 +159,12 @@ public class ReportServiceImpl implements ReportService {
     private RevenueDiffDTO revenueDiffGen(Long userId, Month thisMonth, Month prevMonth) {
         Double totalRevenueThisMonth = bookingService.getTotalRevenueByMonth(userId, null, thisMonth);
         Double totalRevenuePrevMonth = bookingService.getTotalRevenueByMonth(userId, null, prevMonth);
-        Double revenueDiffPercent = ((totalRevenueThisMonth - totalRevenuePrevMonth) / (totalRevenueThisMonth + totalRevenuePrevMonth)) * 100;
+        double revenueDiffPercent;
+        if (totalRevenueThisMonth == 0 && totalRevenuePrevMonth == 0) {
+            revenueDiffPercent = 0;
+            return new RevenueDiffDTO(totalRevenueThisMonth, revenueDiffPercent);
+        }
+        revenueDiffPercent = ((totalRevenueThisMonth - totalRevenuePrevMonth) / ((totalRevenueThisMonth + totalRevenuePrevMonth) / 2)) * 100;
 
         return new RevenueDiffDTO(totalRevenueThisMonth, revenueDiffPercent);
     }

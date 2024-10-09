@@ -1,6 +1,7 @@
 package com.finalproject.stayease.users.entity;
 
 import com.finalproject.stayease.bookings.entity.Booking;
+import com.finalproject.stayease.reviews.entity.Reply;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -63,6 +64,9 @@ public class TenantInfo {
 
   @OneToMany(mappedBy = "tenant")
   private Set<Booking> bookings = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Reply> replies = new LinkedHashSet<>();
 
   @PrePersist
   protected void onCreate() {
