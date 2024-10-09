@@ -12,5 +12,5 @@ public interface ReplyService {
     ReplyDTO addReply(AdminReplyReqDTO reqDto, Long reviewId, Users user);
     ReplyDTO updateReply(AdminReplyReqDTO reqDto, Long replyId, Users user);
     void deleteReply(Long replyId, Users user);
-    Page<ReplyDTO> findReviewReplies(Long replyId, Pageable pageable);
+    Page<ReplyDTO> findReviewReplies(Long reviewId, Pageable pageable);
 }

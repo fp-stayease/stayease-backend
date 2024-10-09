@@ -91,7 +91,8 @@ public class SecurityConfig {
         API_VERSION + "/payment/{bookingId}",
         API_VERSION + "/reviews/properties/**",
         API_VERSION + "/reviews/rating/**",
-        API_VERSION + "/reviews/{reviewId}"
+        API_VERSION + "/reviews/{reviewId}",
+        API_VERSION + "/replies/**"
         ).permitAll();
 
     auth.requestMatchers(HttpMethod.POST,
@@ -110,7 +111,8 @@ public class SecurityConfig {
         API_VERSION + "/transactions/user/{bookingId}",
         API_VERSION + "/reviews/{reviewId}"
     ).hasRole("USER");
-    auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
+    auth.requestMatchers(HttpMethod.PUT,
+         API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
 
     // Permit access to specific PATCH endpoint
     auth.requestMatchers(HttpMethod.PATCH, API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
@@ -133,7 +135,8 @@ public class SecurityConfig {
         API_VERSION + "/bookings/tenant",
         API_VERSION + "/rates/auto/**",
         API_VERSION + "/reports/**",
-        API_VERSION + "/reviews/tenant"
+        API_VERSION + "/reviews/tenant",
+        API_VERSION + "/replies/**"
     ).hasRole("TENANT");
 
     // Permit all access to authentication and registration endpoints

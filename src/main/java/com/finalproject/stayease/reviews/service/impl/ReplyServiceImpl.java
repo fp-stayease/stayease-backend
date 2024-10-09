@@ -82,7 +82,7 @@ public class ReplyServiceImpl implements ReplyService {
     }
 
     @Override
-    public Page<ReplyDTO> findReviewReplies(Long replyId, Pageable pageable) {
-        return replyRepository.findRepliesByReviewId(replyId, pageable).map(ReplyDTO::new);
+    public Page<ReplyDTO> findReviewReplies(Long reviewId, Pageable pageable) {
+        return replyRepository.findRepliesByReviewId(reviewId, pageable).map(ReplyDTO::new);
     }
 }
