@@ -24,8 +24,8 @@ public interface BookingService {
     Page<BookingDTO> getUserBookings(Long userId, String search, Pageable pageable);
     Booking updateBooking(UUID bookingId, BookingStatus bookingStatus);
     List<BookingDTO> getTenantBookings(Long userId);
-    Long countCompletedBookingsByTenantId(Long userId, Month month);
-    Long countUsersTrxByTenantId(Long userId, Month month);
+    Double countCompletedBookingsByTenantId(Long userId, Month month);
+    Double countUsersTrxByTenantId(Long userId, Month month);
     List<BookingDTO> findTenantRecentCompletedBookings(Long userId);
     List<DailySummaryDTO> getDailySummaryForMonth(Long userId, Long propertyId, Instant startDate, Instant endDate);
     List<PopularRoomDTO> findMostPopularBookings(Long userId);

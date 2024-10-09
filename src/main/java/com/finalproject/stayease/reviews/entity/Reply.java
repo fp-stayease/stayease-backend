@@ -1,5 +1,6 @@
 package com.finalproject.stayease.reviews.entity;
 
+import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -21,8 +22,8 @@ public class Reply {
     private String comment;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private TenantInfo tenant;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)

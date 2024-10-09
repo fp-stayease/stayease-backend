@@ -28,6 +28,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
         FROM Payment p
         WHERE p.paymentStatus = 'SETTLEMENT'
         AND p.booking.tenant.id = :tenantId
+        AND p.booking.status = 'PAYMENT_COMPLETE'
+        AND p.booking.deletedAt IS NULL
         AND YEAR(p.createdAt) = :year
         GROUP BY MONTH(p.createdAt)
         ORDER BY MONTH(p.createdAt)

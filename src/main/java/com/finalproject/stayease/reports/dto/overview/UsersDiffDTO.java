@@ -4,10 +4,10 @@ import lombok.Data;
 
 @Data
 public class UsersDiffDTO {
-    private Long usersThisMonth;
-    private Long usersDiffPercent;
+    private Double usersThisMonth;
+    private Double usersDiffPercent;
 
-    public UsersDiffDTO(Long usersThisMonth, Long usersDiffPercent) {
+    public UsersDiffDTO(Double usersThisMonth, Double usersDiffPercent) {
         this.usersThisMonth = usersThisMonth;
         this.usersDiffPercent = usersDiffPercent;
     }

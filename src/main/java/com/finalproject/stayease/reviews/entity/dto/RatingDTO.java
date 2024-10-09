@@ -6,9 +6,11 @@ import lombok.Data;
 public class RatingDTO {
     private String propertyName;
     private Double avgRating;
+    private Long totalReviewers;
 
-    public RatingDTO(String propertyName, Double avgRating) {
+    public RatingDTO(String propertyName, Double avgRating, Long totalReviewers) {
         this.propertyName = propertyName;
         this.avgRating = avgRating;
+        this.totalReviewers = totalReviewers;
     }
 }

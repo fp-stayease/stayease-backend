@@ -141,7 +141,8 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new DataNotFoundException("Property not found"));
 
         Double propertyRating = reviewRepository.calculatePropertyAverageRating(property.getId());
+        Long totalReviewers = reviewRepository.countTotalPropertiesReviewers(property.getId());
 
-        return new RatingDTO(property.getName(), propertyRating);
+        return new RatingDTO(property.getName(), propertyRating, totalReviewers);
     }
 }

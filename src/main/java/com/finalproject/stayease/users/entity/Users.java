@@ -105,9 +105,6 @@ public class Users {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Review> reviews = new LinkedHashSet<>();
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<Reply> replies = new LinkedHashSet<>();
-
   public enum UserType {
     USER,
     TENANT

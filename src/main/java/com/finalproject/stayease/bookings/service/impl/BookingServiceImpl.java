@@ -185,13 +185,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Long countCompletedBookingsByTenantId(Long userId, Month month) {
+    public Double countCompletedBookingsByTenantId(Long userId, Month month) {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
         return bookingRepository.countCompletedBookingsByTenantId(tenant.getId(), month.getValue());
     }
 
     @Override
-    public Long countUsersTrxByTenantId(Long userId, Month month) {
+    public Double countUsersTrxByTenantId(Long userId, Month month) {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(userId);
         return bookingRepository.countUserBookingsByTenantId(tenant.getId(), month.getValue());
     }

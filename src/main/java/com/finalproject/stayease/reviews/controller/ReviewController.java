@@ -1,6 +1,7 @@
 package com.finalproject.stayease.reviews.controller;
 
 import com.finalproject.stayease.responses.Response;
+import com.finalproject.stayease.reviews.entity.dto.ReviewDTO;
 import com.finalproject.stayease.reviews.entity.dto.request.UserReviewReqDTO;
 import com.finalproject.stayease.reviews.service.ReviewService;
 import com.finalproject.stayease.users.entity.Users;
@@ -25,7 +26,8 @@ public class ReviewController {
 
     @GetMapping("/{reviewId}")
     public ResponseEntity<?> getReviewDetail(@PathVariable Long reviewId) {
-        return Response.successfulResponse("Review detail fetched", reviewService.findReviewById(reviewId));
+        var response = reviewService.findReviewById(reviewId);
+        return Response.successfulResponse("Review detail fetched", new ReviewDTO(response));
     }
 
     @PostMapping("/{reviewId}")
@@ -54,9 +56,10 @@ public class ReviewController {
     public ResponseEntity<?> getUserReviews(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "5") int size,
                                             @RequestParam(defaultValue = "DESC") Sort.Direction direction,
+                                            @RequestParam(defaultValue = "createdAt") String sortBy,
                                             @RequestParam(required = false) String search) {
         Users user = usersService.getLoggedUser();
-        Sort sort = Sort.by(direction, "createdAt");
+        Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         var response = reviewService.getUserReviews(user, search, pageable);
@@ -67,9 +70,10 @@ public class ReviewController {
     public ResponseEntity<?> getTenantReviews(@RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "5") int size,
                                               @RequestParam(defaultValue = "DESC") Sort.Direction direction,
+                                              @RequestParam(defaultValue = "createdAt") String sortBy,
                                               @RequestParam(required = false) String search) {
         Users user = usersService.getLoggedUser();
-        Sort sort = Sort.by(direction, "createdAt");
+        Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         var response = reviewService.getTenantReviews(user, search, pageable);
@@ -80,8 +84,9 @@ public class ReviewController {
     public ResponseEntity<?> getPropertyReviews(@PathVariable Long propertyId,
                                                 @RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "5") int size,
+                                                @RequestParam(defaultValue = "createdAt") String sortBy,
                                                 @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
-        Sort sort = Sort.by(direction, "createdAt");
+        Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         var response = reviewService.getPropertiesReviews(propertyId, pageable);
