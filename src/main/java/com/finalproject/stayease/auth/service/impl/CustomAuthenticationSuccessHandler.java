@@ -79,13 +79,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
   }
 
   private void sendTokenResponse(HttpServletResponse response, Users user, String accessToken, String refreshToken) throws IOException {
-//    Map<String, String> tokens = new HashMap<>();
-//    tokens.put("message:", "Successfully logged in using socials login!");
-//    tokens.put("access_token", accessToken);
-//    tokens.put("refresh_token", generateTokenFromEmail);
-//
-//    response.setContentType("application/json");
-//    response.getWriter().write(new ObjectMapper().writeValueAsString(tokens));
 
     String oneTimeCode = oneTimeCodeService.generateAndStoreCode(user, accessToken, refreshToken);
     String redirectUrl = UriComponentsBuilder.fromUriString(FE_URL)
