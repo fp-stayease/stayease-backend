@@ -55,7 +55,7 @@ public class ReplyController {
     public ResponseEntity<?> getReviewReplies(@PathVariable Long reviewId,
                                               @RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "5") int size) {
-        Sort sort = Sort.by("DESC", "createdAt");
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
         var response = replyService.findReviewReplies(reviewId, pageable);
 

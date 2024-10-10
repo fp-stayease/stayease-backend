@@ -51,4 +51,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
         AND r.deletedAt IS NULL
     """)
     Long countTotalPropertiesReviewers(@Param("propertyId") Long propertyId);
+    @Query("""
+        SELECT AVG(r.rating) FROM Review r
+        WHERE r.property.tenant.id = :tenantId
+        AND r.isPublished = TRUE
+        AND r.deletedAt IS NULL
+    """)
+    Double findTenantAverageRating(@Param("tenantId") Long tenantId);
 }

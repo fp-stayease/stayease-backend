@@ -98,4 +98,11 @@ public class ReviewController {
         var response = reviewService.getPropertyRating(propertyId);
         return Response.successfulResponse("Rating reviews fetched", response);
     }
+
+    @GetMapping("/rating/tenant")
+    public ResponseEntity<?> getTenantRating() {
+        Users user = usersService.getLoggedUser();
+        var response = reviewService.getTenantRating(user);
+        return Response.successfulResponse("Tenant rating fetched", response);
+    }
 }
