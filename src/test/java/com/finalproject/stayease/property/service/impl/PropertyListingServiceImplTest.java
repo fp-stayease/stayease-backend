@@ -89,14 +89,14 @@ public class PropertyListingServiceImplTest {
 
   @Test
   void findAvailableProperties_Success() {
-    when(propertyService.findAvailableProperties(any(), any(), any(), any(), any(), any(), any()))
+    when(propertyService.findAvailableProperties(any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(Collections.singletonList(propertyListingDTO));
     when(peakSeasonRateService.applyPeakSeasonRate(anyLong(), any(), any(), any()))
         .thenReturn(BigDecimal.valueOf(120));
 
     Page<PropertyListingDTO> result = propertyListingService.findAvailableProperties(
         LocalDate.now(), LocalDate.now().plusDays(1), "City", 1L,
-        "searchTerm", BigDecimal.valueOf(50), BigDecimal.valueOf(200),
+        "searchTerm", BigDecimal.valueOf(50), BigDecimal.valueOf(200), 2,
         0, 10, "price", "ASC");
 
     assertNotNull(result);
@@ -163,6 +163,6 @@ public class PropertyListingServiceImplTest {
     assertThrows(InvalidDateException.class,
         () -> propertyListingService.findAvailableProperties(
             LocalDate.now().plusDays(1), LocalDate.now(), null, null,
-            null, null, null, 0, 10, "price", "ASC"));
+            null, null, null, 2, 0, 10, "price", "ASC"));
   }
 }

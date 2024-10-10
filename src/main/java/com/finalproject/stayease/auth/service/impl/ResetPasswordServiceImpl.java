@@ -122,7 +122,7 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
     String randomKey = generateRandomKey(email);
 
     sendPasswordResetRequestMail(email, randomKey);
-    log.info("Request to reset password accepted! Random key: " + randomKey);
+    log.debug("Request to reset password accepted! Random key: " + randomKey);
     String message = "Request to reset password accepted!";
     return new ForgotPasswordResponseDTO(message, randomKey);
   }

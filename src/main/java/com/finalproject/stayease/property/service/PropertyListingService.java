@@ -16,6 +16,7 @@ public interface PropertyListingService {
       String searchTerm,
       BigDecimal minPrice,
       BigDecimal maxPrice,
+      Integer guestCount,
       int page,
       int size,
       String sortBy,

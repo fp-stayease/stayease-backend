@@ -41,13 +41,14 @@ public class PropertyListingServiceImpl implements PropertyListingService {
   @Override
   public Page<PropertyListingDTO> findAvailableProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
-      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, int page, int size, String sortBy, String sortDirection
+      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, Integer guestCount, int page, int size, String sortBy, String sortDirection
   ) {
     LocalDate checkInDate = startDate != null ? startDate : LocalDate.now();
     LocalDate checkOutDate = endDate != null ? endDate : checkInDate.plusYears(100);
     validateDate(checkInDate, checkOutDate);
 
-    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm, minPrice, maxPrice);
+    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
+        minPrice, maxPrice, guestCount);
     log.info("Properties fetched: {}", properties.size());
 
     applyPeakSeasonRates(properties, checkInDate);
@@ -89,12 +90,12 @@ public class PropertyListingServiceImpl implements PropertyListingService {
 
   private List<PropertyListingDTO> fetchProperties(
       LocalDate startDate, LocalDate endDate, String city, Long categoryId,
-      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice
+      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, Integer guestCount
   ) {
     String lowerCaseSearchTerm = searchTerm != null ? searchTerm.toLowerCase() : null;
     String lowerCaseCity = city != null ? city.toLowerCase() : null;
     return propertyService.findAvailableProperties(
-        startDate, endDate, lowerCaseCity, categoryId, lowerCaseSearchTerm, minPrice, maxPrice);
+        startDate, endDate, lowerCaseCity, categoryId, lowerCaseSearchTerm, minPrice, maxPrice, guestCount);
   }
 
   private void applyPeakSeasonRates(List<PropertyListingDTO> properties, LocalDate checkDate) {

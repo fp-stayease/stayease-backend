@@ -215,6 +215,7 @@ public class PropertyServiceImpl implements PropertyService {
    * @param searchTerm A search term to filter properties.
    * @param minPrice The minimum price.
    * @param maxPrice The maximum price.
+   * @param guestCount The minimum number of guests that could stay in the room
    * @return A list of property listings matching the criteria.
    */
   @Override
@@ -225,9 +226,11 @@ public class PropertyServiceImpl implements PropertyService {
       Long categoryId,
       String searchTerm,
       BigDecimal minPrice,
-      BigDecimal maxPrice) {
+      BigDecimal maxPrice,
+      Integer guestCount) {
     validateDate(startDate, endDate);
-    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm, minPrice, maxPrice);
+    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm, minPrice,
+        maxPrice, guestCount);
   }
 
   // Property ownership verification

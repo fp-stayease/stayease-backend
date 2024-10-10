@@ -37,9 +37,6 @@ public class JwtServiceImpl implements JwtService {
   private final UsersService usersService;
   private final UserDetailsServiceImpl userDetailsService;
 
-  @Value("${NEXTAUTH_SECRET}")
-  private String NEXTAUTH_SECRET;
-
   public JwtServiceImpl(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, AuthRedisRepository authRedisRepository,
       UsersService usersService, UserDetailsServiceImpl userDetailsService) {
     this.jwtEncoder = jwtEncoder;
@@ -90,15 +87,6 @@ public class JwtServiceImpl implements JwtService {
   public Long getExpiresAt(String token) {
     return Objects.requireNonNull(jwtDecoder.decode(token).getExpiresAt()).toEpochMilli();
   }
-
-//  @Override
-//public Claims validateToken(String token) {
-//  return Jwts.parser()
-//      .setSigningKey(NEXTAUTH_SECRET.getBytes())
-//      .build()
-//      .parseClaimsJws(token)
-//      .getBody();
-//}
 
   private JwtClaimsSet buildAccessTokenClaimsSet(Users user, List<String> authorities, String subject) {
     Instant now = Instant.now();

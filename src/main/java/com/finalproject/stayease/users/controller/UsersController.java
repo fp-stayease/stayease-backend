@@ -104,7 +104,7 @@ public class UsersController {
       throws MessagingException, IOException {
     Users loggedUser = usersService.getLoggedUser();
     String verificationUrl = emailChangeService.requestEmailChange(loggedUser, requestDTO);
-    log.info("Email change request sent successfully! Verification URL: {}", verificationUrl);
+    log.debug("Email change request sent successfully! Verification URL: {}", verificationUrl);
     return Response.successfulResponse(HttpStatus.OK.value(), "Email change request sent successfully!", new EmailChangeResponseDTO(verificationUrl));
   }
 

@@ -209,11 +209,12 @@ class PropertyServiceImplTest {
   @Test
   void findAvailableProperties_Success() {
     PropertyListingDTO listingDTO = new PropertyListingDTO();
-    when(propertyRepository.findAvailableProperties(any(), any(), any(), any(), any(), any(), any()))
+    when(propertyRepository.findAvailableProperties(any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(List.of(listingDTO));
 
     List<PropertyListingDTO> result = propertyService.findAvailableProperties(
-        LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), "City", 1L, "Search", BigDecimal.ONE, BigDecimal.TEN);
+        LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), "City", 1L, "Search", BigDecimal.ONE,
+        BigDecimal.TEN, 2);
     assertFalse(result.isEmpty());
     assertEquals(1, result.size());
   }

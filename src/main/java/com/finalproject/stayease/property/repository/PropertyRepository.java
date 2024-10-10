@@ -153,6 +153,23 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
           LOWER(CAST(p.city AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
           LOWER(CAST(p.country AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
           LOWER(CAST(ti.businessName AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')))
+      AND (:guestCount IS NULL OR
+              EXISTS (
+                  SELECT 1
+                  FROM Room r
+                  WHERE r.property = p
+                  AND r.deletedAt IS NULL
+                  AND r.capacity >= :guestCount
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM RoomAvailability ra
+                      WHERE ra.room = r
+                      AND ra.startDate <= :startDate
+                      AND ra.endDate >= :startDate
+                      AND ra.isAvailable = false
+                  )
+              )
+          )
       AND EXISTS (
           SELECT 1
           FROM Room r
@@ -175,7 +192,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       @Param("categoryId") Long categoryId,
       @Param("searchTerm") String searchTerm,
       @Param("minPrice") BigDecimal minPrice,
-      @Param("maxPrice") BigDecimal maxPrice
+      @Param("maxPrice") BigDecimal maxPrice,
+      @Param("guestCount") Integer guestCount
   );
     @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId AND p.deletedAt IS NULL")
     Long countPropertiesByTenantId(@Param("tenantId") Long tenantId);

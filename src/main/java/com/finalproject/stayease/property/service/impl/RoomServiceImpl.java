@@ -64,6 +64,7 @@ public class RoomServiceImpl implements RoomService {
   @Override
   public void deleteRoom(Long propertyId, Long roomId) {
     Room existingRoom = checkRoomBelongsToProperty(propertyId, roomId);
+    isOnlyRoom(propertyId);
     softDeleteRoom(existingRoom);
   }
 
@@ -196,6 +197,17 @@ public class RoomServiceImpl implements RoomService {
       throw new InvalidRequestException("Property and room do not match. Please enter a valid property ID and room ID that correlate to each other");
     }
     return room;
+  }
+
+  // Checks if a room is the only room in the property
+  private void isOnlyRoom(Long propertyId) {
+    Property property = propertyService.findPropertyById(propertyId).orElseThrow(() -> new PropertyNotFoundException(
+        "Property not found"));
+    List<Room> rooms = roomRepository.findAllByPropertyAndDeletedAtIsNull(property);
+    if (rooms.size() == 1) {
+      throw new InvalidRequestException("This is the only room in the property, you are not allowed to list a "
+                                        + "property without a room");
+    }
   }
 
   // Soft deletes a room
