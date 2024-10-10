@@ -186,7 +186,7 @@ public class RegisterServiceImpl implements RegisterService {
 
     //Build url
     String url = buildVerificationUrl(userType, token);
-    log.info("Verification URL: {}", url);
+    log.debug("Verification URL: {}", url);
 
     // Replace placeholders with actual values
     String htmlContent = htmlTemplate

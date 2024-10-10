@@ -41,7 +41,8 @@ public interface PropertyService {
       Long categoryId,
       String searchTerm,
       BigDecimal minPrice,
-      BigDecimal maxPrice
+      BigDecimal maxPrice,
+      Integer guestCount
   );
 
   // Property ownership verification

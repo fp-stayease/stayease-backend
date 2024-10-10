@@ -108,15 +108,4 @@ public class GoogleVerifierService {
   }
 
 
-//  public SocialLoginRequest extractUserInfoFromToken(GoogleIdToken.Payload payload) {
-//    String email = payload.getEmail();
-//    String firstName = (String) payload.get("given_name");
-//    String lastName = (String) payload.get("family_name");
-//    String avatar = (String) payload.get("picture");
-//    String provider = "google";
-//    String providerUserId = payload.getSubject();
-//    return new SocialLoginRequest();
-//  }
-
-
 }

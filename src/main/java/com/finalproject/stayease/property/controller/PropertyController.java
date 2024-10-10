@@ -81,6 +81,7 @@ public class PropertyController {
       @RequestParam(required = false) String searchTerm,
       @RequestParam(required = false) BigDecimal minPrice,
       @RequestParam(required = false) BigDecimal maxPrice,
+      @RequestParam(required = false) Integer guestCount,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
       @RequestParam(defaultValue = "name") String sortBy,
@@ -88,8 +89,8 @@ public class PropertyController {
   ) {
     Page<PropertyListingDTO> properties = propertyListingService.findAvailableProperties(
         startDate, endDate, city, categoryId, searchTerm, minPrice,
-        maxPrice, page, size,
-        sortBy, sortDirection);
+        maxPrice, guestCount, page,
+        size, sortBy, sortDirection);
 
     return Response.responseMapper(
         HttpStatus.OK.value(),
