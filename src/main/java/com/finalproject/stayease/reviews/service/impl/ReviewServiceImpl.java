@@ -123,7 +123,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public Page<ReviewDTO> getTenantReviews(Users user, String search, Pageable pageable) {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
-        return reviewRepository.findTenantReviewsAndDeletedAtIsNull(tenant.getId(), search, pageable)
+        return reviewRepository.findTenantReviewsAndDeletedAtIsNull(user.getId(), search, pageable)
                 .map(ReviewDTO::new);
     }
 
@@ -144,5 +144,11 @@ public class ReviewServiceImpl implements ReviewService {
         Long totalReviewers = reviewRepository.countTotalPropertiesReviewers(property.getId());
 
         return new RatingDTO(property.getName(), propertyRating, totalReviewers);
+    }
+
+    @Override
+    public Double getTenantRating(Users user) {
+        TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
+        return reviewRepository.findTenantAverageRating(user.getId());
     }
 }

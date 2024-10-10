@@ -23,7 +23,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findBookingsWithCheckInTomorrow(LocalDate tomorrow);
     @Query("""
         SELECT COUNT(b.id) FROM Booking b
-        WHERE b.status = 'PAYMENT_COMPLETE'
+        WHERE b.status = 'PAYMENT_COMPLETE' OR b.status = 'COMPLETED'
         AND b.tenant.id = :tenantId
         AND b.deletedAt IS NULL
         AND EXTRACT(YEAR FROM b.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
@@ -64,7 +64,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
         LEFT JOIN 
             bookings b ON DATE_TRUNC('day', b.created_at AT TIME ZONE 'UTC') = ds.date
             AND b.tenant_id = :tenantId
-            AND b.status = 'PAYMENT_COMPLETE'
+            AND b.status = 'PAYMENT_COMPLETE' OR b.status = 'COMPLETED'
         LEFT JOIN
             property p ON b.property_id = p.id
         WHERE
@@ -81,7 +81,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     @Query("""
         SELECT b FROM Booking b
         WHERE b.tenant.id = :tenantId
-        AND b.status = 'PAYMENT_COMPLETE'
+        AND b.status = 'PAYMENT_COMPLETE' OR b.status = 'COMPLETED'
         AND b.deletedAt IS NULL
         AND EXTRACT(YEAR FROM b.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
         AND EXTRACT(MONTH FROM b.createdAt) = :month
@@ -104,7 +104,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
         SELECT COUNT(b.id) FROM Booking b
         WHERE b.user.id = :userId
         AND b.checkOutDate <= CURRENT_DATE
-        AND b.status = 'PAYMENT_COMPLETE'
+        AND b.status = 'COMPLETED'
         AND b.deletedAt IS NULL
     """)
     Double countUserPastBookings(@Param("userId") Long userId);

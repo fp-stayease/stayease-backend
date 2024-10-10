@@ -11,6 +11,7 @@ import com.finalproject.stayease.reviews.service.ReviewService;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.service.TenantInfoService;
+import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.Objects;
 
 @Service
+@Log
 public class ReplyServiceImpl implements ReplyService {
     private final ReplyRepository replyRepository;
     private final ReviewService reviewService;
@@ -40,8 +42,7 @@ public class ReplyServiceImpl implements ReplyService {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
         Review review = reviewService.findReviewById(reviewId);
 
-        if (!Objects.equals(review.getProperty().getTenant().getId(), tenant.getId()) ||
-        !Objects.equals(review.getUser().getId(), user.getId())) {
+        if (!Objects.equals(review.getProperty().getTenant().getId(), user.getId())) {
             throw new IllegalArgumentException("Only tenants can reply this reviews");
         }
 

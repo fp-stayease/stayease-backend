@@ -16,6 +16,7 @@ public class ReviewDTO {
     private Integer rating;
     private UsersSummary user;
     private BookingSummary booking;
+    private boolean isPublished;
     private Instant createdAt;
 
     public ReviewDTO(Review review) {
@@ -24,6 +25,7 @@ public class ReviewDTO {
         this.rating = review.getRating();
         this.user = new UsersSummary(review.getUser());
         this.booking = new BookingSummary(review.getBooking());
+        this.isPublished = review.isPublished();
         this.createdAt = review.getCreatedAt();
     }
 
@@ -49,6 +51,7 @@ public class ReviewDTO {
         private UUID id;
         private String propertyName;
         private String propertyImage;
+        private Double totalPrice;
         private LocalDate checkInDate;
         private LocalDate checkOutDate;
 
@@ -56,6 +59,7 @@ public class ReviewDTO {
             this.id = booking.getId();
             this.propertyName = booking.getProperty().getName();
             this.propertyImage = booking.getProperty().getImageUrl();
+            this.totalPrice = booking.getTotalPrice();
             this.checkInDate = booking.getCheckInDate();
             this.checkOutDate = booking.getCheckOutDate();
         }
