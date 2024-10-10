@@ -195,8 +195,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       @Param("maxPrice") BigDecimal maxPrice,
       @Param("guestCount") Integer guestCount
   );
-
-    @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId")
+    @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId AND p.deletedAt IS NULL")
     Long countPropertiesByTenantId(@Param("tenantId") Long tenantId);
 
   @Modifying

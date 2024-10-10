@@ -17,4 +17,5 @@ public interface ReviewService {
     Page<ReviewDTO> getTenantReviews(Users user, String search, Pageable pageable);
     Page<ReviewDTO> getPropertiesReviews(Long propertyId, Pageable pageable);
     RatingDTO getPropertyRating(Long propertyId);
+    Double getTenantRating(Users user);
 }

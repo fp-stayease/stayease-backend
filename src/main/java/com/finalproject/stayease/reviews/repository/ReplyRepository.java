@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface ReplyRepository extends JpaRepository<Reply, Long> {
     @Query("""
         SELECT r FROM Reply r
-        WHERE r.review = :reviewId
+        WHERE r.review.id = :reviewId
         AND r.deletedAt IS NULL
     """)
     Page<Reply> findRepliesByReviewId(Long reviewId, Pageable pageable);
