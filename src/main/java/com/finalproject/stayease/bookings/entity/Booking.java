@@ -5,6 +5,7 @@ import com.finalproject.stayease.bookings.entity.dto.BookingDTO;
 import com.finalproject.stayease.payment.entity.Payment;
 import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.dto.PropertyDTO;
+import com.finalproject.stayease.reviews.entity.Review;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.*;
@@ -72,6 +73,9 @@ public class Booking {
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "booking")
     private Payment payment;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews;
 
     @Column(name = "checkin_date")
     private LocalDate checkInDate;

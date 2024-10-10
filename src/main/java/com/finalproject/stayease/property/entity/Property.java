@@ -1,5 +1,6 @@
 package com.finalproject.stayease.property.entity;
 
+import com.finalproject.stayease.reviews.entity.Review;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -104,6 +105,9 @@ public class Property {
 
   @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Room> rooms = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private Set<Review> reviews = new LinkedHashSet<>();
 
   @OneToOne(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private PropertyRateSetting propertyRateSetting;

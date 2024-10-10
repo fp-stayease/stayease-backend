@@ -88,7 +88,11 @@ public class SecurityConfig {
         API_VERSION + "/rates",
         API_VERSION + "/rates/daily",
         API_VERSION + "/rates/daily/cumulative",
-        API_VERSION + "/payment/{bookingId}"
+        API_VERSION + "/payment/{bookingId}",
+        API_VERSION + "/reviews/properties/**",
+        API_VERSION + "/reviews/rating/**",
+        API_VERSION + "/reviews/{reviewId}",
+        API_VERSION + "/replies/**"
         ).permitAll();
 
     auth.requestMatchers(HttpMethod.POST,
@@ -96,20 +100,33 @@ public class SecurityConfig {
     ).permitAll();
 
     // Permit access to specific POST endpoint
-    auth.requestMatchers(HttpMethod.POST, API_VERSION + "/transactions").hasRole("USER");
+    auth.requestMatchers(HttpMethod.POST,
+        API_VERSION + "/transactions",
+        API_VERSION + "/reviews"
+    ).hasRole("USER");
 
     // Permit access to specific PUT endpoint
     auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/users/profile/email").permitAll();
-    auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/transactions/user/{bookingId}").hasRole("USER");
-    auth.requestMatchers(HttpMethod.PUT, API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
+    auth.requestMatchers(HttpMethod.PUT,
+        API_VERSION + "/transactions/user/{bookingId}",
+        API_VERSION + "/reviews/{reviewId}"
+    ).hasRole("USER");
+    auth.requestMatchers(HttpMethod.PUT,
+         API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
 
     // Permit access to specific PATCH endpoint
     auth.requestMatchers(HttpMethod.PATCH, API_VERSION + "/transactions/{bookingId}").hasRole("TENANT");
 
+    // Permit access to specific DELETE endpoint
+    auth.requestMatchers(HttpMethod.DELETE, API_VERSION + "/reviews/{reviewId}").hasAnyRole("TENANT", "USER");
+
     // Role-based access control
     auth.requestMatchers(
         API_VERSION + "/payments/payment-proof/{bookingId}",
-        API_VERSION + "/bookings/user").hasRole("USER");
+        API_VERSION + "/bookings/user",
+        API_VERSION + "/reports/user-stats",
+        API_VERSION + "/reviews/user"
+    ).hasRole("USER");
 
     auth.requestMatchers(
         API_VERSION + "/properties/**",
@@ -117,7 +134,10 @@ public class SecurityConfig {
         API_VERSION + "/profile/tenant",
         API_VERSION + "/bookings/tenant",
         API_VERSION + "/rates/auto/**",
-        API_VERSION + "/reports/**").hasRole("TENANT");
+        API_VERSION + "/reports/**",
+        API_VERSION + "/reviews/tenant",
+        API_VERSION + "/replies/**"
+    ).hasRole("TENANT");
 
     // Permit all access to authentication and registration endpoints
     auth.requestMatchers(
