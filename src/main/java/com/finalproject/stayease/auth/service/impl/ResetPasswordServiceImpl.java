@@ -6,8 +6,8 @@ import com.finalproject.stayease.auth.model.dto.forgorPassword.reset.ResetPasswo
 import com.finalproject.stayease.auth.repository.ResetPasswordRedisRepository;
 import com.finalproject.stayease.auth.service.ResetPasswordService;
 import com.finalproject.stayease.exceptions.auth.InvalidCredentialsException;
-import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.exceptions.auth.PasswordDoesNotMatchException;
+import com.finalproject.stayease.exceptions.utils.InvalidRequestException;
 import com.finalproject.stayease.exceptions.utils.InvalidTokenException;
 import com.finalproject.stayease.mail.service.MailService;
 import com.finalproject.stayease.users.entity.SocialLogin;
@@ -17,7 +17,9 @@ import com.finalproject.stayease.users.service.UsersService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -26,7 +28,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -36,6 +37,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 
 @Service
 @Data
@@ -201,8 +203,12 @@ public class ResetPasswordServiceImpl implements ResetPasswordService {
 
   private void sendPasswordResetRequestMail(String email, String randomKey) throws IOException, MessagingException {
     // Load the HTML template
-    Resource resource = new ClassPathResource("templates/password-reset.html");
-    String htmlTemplate = Files.readString(resource.getFile().toPath());
+    ClassPathResource resource = new ClassPathResource("templates/password-reset.html");
+    String htmlTemplate;
+    try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+      htmlTemplate = FileCopyUtils.copyToString(reader);
+    }
+
     String url = buildUrl(randomKey);
     log.info("Reset URL: " + url);
 
