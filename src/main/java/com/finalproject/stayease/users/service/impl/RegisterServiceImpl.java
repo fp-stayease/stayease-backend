@@ -1,5 +1,10 @@
 package com.finalproject.stayease.users.service.impl;
 
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationRequestDTO;
+import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyTenantResponseDTO;
+import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.auth.service.RegisterRedisService;
 import com.finalproject.stayease.exceptions.auth.PasswordDoesNotMatchException;
 import com.finalproject.stayease.exceptions.utils.DataNotFoundException;
@@ -9,11 +14,6 @@ import com.finalproject.stayease.users.entity.PendingRegistration;
 import com.finalproject.stayease.users.entity.TenantInfo;
 import com.finalproject.stayease.users.entity.Users;
 import com.finalproject.stayease.users.entity.Users.UserType;
-import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationRequestDTO;
-import com.finalproject.stayease.auth.model.dto.register.init.InitialRegistrationResponseDTO;
-import com.finalproject.stayease.auth.model.dto.register.verify.request.VerifyRegistrationDTO;
-import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyTenantResponseDTO;
-import com.finalproject.stayease.auth.model.dto.register.verify.response.VerifyUserResponseDTO;
 import com.finalproject.stayease.users.service.PendingRegistrationService;
 import com.finalproject.stayease.users.service.RegisterService;
 import com.finalproject.stayease.users.service.TenantInfoService;
@@ -21,7 +21,9 @@ import com.finalproject.stayease.users.service.UsersService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,9 +31,9 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 
 @Service
 @Data
@@ -178,8 +180,11 @@ public class RegisterServiceImpl implements RegisterService {
       String message) throws MessagingException, IOException {
 
     // Load the HTML template
-    Resource resource = new ClassPathResource("templates/verification-email.html");
-    String htmlTemplate = Files.readString(resource.getFile().toPath());
+    ClassPathResource resource = new ClassPathResource("templates/verification-email.html");
+    String htmlTemplate;
+    try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+      htmlTemplate = FileCopyUtils.copyToString(reader);
+    }
 
     // Get user type
     UserType userType = pendingRegistration.getUserType();
