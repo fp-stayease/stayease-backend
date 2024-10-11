@@ -13,7 +13,9 @@ import com.finalproject.stayease.users.service.UsersService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -26,6 +28,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 
 @Service
 @Transactional
@@ -116,8 +119,16 @@ public class EmailChangeServiceImpl implements EmailChangeService {
   // Region - Helper methods
 
   private void sendVerificationEmail(String newEmail, String tokenUUID) throws MessagingException, IOException {
-    String htmlTemplate = Files.readString(new ClassPathResource("templates/email-change.html").getFile().toPath());
-    String htmlContent = htmlTemplate.replace("${verificationUrl}", buildVerificationUrl(tokenUUID));
+    ClassPathResource resource = new ClassPathResource("templates/email-change.html");
+    String htmlTemplate;
+    try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+      htmlTemplate = FileCopyUtils.copyToString(reader);
+    }
+
+    String url = buildVerificationUrl(tokenUUID);
+    String htmlContent = htmlTemplate.replace("${verificationUrl}", url);
+    log.info("Email change URL: {}", url);
+
     mailService.sendHtmlEmail(htmlContent, newEmail, "Verify your new email!");
   }
 
