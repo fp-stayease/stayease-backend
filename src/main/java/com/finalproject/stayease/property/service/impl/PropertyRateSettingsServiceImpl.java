@@ -190,8 +190,8 @@ public class PropertyRateSettingsServiceImpl implements PropertyRateSettingsServ
       LocalDate endDate, Map<LocalDate, List<PeakSeasonRate>> existingAutoRatesMap) {
     Long propertyId = setting.getProperty().getId();
     for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-      if (existingAutoRatesMap.containsKey(date)) {
-        // else remove existing auto rates (cases where holiday or long weekend is removed)
+      // If the date is neither a holiday nor a long weekend, deactivate rates
+      if (!holidayService.isHoliday(date) && !holidayService.isLongWeekend(date) && existingAutoRatesMap.containsKey(date)) {
         log.info("Not a holiday or long weekend, removing existing auto rates for property ID: {} on date: {}",
             propertyId, date);
         handleDeactivation(existingAutoRatesMap.get(date));
