@@ -208,14 +208,15 @@ public class PropertyServiceImpl implements PropertyService {
 
   /**
    * Finds available properties based on various criteria.
-   * @param startDate The start date of the stay.
-   * @param endDate The end date of the stay.
-   * @param city The city to search in.
-   * @param categoryId The category ID of the property.
-   * @param searchTerm A search term to filter properties.
-   * @param minPrice The minimum price.
-   * @param maxPrice The maximum price.
-   * @param guestCount The minimum number of guests that could stay in the room
+   *
+   * @param startDate    The start date of the stay.
+   * @param endDate      The end date of the stay.
+   * @param city         The city to search in.
+   * @param categoryName The category of the property.
+   * @param searchTerm   A search term to filter properties.
+   * @param minPrice     The minimum price.
+   * @param maxPrice     The maximum price.
+   * @param guestCount   The minimum number of guests that could stay in the room
    * @return A list of property listings matching the criteria.
    */
   @Override
@@ -223,13 +224,12 @@ public class PropertyServiceImpl implements PropertyService {
       LocalDate startDate,
       LocalDate endDate,
       String city,
-      Long categoryId,
-      String searchTerm,
+      String categoryName, String searchTerm,
       BigDecimal minPrice,
       BigDecimal maxPrice,
       Integer guestCount) {
     validateDate(startDate, endDate);
-    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryId, searchTerm, minPrice,
+    return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryName, searchTerm, minPrice,
         maxPrice, guestCount);
   }
 

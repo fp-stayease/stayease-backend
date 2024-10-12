@@ -77,7 +77,7 @@ public class PropertyController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
       @RequestParam(required = false) String city,
-      @RequestParam(required = false) Long categoryId,
+      @RequestParam(required = false) String categoryName,
       @RequestParam(required = false) String searchTerm,
       @RequestParam(required = false) BigDecimal minPrice,
       @RequestParam(required = false) BigDecimal maxPrice,
@@ -88,7 +88,7 @@ public class PropertyController {
       @RequestParam(defaultValue = "ASC") String sortDirection
   ) {
     Page<PropertyListingDTO> properties = propertyListingService.findAvailableProperties(
-        startDate, endDate, city, categoryId, searchTerm, minPrice,
+        startDate, endDate, city, categoryName, searchTerm, minPrice,
         maxPrice, guestCount, page,
         size, sortBy, sortDirection);
 

@@ -213,7 +213,7 @@ class PropertyServiceImplTest {
         .thenReturn(List.of(listingDTO));
 
     List<PropertyListingDTO> result = propertyService.findAvailableProperties(
-        LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), "City", 1L, "Search", BigDecimal.ONE,
+        LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), "City", "Category", "Search", BigDecimal.ONE,
         BigDecimal.TEN, 2);
     assertFalse(result.isEmpty());
     assertEquals(1, result.size());

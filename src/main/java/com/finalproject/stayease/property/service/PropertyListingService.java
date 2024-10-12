@@ -8,11 +8,12 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 public interface PropertyListingService {
+
   Page<PropertyListingDTO> findAvailableProperties(
       LocalDate startDate,
       LocalDate endDate,
       String city,
-      Long categoryId,
+      String categoryName,
       String searchTerm,
       BigDecimal minPrice,
       BigDecimal maxPrice,

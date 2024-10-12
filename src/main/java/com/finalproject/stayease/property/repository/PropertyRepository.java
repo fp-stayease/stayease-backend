@@ -111,7 +111,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       JOIN t.tenantInfo ti
       WHERE p.deletedAt IS NULL
       AND (:city IS NULL OR LOWER(CAST(p.city AS string)) = LOWER(CAST(:city AS string)))
-      AND (:categoryId IS NULL OR pc.id = :categoryId)
+      AND (:categoryName IS NULL OR LOWER(CAST(pc.name AS string)) = LOWER(CAST(:categoryName AS string)))
       AND (:minPrice IS NULL OR
           EXISTS (
               SELECT 1
@@ -189,7 +189,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       @Param("startDate") LocalDate startDate,
       @Param("endDate") LocalDate endDate,
       @Param("city") String city,
-      @Param("categoryId") Long categoryId,
+      @Param("categoryName") String categoryName,
       @Param("searchTerm") String searchTerm,
       @Param("minPrice") BigDecimal minPrice,
       @Param("maxPrice") BigDecimal maxPrice,
