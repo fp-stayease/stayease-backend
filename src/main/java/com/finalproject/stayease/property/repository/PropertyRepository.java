@@ -71,6 +71,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         WHERE ra.room.id = r.id
         AND :date BETWEEN ra.startDate AND ra.endDate
         AND ra.isAvailable = false
+        AND ra.deletedAt IS NULL
       )
       ORDER BY r.basePrice asc
       """)
@@ -89,6 +90,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                WHERE ra.room = r
                  AND :date BETWEEN ra.startDate AND ra.endDate
                  AND ra.isAvailable = false
+                 AND ra.deletedAt IS NULL
            )
        )
       """)
@@ -126,6 +128,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                   AND ra.startDate <= :startDate
                   AND ra.endDate >= :startDate
                   AND ra.isAvailable = false
+                  AND ra.deletedAt IS NULL
               )
           )
       )
@@ -143,6 +146,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                   AND ra.startDate <= :startDate
                   AND ra.endDate >= :startDate
                   AND ra.isAvailable = false
+                  AND ra.deletedAt IS NULL
               )
           )
       )
@@ -167,6 +171,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                       AND ra.startDate <= :startDate
                       AND ra.endDate >= :startDate
                       AND ra.isAvailable = false
+                      AND ra.deletedAt IS NULL
                   )
               )
           )
@@ -182,6 +187,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
               AND ra.startDate <= :endDate
               AND ra.endDate >= :startDate
               AND ra.isAvailable = false
+              AND ra.deletedAt IS NULL
           )
       )
       """)
