@@ -52,7 +52,6 @@ public class RegistrationController {
   @PostMapping("/verify")
   public ResponseEntity<Response<VerifyUserResponseDTO>> verifyRegistration(@RequestParam String token,
       @Valid @RequestBody VerifyRegistrationDTO verifyRegistrationDTO) {
-    log.info("token: {}, verifyRegistrationDTO: {}", token, verifyRegistrationDTO);
     return Response.successfulResponse(HttpStatus.ACCEPTED.value(), "Verification successful, welcome to StayEase! "
                                                                     + "Please login with your new credentials!",
         registerService.verifyRegistration(verifyRegistrationDTO, token));
