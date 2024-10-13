@@ -71,6 +71,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         WHERE ra.room.id = r.id
         AND :date BETWEEN ra.startDate AND ra.endDate
         AND ra.isAvailable = false
+        AND ra.deletedAt IS NULL
       )
       ORDER BY r.basePrice asc
       """)
@@ -89,6 +90,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                WHERE ra.room = r
                  AND :date BETWEEN ra.startDate AND ra.endDate
                  AND ra.isAvailable = false
+                 AND ra.deletedAt IS NULL
            )
        )
       """)
@@ -111,7 +113,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       JOIN t.tenantInfo ti
       WHERE p.deletedAt IS NULL
       AND (:city IS NULL OR LOWER(CAST(p.city AS string)) = LOWER(CAST(:city AS string)))
-      AND (:categoryId IS NULL OR pc.id = :categoryId)
+      AND (:categoryName IS NULL OR LOWER(CAST(pc.name AS string)) = LOWER(CAST(:categoryName AS string)))
       AND (:minPrice IS NULL OR
           EXISTS (
               SELECT 1
@@ -126,6 +128,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                   AND ra.startDate <= :startDate
                   AND ra.endDate >= :startDate
                   AND ra.isAvailable = false
+                  AND ra.deletedAt IS NULL
               )
           )
       )
@@ -143,6 +146,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                   AND ra.startDate <= :startDate
                   AND ra.endDate >= :startDate
                   AND ra.isAvailable = false
+                  AND ra.deletedAt IS NULL
               )
           )
       )
@@ -167,6 +171,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                       AND ra.startDate <= :startDate
                       AND ra.endDate >= :startDate
                       AND ra.isAvailable = false
+                      AND ra.deletedAt IS NULL
                   )
               )
           )
@@ -182,6 +187,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
               AND ra.startDate <= :endDate
               AND ra.endDate >= :startDate
               AND ra.isAvailable = false
+              AND ra.deletedAt IS NULL
           )
       )
       """)
@@ -189,13 +195,14 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       @Param("startDate") LocalDate startDate,
       @Param("endDate") LocalDate endDate,
       @Param("city") String city,
-      @Param("categoryId") Long categoryId,
+      @Param("categoryName") String categoryName,
       @Param("searchTerm") String searchTerm,
       @Param("minPrice") BigDecimal minPrice,
       @Param("maxPrice") BigDecimal maxPrice,
       @Param("guestCount") Integer guestCount
   );
-    @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId AND p.deletedAt IS NULL")
+
+    @Query("SELECT COUNT(p.id) FROM Property p WHERE p.tenant.id = :tenantId")
     Long countPropertiesByTenantId(@Param("tenantId") Long tenantId);
 
   @Modifying

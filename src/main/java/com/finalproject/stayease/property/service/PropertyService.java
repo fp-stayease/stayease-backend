@@ -38,7 +38,7 @@ public interface PropertyService {
       LocalDate startDate,
       LocalDate endDate,
       String city,
-      Long categoryId,
+      String categoryName,
       String searchTerm,
       BigDecimal minPrice,
       BigDecimal maxPrice,

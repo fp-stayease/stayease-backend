@@ -95,7 +95,7 @@ public class PropertyListingServiceImplTest {
         .thenReturn(BigDecimal.valueOf(120));
 
     Page<PropertyListingDTO> result = propertyListingService.findAvailableProperties(
-        LocalDate.now(), LocalDate.now().plusDays(1), "City", 1L,
+        LocalDate.now(), LocalDate.now().plusDays(1), "City", "Category",
         "searchTerm", BigDecimal.valueOf(50), BigDecimal.valueOf(200), 2,
         0, 10, "price", "ASC");
 

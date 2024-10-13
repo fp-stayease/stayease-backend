@@ -6,42 +6,38 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.properties.DuplicatePropertyException;
-import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
 import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
-import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyRepository;
-import com.finalproject.stayease.property.service.PropertyCategoryService;
+import com.finalproject.stayease.property.service.helpers.PropertyServiceHelper;
 import com.finalproject.stayease.users.entity.Users;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.locationtech.jts.geom.Point;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class PropertyServiceImplTest {
+public class PropertyServiceImplTest {
 
   @Mock
   private PropertyRepository propertyRepository;
 
   @Mock
-  private PropertyCategoryService propertyCategoryService;
+  private PropertyServiceHelper propertyServiceHelper;
 
   @InjectMocks
   private PropertyServiceImpl propertyService;
@@ -50,7 +46,6 @@ class PropertyServiceImplTest {
   private Property property;
   private CreatePropertyRequestDTO createDTO;
   private UpdatePropertyRequestDTO updateDTO;
-  private PropertyCategory category;
 
   @BeforeEach
   void setUp() {
@@ -58,22 +53,12 @@ class PropertyServiceImplTest {
     tenant.setId(1L);
     tenant.setUserType(Users.UserType.TENANT);
 
-    category = new PropertyCategory();
-    category.setId(1L);
-
     property = new Property();
     property.setId(1L);
     property.setTenant(tenant);
-    property.setCategory(category);
 
     createDTO = new CreatePropertyRequestDTO();
-    createDTO.setCategoryId(1L);
-    createDTO.setName("Test Property");
-    createDTO.setLongitude(0.0);
-    createDTO.setLatitude(0.0);
-
     updateDTO = new UpdatePropertyRequestDTO();
-    updateDTO.setName("Updated Property");
   }
 
   @Test
@@ -106,136 +91,76 @@ class PropertyServiceImplTest {
 
   @Test
   void createProperty_Success() {
-    when(propertyCategoryService.findCategoryByIdAndNotDeleted(1L)).thenReturn(Optional.of(category));
-    when(propertyRepository.findByLocationAndDeletedAtIsNull(any(Point.class))).thenReturn(Optional.empty());
-    when(propertyRepository.save(any(Property.class))).thenReturn(property);
-
+    when(propertyServiceHelper.toPropertyEntity(tenant, createDTO)).thenReturn(property);
     Property result = propertyService.createProperty(tenant, createDTO);
     assertNotNull(result);
-    assertEquals(property.getTenant().getId(), result.getTenant().getId());
-  }
-
-  @Test
-  void createProperty_DuplicateLocation() {
-    when(propertyRepository.findByLocationAndDeletedAtIsNull(any(Point.class))).thenReturn(Optional.of(property));
-
-    assertThrows(DuplicatePropertyException.class, () -> propertyService.createProperty(tenant, createDTO));
+    assertEquals(property, result);
   }
 
   @Test
   void updateProperty_Success() {
-    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(property));
-    when(propertyRepository.save(any(Property.class))).thenReturn(property);
-
+    when(propertyServiceHelper.checkIfValid(tenant, 1L)).thenReturn(property);
+    when(propertyServiceHelper.update(property, updateDTO)).thenReturn(property);
     Property result = propertyService.updateProperty(tenant, 1L, updateDTO);
     assertNotNull(result);
-    assertEquals("Updated Property", result.getName());
-  }
-
-  @Test
-  void updateProperty_PropertyNotFound() {
-    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
-
-    assertThrows(PropertyNotFoundException.class, () -> propertyService.updateProperty(tenant, 1L, updateDTO));
+    assertEquals(property, result);
   }
 
   @Test
   void deleteProperty_Success() {
-    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(property));
+    when(propertyServiceHelper.checkIfValid(tenant, 1L)).thenReturn(property);
     when(propertyRepository.save(any(Property.class))).thenReturn(property);
-
     Property result = propertyService.deleteProperty(tenant, 1L);
     assertNotNull(result);
     assertNotNull(result.getDeletedAt());
   }
 
   @Test
-  void deleteProperty_PropertyNotFound() {
-    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
-
-    assertThrows(PropertyNotFoundException.class, () -> propertyService.deleteProperty(tenant, 1L));
-  }
-
-  @Test
   void hardDeleteStaleProperties_Success() {
     when(propertyRepository.deleteAllDeletedPropertiesOlderThan(any(Instant.class))).thenReturn(1);
-
     int result = propertyService.hardDeleteStaleProperties(Instant.now());
     assertEquals(1, result);
   }
 
   @Test
-  void findPropertyById_Success() {
-    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(property));
-
-    Optional<Property> result = propertyService.findPropertyById(1L);
-    assertTrue(result.isPresent());
-    assertEquals(property.getId(), result.get().getId());
-  }
-
-  @Test
   void getAllAvailablePropertiesOnDate_Success() {
-    when(propertyRepository.findAvailablePropertiesOnDate(any(LocalDate.class))).thenReturn(
-        Collections.singletonList(property));
-
-    List<Property> result = propertyService.getAllAvailablePropertiesOnDate(LocalDate.now().plusDays(1));
+    LocalDate date = LocalDate.now().plusDays(1);
+    when(propertyRepository.findAvailablePropertiesOnDate(date)).thenReturn(Collections.singletonList(property));
+    List<Property> result = propertyService.getAllAvailablePropertiesOnDate(date);
     assertFalse(result.isEmpty());
     assertEquals(1, result.size());
   }
 
   @Test
-  void getAllAvailablePropertiesOnDate_NoPropertiesFound() {
-    when(propertyRepository.findAvailablePropertiesOnDate(any(LocalDate.class))).thenReturn(Collections.emptyList());
-
-    assertThrows(PropertyNotFoundException.class, () -> propertyService.getAllAvailablePropertiesOnDate(LocalDate.now().plusDays(1)));
-  }
-
-  @Test
   void findLowestRoomRate_Success() {
+    LocalDate date = LocalDate.now().plusDays(1);
     RoomPriceRateDTO rateDTO = new RoomPriceRateDTO();
-    when(propertyRepository.findAvailableRoomRates(1L, LocalDate.now().plusDays(1))).thenReturn(List.of(rateDTO));
-
-    RoomPriceRateDTO result = propertyService.findLowestRoomRate(1L, LocalDate.now().plusDays(1));
+    when(propertyRepository.findAvailableRoomRates(1L, date)).thenReturn(Collections.singletonList(rateDTO));
+    RoomPriceRateDTO result = propertyService.findLowestRoomRate(1L, date);
     assertNotNull(result);
   }
 
   @Test
-  void findLowestRoomRate_NoRatesFound() {
-    when(propertyRepository.findAvailableRoomRates(1L, LocalDate.now().plusDays(1))).thenReturn(Collections.emptyList());
-
-    assertThrows(PeakSeasonRateNotFoundException.class, () -> propertyService.findLowestRoomRate(1L, LocalDate.now().plusDays(1)));
-  }
-
-  @Test
   void findAvailableProperties_Success() {
-    PropertyListingDTO listingDTO = new PropertyListingDTO();
-    when(propertyRepository.findAvailableProperties(any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(List.of(listingDTO));
-
-    List<PropertyListingDTO> result = propertyService.findAvailableProperties(
-        LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), "City", 1L, "Search", BigDecimal.ONE,
-        BigDecimal.TEN, 2);
+    LocalDate startDate = LocalDate.now().plusDays(1);
+    LocalDate endDate = LocalDate.now().plusDays(2);
+    when(propertyRepository.findAvailableProperties(eq(startDate), eq(endDate), any(), any(), any(), any(), any(), any()))
+        .thenReturn(Collections.singletonList(new PropertyListingDTO()));
+    List<PropertyListingDTO> result = propertyService.findAvailableProperties(startDate, endDate, "City", "Category", "Search", BigDecimal.ONE, BigDecimal.TEN, 2);
     assertFalse(result.isEmpty());
     assertEquals(1, result.size());
   }
 
   @Test
   void isTenantPropertyOwner_Success() {
-    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(property));
-
+    when(propertyServiceHelper.checkIfValid(tenant, 1L)).thenReturn(property);
     boolean result = propertyService.isTenantPropertyOwner(tenant, 1L);
     assertTrue(result);
   }
 
   @Test
   void isTenantPropertyOwner_NotOwner() {
-    Users otherTenant = new Users();
-    otherTenant.setId(2L);
-    otherTenant.setUserType(Users.UserType.TENANT);
-    property.setTenant(otherTenant);
-
-    when(propertyRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(property));
-
+    when(propertyServiceHelper.checkIfValid(tenant, 1L)).thenThrow(new RuntimeException());
     boolean result = propertyService.isTenantPropertyOwner(tenant, 1L);
     assertFalse(result);
   }

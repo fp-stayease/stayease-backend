@@ -59,6 +59,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         WHERE ra.room.id = r.id
         AND :date BETWEEN ra.startDate AND ra.endDate
         AND ra.isAvailable = false
+        AND ra.deletedAt IS NULL
       )
       """)
   List<Room> findUnavailableRoomsByPropertyIdAndDate(Long propertyId, LocalDate date);
@@ -81,6 +82,7 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             WHERE ra.room.id = r.id
               AND :date BETWEEN ra.startDate AND ra.endDate
               AND ra.isAvailable = false
+              AND ra.deletedAt IS NULL
           ) THEN false
           ELSE true
         END

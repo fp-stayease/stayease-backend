@@ -40,14 +40,14 @@ public class PropertyListingServiceImpl implements PropertyListingService {
    */
   @Override
   public Page<PropertyListingDTO> findAvailableProperties(
-      LocalDate startDate, LocalDate endDate, String city, Long categoryId,
-      String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, Integer guestCount, int page, int size, String sortBy, String sortDirection
+      LocalDate startDate, LocalDate endDate, String city,
+      String categoryName, String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, Integer guestCount, int page, int size, String sortBy, String sortDirection
   ) {
     LocalDate checkInDate = startDate != null ? startDate : LocalDate.now();
     LocalDate checkOutDate = endDate != null ? endDate : checkInDate.plusYears(100);
     validateDate(checkInDate, checkOutDate);
 
-    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryId, searchTerm,
+    List<PropertyListingDTO> properties = fetchProperties(checkInDate, checkOutDate, city, categoryName, searchTerm,
         minPrice, maxPrice, guestCount);
     log.info("Properties fetched: {}", properties.size());
 
@@ -89,13 +89,14 @@ public class PropertyListingServiceImpl implements PropertyListingService {
 
 
   private List<PropertyListingDTO> fetchProperties(
-      LocalDate startDate, LocalDate endDate, String city, Long categoryId,
+      LocalDate startDate, LocalDate endDate, String city, String categoryName,
       String searchTerm, BigDecimal minPrice, BigDecimal maxPrice, Integer guestCount
   ) {
     String lowerCaseSearchTerm = searchTerm != null ? searchTerm.toLowerCase() : null;
     String lowerCaseCity = city != null ? city.toLowerCase() : null;
+    String lowerCaseCategory = categoryName != null ? categoryName.toLowerCase() : null;
     return propertyService.findAvailableProperties(
-        startDate, endDate, lowerCaseCity, categoryId, lowerCaseSearchTerm, minPrice, maxPrice, guestCount);
+        startDate, endDate, lowerCaseCity, lowerCaseCategory, lowerCaseSearchTerm, minPrice, maxPrice, guestCount);
   }
 
   private void applyPeakSeasonRates(List<PropertyListingDTO> properties, LocalDate checkDate) {
