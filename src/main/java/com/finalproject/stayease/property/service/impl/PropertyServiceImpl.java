@@ -1,21 +1,16 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
-import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
-import com.finalproject.stayease.exceptions.properties.DuplicatePropertyException;
 import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
 import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
 import com.finalproject.stayease.property.entity.Property;
-import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreatePropertyRequestDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.PropertyListingDTO;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdatePropertyRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyRepository;
-import com.finalproject.stayease.property.service.PropertyCategoryService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.helpers.PropertyServiceHelper;
 import com.finalproject.stayease.users.entity.Users;
-import com.finalproject.stayease.users.entity.Users.UserType;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,10 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,7 +28,7 @@ import org.springframework.stereotype.Service;
 public class PropertyServiceImpl implements PropertyService {
 
   private final PropertyRepository propertyRepository;
-  private final PropertyCategoryService propertyCategoryService;
+  private final PropertyServiceHelper propertyServiceHelper;
 
 
   // Property retrieval methods
@@ -64,7 +55,7 @@ public class PropertyServiceImpl implements PropertyService {
    */
   @Override
   public List<Property> findAllByTenant(Users tenant) {
-    isTenant(tenant);
+    propertyServiceHelper.isTenant(tenant);
     List<Property> tenantsProperties = propertyRepository.findByTenantAndDeletedAtIsNull(tenant);
     if (tenantsProperties.isEmpty()) {
       throw new PropertyNotFoundException("You have no properties yet");
@@ -119,8 +110,8 @@ public class PropertyServiceImpl implements PropertyService {
    */
   @Override
   public Property createProperty(Users tenant, CreatePropertyRequestDTO requestDTO) {
-    isTenant(tenant);
-    return toPropertyEntity(tenant, requestDTO);
+    propertyServiceHelper.isTenant(tenant);
+    return propertyServiceHelper.toPropertyEntity(tenant, requestDTO);
   }
 
   /**
@@ -132,8 +123,8 @@ public class PropertyServiceImpl implements PropertyService {
    */
   @Override
   public Property updateProperty(Users tenant, Long propertyId, UpdatePropertyRequestDTO requestDTO) {
-    Property existingProperty = checkIfValid(tenant, propertyId);
-    return update(existingProperty, requestDTO);
+    Property existingProperty = propertyServiceHelper.checkIfValid(tenant, propertyId);
+    return propertyServiceHelper.update(existingProperty, requestDTO);
   }
 
   /**
@@ -144,7 +135,7 @@ public class PropertyServiceImpl implements PropertyService {
    */
   @Override
   public Property deleteProperty(Users tenant, Long propertyId) {
-    Property existingProperty = checkIfValid(tenant, propertyId);
+    Property existingProperty = propertyServiceHelper.checkIfValid(tenant, propertyId);
     existingProperty.setDeletedAt(Instant.now());
     propertyRepository.save(existingProperty);
     return existingProperty;
@@ -169,7 +160,7 @@ public class PropertyServiceImpl implements PropertyService {
    */
   @Override
   public List<Property> getAllAvailablePropertiesOnDate(LocalDate date) {
-    validateDate(date);
+    propertyServiceHelper.validateDate(date);
     List<Property> availableProperties = propertyRepository.findAvailablePropertiesOnDate(date);
     if (availableProperties.isEmpty()) {
       throw new PropertyNotFoundException("No properties found for this date");
@@ -185,7 +176,7 @@ public class PropertyServiceImpl implements PropertyService {
    */
   @Override
   public RoomPriceRateDTO findLowestRoomRate(Long propertyId, LocalDate date) {
-    validateDate(date);
+    propertyServiceHelper.validateDate(date);
     return propertyRepository.findAvailableRoomRates(propertyId, date).stream().findFirst().orElseThrow(
         () -> new PeakSeasonRateNotFoundException("No room rates found for this property")
     );
@@ -199,8 +190,8 @@ public class PropertyServiceImpl implements PropertyService {
    */
   @Override
   public List<RoomPriceRateDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
-    validateDate(date);
-    Property property = propertyRepository.findByIdAndDeletedAtIsNull(propertyId).orElseThrow(
+    propertyServiceHelper.validateDate(date);
+    propertyRepository.findByIdAndDeletedAtIsNull(propertyId).orElseThrow(
         () -> new PropertyNotFoundException("Property with this ID does not exist or is deleted")
     );
     return propertyRepository.findAvailableRoomRates(propertyId, date);
@@ -228,7 +219,7 @@ public class PropertyServiceImpl implements PropertyService {
       BigDecimal minPrice,
       BigDecimal maxPrice,
       Integer guestCount) {
-    validateDate(startDate, endDate);
+    propertyServiceHelper.validateDate(startDate, endDate);
     return propertyRepository.findAvailableProperties(startDate, endDate, city, categoryName, searchTerm, minPrice,
         maxPrice, guestCount);
   }
@@ -244,7 +235,7 @@ public class PropertyServiceImpl implements PropertyService {
   @Override
   public boolean isTenantPropertyOwner(Users tenant, Long propertyId) {
     try {
-      checkIfValid(tenant, propertyId);
+      propertyServiceHelper.checkIfValid(tenant, propertyId);
     } catch (RuntimeException e) {
       return false;
     }
@@ -253,100 +244,7 @@ public class PropertyServiceImpl implements PropertyService {
 
   @Override
   public Long tenantPropertyCount(Users tenant) {
-    isTenant(tenant);
+    propertyServiceHelper.isTenant(tenant);
     return propertyRepository.countPropertiesByTenantId(tenant.getId());
-  }
-
-  // Region - helper methods
-
-  private void isTenant(Users tenant) {
-    if (tenant.getUserType() != UserType.TENANT) {
-      throw new UnauthorizedOperationsException("Only Tenants can create properties");
-    }
-  }
-
-  private Property toPropertyEntity(Users tenant, CreatePropertyRequestDTO requestDTO) {
-    Point point = toGeographyPoint(requestDTO.getLongitude(), requestDTO.getLatitude());
-
-    PropertyCategory category = getCategoryById(requestDTO.getCategoryId());
-
-    Property property = new Property();
-    property.setTenant(tenant);
-    property.setCategory(category);
-    property.setName(requestDTO.getName());
-    property.setDescription(requestDTO.getDescription());
-    property.setImageUrl(requestDTO.getImageUrl());
-    property.setAddress(requestDTO.getAddress());
-    property.setCity(requestDTO.getCity());
-    property.setCountry(requestDTO.getCountry());
-    property.setLocation(point);
-    property.setLongitude(requestDTO.getLongitude());
-    property.setLatitude(requestDTO.getLatitude());
-    propertyRepository.save(property);
-    return property;
-  }
-
-  private PropertyCategory getCategoryById(Long propertyCategoryId) {
-    return
-        propertyCategoryService.findCategoryByIdAndNotDeleted(propertyCategoryId)
-            .orElseThrow(() -> new CategoryNotFoundException(
-                "Category not found, please enter a valid category ID"));
-  }
-
-  private Point toGeographyPoint(double longitude, double latitude) {
-    GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-    Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
-
-    Optional<Property> checkProp = propertyRepository.findByLocationAndDeletedAtIsNull(point);
-    if (checkProp.isPresent()) {
-      throw new DuplicatePropertyException("Property at this location already exist.");
-    }
-    return point;
-  }
-
-  private Property checkIfValid(Users tenant, Long categoryId) {
-    Property existingProperty = propertyRepository.findByIdAndDeletedAtIsNull(categoryId).orElseThrow(
-        () -> new PropertyNotFoundException("Property with this ID does not exist or is deleted")
-    );
-    isTenant(tenant);
-    Users propertyOwner = existingProperty.getTenant();
-    if (tenant != propertyOwner) {
-      throw new UnauthorizedOperationsException("You are not the owner of this property");
-    }
-    return existingProperty;
-  }
-
-  private Property update(Property existingProperty, UpdatePropertyRequestDTO requestDTO) {
-    PropertyCategory updatedCategory = getUpdatedCategory(existingProperty, requestDTO);
-    Optional.ofNullable(updatedCategory).ifPresent(existingProperty::setCategory);
-    Optional.ofNullable(requestDTO.getName()).ifPresent(existingProperty::setName);
-    Optional.ofNullable(requestDTO.getDescription()).ifPresent(existingProperty::setDescription);
-    Optional.ofNullable(requestDTO.getImageUrl()).ifPresent(existingProperty::setImageUrl);
-    propertyRepository.save(existingProperty);
-    return existingProperty;
-  }
-
-  private PropertyCategory getUpdatedCategory(Property existingProperty, UpdatePropertyRequestDTO requestDTO) {
-    if (requestDTO.getCategoryId() != null) {
-      PropertyCategory existingCategory = existingProperty.getCategory();
-      PropertyCategory requestedCategory = getCategoryById(requestDTO.getCategoryId());
-      if (existingCategory != requestedCategory) {
-        return requestedCategory;
-      }
-    }
-    return null;
-  }
-
-  private void validateDate(LocalDate date) {
-    if (date.isBefore(LocalDate.now())) {
-      throw new IllegalArgumentException("Date is out of valid range: " + date);
-    }
-  }
-
-  private void validateDate(LocalDate startDate, LocalDate endDate) {
-    validateDate(startDate);
-    if (startDate.isAfter(endDate)) {
-      throw new IllegalArgumentException("Start date cannot be after end date");
-    }
   }
 }
