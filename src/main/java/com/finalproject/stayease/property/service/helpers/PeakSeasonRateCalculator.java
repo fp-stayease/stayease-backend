@@ -1,7 +1,9 @@
 package com.finalproject.stayease.property.service.helpers;
 
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
+import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDTO;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,11 +17,9 @@ public class PeakSeasonRateCalculator {
 
   public BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
     BigDecimal adjustedPrice = roomRate.getBasePrice();
-    if (roomRate.getAdjustmentType() == PeakSeasonRate.AdjustmentType.PERCENTAGE) {
-      adjustedPrice = adjustedPrice.add(adjustedPrice.multiply(roomRate.getAdjustmentRate().divide(BigDecimal.valueOf(100))));
-    } else {
-      adjustedPrice = adjustedPrice.add(roomRate.getAdjustmentRate());
-    }
+    adjustedPrice = roomRate.getAdjustmentType() == AdjustmentType.PERCENTAGE
+        ? adjustedPrice.add(adjustedPrice.multiply(roomRate.getAdjustmentRate().divide(BigDecimal.valueOf(100))))
+        : adjustedPrice.add(Optional.ofNullable(roomRate.getAdjustmentRate()).orElse(BigDecimal.ZERO));
     return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
   }
 
