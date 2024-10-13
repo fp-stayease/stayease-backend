@@ -92,6 +92,7 @@ public class SecurityConfig {
         API_VERSION + "/reviews/properties/**",
         API_VERSION + "/reviews/rating/**",
         API_VERSION + "/reviews/{reviewId}",
+        API_VERSION + "/reviews",
         API_VERSION + "/replies/**"
         ).permitAll();
 
@@ -124,6 +125,7 @@ public class SecurityConfig {
     auth.requestMatchers(
         API_VERSION + "/payments/payment-proof/{bookingId}",
         API_VERSION + "/bookings/user",
+        API_VERSION + "/bookings/upcoming-bookings",
         API_VERSION + "/reports/user-stats",
         API_VERSION + "/reviews/user"
     ).hasRole("USER");

@@ -106,7 +106,7 @@ public class ReviewController {
         return Response.successfulResponse("Tenant rating fetched", response);
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     public ResponseEntity<?> getAllReviews() {
         var response = reviewService.getAllReviews();
         return Response.successfulResponse("All reviews fetched", response);
