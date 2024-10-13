@@ -1,9 +1,5 @@
 package com.finalproject.stayease.property.service.impl;
 
-import com.finalproject.stayease.exceptions.properties.ConflictingRateException;
-import com.finalproject.stayease.exceptions.properties.PeakSeasonRateNotFoundException;
-import com.finalproject.stayease.exceptions.properties.PropertyNotFoundException;
-import com.finalproject.stayease.exceptions.utils.InvalidDateException;
 import com.finalproject.stayease.property.entity.PeakSeasonRate;
 import com.finalproject.stayease.property.entity.PeakSeasonRate.AdjustmentType;
 import com.finalproject.stayease.property.entity.Property;
@@ -14,10 +10,12 @@ import com.finalproject.stayease.property.entity.dto.listingDTOs.RoomPriceRateDT
 import com.finalproject.stayease.property.repository.PeakSeasonRateRepository;
 import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.helpers.PeakSeasonRateCalculator;
+import com.finalproject.stayease.property.service.helpers.PeakSeasonRateCreator;
+import com.finalproject.stayease.property.service.helpers.PeakSeasonRateValidator;
 import com.finalproject.stayease.users.entity.Users;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -25,10 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,6 +35,9 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
 
   private final PeakSeasonRateRepository peakSeasonRateRepository;
   private final PropertyService propertyService;
+  private final PeakSeasonRateValidator validator;
+  private final PeakSeasonRateCreator creator;
+  private final PeakSeasonRateCalculator calculator;
 
   // Basic CRUD operations
 
@@ -50,9 +49,8 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public PeakSeasonRate setPeakSeasonRate(Long propertyId, SetPeakSeasonRateRequestDTO requestDTO) {
-    Property property = propertyService.findPropertyById(propertyId)
-        .orElseThrow(() -> new PropertyNotFoundException("Property not found"));
-    return setRate(property, requestDTO);
+    Property property = validator.checkAndRetrieveProperty(propertyId);
+    return creator.createRate(property, requestDTO);
   }
 
   /**
@@ -64,9 +62,9 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public PeakSeasonRate setPeakSeasonRate(Users tenant, Long propertyId, SetPeakSeasonRateRequestDTO requestDTO) {
-    Property property = getProperty(tenant, propertyId);
-    checkDateRangeValid(property.getId(), requestDTO.getStartDate(), requestDTO.getEndDate());
-    return setRate(property, requestDTO);
+    Property property = validator.validatePropertyOwnership(tenant, propertyId);
+    validator.validateRateDateRange(property.getId(), requestDTO.getStartDate(), requestDTO.getEndDate());
+    return creator.createRate(property, requestDTO);
   }
 
   /**
@@ -92,11 +90,10 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public PeakSeasonRate updatePeakSeasonRate(Users tenant, Long rateId, SetPeakSeasonRateRequestDTO requestDTO) {
-    PeakSeasonRate existingRate = peakSeasonRateRepository.findById(rateId)
-        .orElseThrow(() -> new PeakSeasonRateNotFoundException("Peak season rate not found"));
+    PeakSeasonRate existingRate = validator.checkAndRetrievePeakSeasonRate(rateId);
     log.info("Updating peak season rate with ID {}", rateId);
-    Property property = getProperty(tenant, existingRate.getProperty().getId());
-    return updateRate(existingRate, requestDTO);
+    validator.validatePropertyOwnership(tenant, existingRate.getProperty().getId());
+    return creator.updateRate(existingRate, requestDTO);
   }
 
   /**
@@ -105,8 +102,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public void removePeakSeasonRate(Long rateId) {
-    PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
-        .orElseThrow(() -> new PeakSeasonRateNotFoundException("Peak season rate not found"));
+    PeakSeasonRate rate = validator.checkAndRetrievePeakSeasonRate(rateId);
     rate.setDeletedAt(Instant.now());
     peakSeasonRateRepository.save(rate);
   }
@@ -118,9 +114,8 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public void removePeakSeasonRate(Users tenant, Long rateId) {
-    PeakSeasonRate rate = peakSeasonRateRepository.findById(rateId)
-        .orElseThrow(() -> new PeakSeasonRateNotFoundException("Peak season rate not found"));
-    Property property = getProperty(tenant, rate.getProperty().getId());
+    PeakSeasonRate rate = validator.checkAndRetrievePeakSeasonRate(rateId);
+    validator.validatePropertyOwnership(tenant, rate.getProperty().getId());
     log.info("Deleting peak season rate with ID {}", rateId);
     rate.setDeletedAt(Instant.now());
     peakSeasonRateRepository.save(rate);
@@ -188,7 +183,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public List<RoomAdjustedRatesDTO> findAvailableRoomRates(Long propertyId, LocalDate date) {
-    validateDate(date);
+    validator.validateDate(date);
     log.info("Finding available room rates for property {} on date {}", propertyId, date);
     List<RoomPriceRateDTO> rooms = propertyService.findAvailableRoomRates(propertyId, date);
 
@@ -224,7 +219,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public List<DailyPriceDTO> findLowestDailyRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
-    validateDate(startDate, endDate);
+    validator.validateDateRange(startDate, endDate);
     List<DailyPriceDTO> dailyPrices = new ArrayList<>();
     for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
       RoomPriceRateDTO lowestRoomRate = propertyService.findLowestRoomRate(propertyId, date);
@@ -243,7 +238,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public List<DailyPriceDTO> findCumulativeRoomRates(Long propertyId, LocalDate startDate, LocalDate endDate) {
-    validateDate(startDate, endDate);
+    validator.validateDateRange(startDate, endDate);
     List<DailyPriceDTO> cumulativeDailyPrice = new ArrayList<>();
     for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
       List<DailyPriceDTO> lowestDailyRoomRates = findLowestDailyRoomRates(propertyId, startDate, date.plusDays(1));
@@ -264,11 +259,7 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public BigDecimal applyPeakSeasonRate(RoomPriceRateDTO roomRate) {
-    BigDecimal adjustedPrice = roomRate.getBasePrice();
-    adjustedPrice = roomRate.getAdjustmentType() == AdjustmentType.PERCENTAGE
-        ? adjustedPrice.add(adjustedPrice.multiply(roomRate.getAdjustmentRate().divide(BigDecimal.valueOf(100))))
-        : adjustedPrice.add(Optional.ofNullable(roomRate.getAdjustmentRate()).orElse(BigDecimal.ZERO));
-    return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
+    return calculator.applyPeakSeasonRate(roomRate);
   }
 
   /**
@@ -281,113 +272,12 @@ public class PeakSeasonRateServiceImpl implements PeakSeasonRateService {
    */
   @Override
   public BigDecimal applyPeakSeasonRate(Long propertyId, LocalDate date, BigDecimal basePrice, Instant bookingTime) {
-    validateDate(date);
+    validator.validateDate(date);
     Instant futureDate = LocalDate.now().plusYears(10).atStartOfDay().toInstant(ZoneOffset.UTC);
 
     List<PeakSeasonRate> applicableRates = peakSeasonRateRepository
         .findValidRatesByPropertyAndDate(propertyId, date, bookingTime, futureDate);
 
-    BigDecimal totalAdjustment = BigDecimal.ZERO;
-
-    for (PeakSeasonRate rate : applicableRates) {
-      if (rate.getAdjustmentType() == AdjustmentType.PERCENTAGE) {
-        BigDecimal percentageAdjustment = basePrice.multiply(rate.getAdjustmentRate().divide(BigDecimal.valueOf(100)));
-        totalAdjustment = totalAdjustment.add(percentageAdjustment);
-      } else {
-        totalAdjustment = totalAdjustment.add(Optional.ofNullable(rate.getAdjustmentRate()).orElse(BigDecimal.ZERO));
-      }
-    }
-
-    BigDecimal adjustedPrice = basePrice.add(totalAdjustment);
-    return adjustedPrice.setScale(2, RoundingMode.HALF_UP);
-  }
-
-  // Helper methods
-
-  /**
-   * Retrieves a property and checks if the tenant is the owner.
-   * @param tenant The tenant user
-   * @param propertyId The ID of the property
-   * @return The Property if the tenant is the owner
-   * @throws PropertyNotFoundException if the property is not found
-   * @throws BadCredentialsException if the tenant is not the owner
-   */
-  private Property getProperty(Users tenant, Long propertyId) {
-    Property property = propertyService.findPropertyById(propertyId)
-        .orElseThrow(() -> new PropertyNotFoundException("Property not found"));
-    if (property.getTenant() != tenant) {
-      throw new BadCredentialsException("You are not the owner of this property");
-    }
-    return property;
-  }
-
-  /**
-   * Creates a new PeakSeasonRate entity from the provided data.
-   * @param property The Property to associate with the rate
-   * @param requestDTO The DTO containing rate details
-   * @return The created PeakSeasonRate
-   */
-  private PeakSeasonRate setRate(Property property, SetPeakSeasonRateRequestDTO requestDTO) {
-    PeakSeasonRate peakSeasonRate = new PeakSeasonRate();
-    peakSeasonRate.setProperty(property);
-    peakSeasonRate.setStartDate(requestDTO.getStartDate());
-    peakSeasonRate.setEndDate(requestDTO.getEndDate());
-    peakSeasonRate.setAdjustmentRate(requestDTO.getAdjustmentRate());
-    peakSeasonRate.setAdjustmentType(requestDTO.getAdjustmentType());
-    peakSeasonRate.setReason(requestDTO.getReason());
-    peakSeasonRateRepository.save(peakSeasonRate);
-    return peakSeasonRate;
-  }
-
-  private void checkDateRangeValid(Long propertyId, LocalDate startDate, LocalDate endDate) {
-    boolean existsConflictingRate = peakSeasonRateRepository.existsConflictingRate(propertyId, startDate, endDate);
-    if (existsConflictingRate) {
-      throw new ConflictingRateException("Rates for this date range already set");
-    }
-  }
-
-  private LocalDate isUpdateDateValid(SetPeakSeasonRateRequestDTO requestDTO) {
-    LocalDate startDate = requestDTO.getStartDate();
-    if (startDate != null) {
-      if (LocalDate.now().isAfter(startDate)) {
-        throw new InvalidDateException("Start date cannot be changed");
-      } else {
-        return startDate;
-      }
-    }
-    return null;
-  }
-
-  private PeakSeasonRate updateRate(PeakSeasonRate existingRate, SetPeakSeasonRateRequestDTO requestDTO) {
-    existingRate.setStartDate(Optional.ofNullable(isUpdateDateValid(requestDTO))
-        .orElse(existingRate.getStartDate()));
-
-    existingRate.setEndDate(Optional.ofNullable(requestDTO.getEndDate())
-        .orElse(existingRate.getEndDate()));
-
-    existingRate.setAdjustmentRate(Optional.ofNullable(requestDTO.getAdjustmentRate())
-        .orElse(existingRate.getAdjustmentRate()));
-
-    existingRate.setAdjustmentType(Optional.ofNullable(requestDTO.getAdjustmentType())
-        .orElse(existingRate.getAdjustmentType()));
-
-    existingRate.setReason(Optional.ofNullable(requestDTO.getReason())
-        .orElse(existingRate.getReason()));
-
-    log.info("Updated peak season rate with ID {}", existingRate.getId());
-    return peakSeasonRateRepository.save(existingRate);
-  }
-
-  private void validateDate(LocalDate date) {
-    if (date.isBefore(LocalDate.now())) {
-      throw new InvalidDateException("Date is out of valid range: " + date);
-    }
-  }
-
-  private void validateDate(LocalDate startDate, LocalDate endDate) {
-    validateDate(startDate);
-    if (startDate.isAfter(endDate)) {
-      throw new InvalidDateException("Start date cannot be after end date");
-    }
+    return calculator.calculateAdjustedPrice(basePrice, applicableRates);
   }
 }
