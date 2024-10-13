@@ -115,4 +115,14 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
         AND b.deletedAt IS NULL
     """)
     List<Booking> findFinishedBookings();
+    @Query("""
+        SELECT b FROM Booking b
+        WHERE b.status = 'PAYMENT_COMPLETE'
+        AND b.checkInDate >= CURRENT_DATE
+        AND b.user.id = :userId
+        AND b.deletedAt IS NULL
+        ORDER BY b.checkInDate ASC
+        LIMIT 3
+    """)
+    List<Booking> findUpcomingUserBookings(@Param("userId") Long userId);
 }

@@ -151,4 +151,10 @@ public class ReviewServiceImpl implements ReviewService {
         TenantInfo tenant = tenantInfoService.findTenantByUserId(user.getId());
         return reviewRepository.findTenantAverageRating(user.getId());
     }
+
+    @Override
+    public List<ReviewDTO> getAllReviews() {
+        return reviewRepository.findAllReviews()
+                .stream().map(ReviewDTO::new).toList();
+    }
 }

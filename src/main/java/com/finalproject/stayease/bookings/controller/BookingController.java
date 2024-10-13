@@ -50,4 +50,11 @@ public class BookingController {
         var bookings = bookingService.getTenantBookings(userId);
         return Response.successfulResponse("User booking list fetched", bookings);
     }
+
+    @GetMapping("/upcoming-bookings")
+    public ResponseEntity<?> getUpcomingBookings() {
+        Long userId = usersService.getLoggedUser().getId();
+        var response = bookingService.findUpcomingUserBookings(userId);
+        return Response.successfulResponse("User upcoming booking list fetched", response);
+    }
 }
