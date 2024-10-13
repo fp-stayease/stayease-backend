@@ -92,7 +92,7 @@ public class SecurityConfig {
         API_VERSION + "/reviews/properties/**",
         API_VERSION + "/reviews/rating/**",
         API_VERSION + "/reviews/{reviewId}",
-        API_VERSION + "/reviews/users-review",
+        API_VERSION + "/reviews",
         API_VERSION + "/replies/**"
         ).permitAll();
 
