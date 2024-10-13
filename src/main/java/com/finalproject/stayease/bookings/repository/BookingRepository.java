@@ -16,8 +16,18 @@ import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
-    @Query("SELECT b FROM Booking b WHERE b.user.id = :userId AND b.status != 'EXPIRED' AND b.deletedAt IS NULL")
-    Page<Booking> findByUserIdAndStatusNotExpired(@Param("userId") Long userId, Pageable pageable);
+    @Query("""
+        SELECT b FROM Booking b\s
+            WHERE b.user.id = :userId\s
+            AND b.status <> 'EXPIRED'
+            AND b.deletedAt IS NULL
+            AND (:search IS NULL
+                OR CAST(b.id AS string) = :search
+                OR LOWER(b.property.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """)
+    Page<Booking> findByUserIdAndStatusNotExpired(@Param("userId") Long userId,
+                                                  @Param("search") String search,
+                                                  Pageable pageable);
     List<Booking> findByTenantId(Long tenantId, Sort sort);
     @Query("SELECT b FROM Booking b WHERE b.checkInDate = :tomorrow AND b.deletedAt IS NULL")
     List<Booking> findBookingsWithCheckInTomorrow(LocalDate tomorrow);
@@ -41,7 +51,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     @Query("""
         SELECT b FROM Booking b
         WHERE b.tenant.id = :tenantId
-        AND b.status = 'PAYMENT_COMPLETE'
         AND b.payment.paymentStatus = 'SETTLEMENT'
         AND b.deletedAt IS NULL
         ORDER BY b.createdAt DESC
@@ -58,17 +67,21 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
         )
         SELECT
             TO_CHAR(ds.date, 'YYYY-MM-DD') AS date,
-            COALESCE(SUM(b.total_price), 0.0) AS total_price
+            COALESCE(SUM(
+                CASE 
+                    WHEN (:propertyId IS NULL OR b.property_id = :propertyId) 
+                    AND b.tenant_id = :tenantId
+                    AND p.payment_status = 'SETTLEMENT'
+                    THEN b.total_price 
+                    ELSE NULL 
+                END
+            ), 0.0) AS total_price
         FROM 
             date_series ds
         LEFT JOIN 
-            bookings b ON DATE_TRUNC('day', b.created_at AT TIME ZONE 'UTC') = ds.date
-            AND b.tenant_id = :tenantId
-            AND b.status = 'PAYMENT_COMPLETE' OR b.status = 'COMPLETED'
-        LEFT JOIN
-            property p ON b.property_id = p.id
-        WHERE
-            (:propertyId IS NULL OR p.id = :propertyId)
+            payments p ON DATE_TRUNC('day', p.created_at AT TIME ZONE 'UTC') = ds.date
+        LEFT JOIN 
+            bookings b ON p.booking_id = b.id
         GROUP BY 
             ds.date
         ORDER BY 
@@ -81,10 +94,10 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     @Query("""
         SELECT b FROM Booking b
         WHERE b.tenant.id = :tenantId
-        AND b.status = 'PAYMENT_COMPLETE' OR b.status = 'COMPLETED'
+        AND b.payment.paymentStatus = 'SETTLEMENT'
         AND b.deletedAt IS NULL
-        AND EXTRACT(YEAR FROM b.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
-        AND EXTRACT(MONTH FROM b.createdAt) = :month
+        AND EXTRACT(YEAR FROM b.payment.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
+        AND EXTRACT(MONTH FROM b.payment.createdAt) = :month
         AND (:propertyId IS NULL OR b.property.id = :propertyId)
     """)
     List<Booking> findCompletedPaymentBookings(
@@ -115,4 +128,14 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
         AND b.deletedAt IS NULL
     """)
     List<Booking> findFinishedBookings();
+    @Query("""
+        SELECT b FROM Booking b
+        WHERE b.status = 'PAYMENT_COMPLETE'
+        AND b.checkInDate >= CURRENT_DATE
+        AND b.user.id = :userId
+        AND b.deletedAt IS NULL
+        ORDER BY b.checkInDate ASC
+        LIMIT 3
+    """)
+    List<Booking> findUpcomingUserBookings(@Param("userId") Long userId);
 }

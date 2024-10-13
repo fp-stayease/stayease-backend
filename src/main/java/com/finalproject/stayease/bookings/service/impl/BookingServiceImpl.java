@@ -155,7 +155,7 @@ public class BookingServiceImpl implements BookingService {
     public Page<BookingDTO> getUserBookings(Long userId, String search, Pageable pageable) {
         var user = usersService.findById(userId).orElseThrow(() -> new DataNotFoundException("User not found"));
 
-        return bookingRepository.findByUserIdAndStatusNotExpired(user.getId(), pageable).map(BookingDTO::new);
+        return bookingRepository.findByUserIdAndStatusNotExpired(user.getId(), search, pageable).map(BookingDTO::new);
     }
 
     // Tenant Booking Section
@@ -297,5 +297,11 @@ public class BookingServiceImpl implements BookingService {
             bookingRepository.save(booking);
         }
         return bookings;
+    }
+
+    @Override
+    public List<BookingDTO> findUpcomingUserBookings(Long userId) {
+        return bookingRepository.findUpcomingUserBookings(userId)
+                .stream().map(BookingDTO::new).toList();
     }
 }

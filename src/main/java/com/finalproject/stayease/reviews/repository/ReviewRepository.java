@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("""
@@ -58,4 +60,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
         AND r.deletedAt IS NULL
     """)
     Double findTenantAverageRating(@Param("tenantId") Long tenantId);
+    @Query("""
+    SELECT r FROM Review r
+    WHERE r.isPublished = TRUE
+    AND r.deletedAt IS NULL
+    ORDER BY r.createdAt DESC
+    LIMIT 5
+    """)
+    List<Review> findAllReviews();
 }

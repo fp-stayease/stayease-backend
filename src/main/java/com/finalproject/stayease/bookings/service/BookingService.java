@@ -34,4 +34,5 @@ public interface BookingService {
     Double upcomingBookingsByUserId(Long userId);
     Double pastBookingsByUserId(Long userId);
     List<Booking> findFinishedBookings();
+    List<BookingDTO> findUpcomingUserBookings(Long userId);
 }
