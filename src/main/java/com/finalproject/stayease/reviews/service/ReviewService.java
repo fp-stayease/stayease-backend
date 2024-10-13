@@ -8,6 +8,8 @@ import com.finalproject.stayease.users.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface ReviewService {
     Review findReviewById(Long id);
     ReviewDTO addUserReview(Users user, UserReviewReqDTO reqDto, Long reviewId);
@@ -18,4 +20,5 @@ public interface ReviewService {
     Page<ReviewDTO> getPropertiesReviews(Long propertyId, Pageable pageable);
     RatingDTO getPropertyRating(Long propertyId);
     Double getTenantRating(Users user);
+    List<ReviewDTO> getAllReviews();
 }

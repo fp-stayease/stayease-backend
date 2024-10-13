@@ -298,4 +298,10 @@ public class BookingServiceImpl implements BookingService {
         }
         return bookings;
     }
+
+    @Override
+    public List<BookingDTO> findUpcomingUserBookings(Long userId) {
+        return bookingRepository.findUpcomingUserBookings(userId)
+                .stream().map(BookingDTO::new).toList();
+    }
 }
