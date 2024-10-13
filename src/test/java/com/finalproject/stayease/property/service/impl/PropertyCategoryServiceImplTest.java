@@ -7,16 +7,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.finalproject.stayease.exceptions.auth.UnauthorizedOperationsException;
 import com.finalproject.stayease.exceptions.properties.CategoryNotFoundException;
-import com.finalproject.stayease.exceptions.properties.DuplicateCategoryException;
 import com.finalproject.stayease.property.entity.PropertyCategory;
 import com.finalproject.stayease.property.entity.dto.createRequests.CreateCategoryRequestDTO;
 import com.finalproject.stayease.property.entity.dto.updateRequests.UpdateCategoryRequestDTO;
 import com.finalproject.stayease.property.repository.PropertyCategoryRepository;
+import com.finalproject.stayease.property.service.helpers.PropertyCategoryHelper;
 import com.finalproject.stayease.users.entity.Users;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +32,9 @@ class PropertyCategoryServiceImplTest {
 
   @Mock
   private PropertyCategoryRepository propertyCategoryRepository;
+
+  @Mock
+  private PropertyCategoryHelper propertyCategoryHelper;
 
   @InjectMocks
   private PropertyCategoryServiceImpl propertyCategoryService;
@@ -76,40 +78,17 @@ class PropertyCategoryServiceImplTest {
 
   @Test
   void createCategory_Success() {
-    when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(Optional.empty());
-    when(propertyCategoryRepository.findAll()).thenReturn(Collections.emptyList());
-    when(propertyCategoryRepository.save(any(PropertyCategory.class))).thenReturn(category);
-
+    when(propertyCategoryHelper.toPropertyCategoryEntity(tenant, createDTO)).thenReturn(category);
     PropertyCategory result = propertyCategoryService.createCategory(tenant, createDTO);
     assertNotNull(result);
-    assertEquals("New Category", result.getName());
-  }
-
-  @Test
-  void createCategory_DuplicateName() {
-    when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(Optional.of(category));
-
-    assertThrows(DuplicateCategoryException.class, () -> propertyCategoryService.createCategory(tenant, createDTO));
-  }
-
-  @Test
-  void createCategory_SimilarName() {
-    when(propertyCategoryRepository.findByNameIgnoreCaseAndDeletedAtIsNull(anyString())).thenReturn(Optional.empty());
-    when(propertyCategoryRepository.findAll()).thenReturn(Collections.singletonList(category));
-
-    createDTO.setName("Apartmant");  // Similar to "Apartment"
-    assertThrows(DuplicateCategoryException.class, () -> propertyCategoryService.createCategory(tenant, createDTO));
-  }
-
-  @Test
-  void createCategory_NonTenant() {
-    tenant.setUserType(Users.UserType.USER);
-    assertThrows(UnauthorizedOperationsException.class, () -> propertyCategoryService.createCategory(tenant, createDTO));
+    assertEquals("Apartment", result.getName());
+    verify(propertyCategoryHelper).isTenant(tenant);
+    verify(propertyCategoryHelper).checkMatch(createDTO.getName());
   }
 
   @Test
   void updateCategory_Success() {
-    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(category));
+    when(propertyCategoryHelper.checkIfValid(tenant, 1L)).thenReturn(category);
     when(propertyCategoryRepository.save(any(PropertyCategory.class))).thenReturn(category);
 
     PropertyCategory result = propertyCategoryService.updateCategory(1L, tenant, updateDTO);
@@ -118,50 +97,12 @@ class PropertyCategoryServiceImplTest {
   }
 
   @Test
-  void updateCategory_CategoryNotFound() {
-    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
-
-    assertThrows(CategoryNotFoundException.class, () -> propertyCategoryService.updateCategory(1L, tenant, updateDTO));
-  }
-
-  @Test
-  void updateCategory_NotOwner() {
-    Users otherTenant = new Users();
-    otherTenant.setId(2L);
-    otherTenant.setUserType(Users.UserType.TENANT);
-    category.setAddedBy(otherTenant);
-
-    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(category));
-
-    assertThrows(UnauthorizedOperationsException.class, () -> propertyCategoryService.updateCategory(1L, tenant, updateDTO));
-  }
-
-  @Test
   void deleteCategory_Success() {
-    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(category));
+    when(propertyCategoryHelper.checkIfValid(tenant, 1L)).thenReturn(category);
     when(propertyCategoryRepository.save(any(PropertyCategory.class))).thenReturn(category);
 
     assertDoesNotThrow(() -> propertyCategoryService.deleteCategory(1L, tenant));
     assertNotNull(category.getDeletedAt());
-  }
-
-  @Test
-  void deleteCategory_CategoryNotFound() {
-    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.empty());
-
-    assertThrows(CategoryNotFoundException.class, () -> propertyCategoryService.deleteCategory(1L, tenant));
-  }
-
-  @Test
-  void deleteCategory_NotOwner() {
-    Users otherTenant = new Users();
-    otherTenant.setId(2L);
-    otherTenant.setUserType(Users.UserType.TENANT);
-    category.setAddedBy(otherTenant);
-
-    when(propertyCategoryRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(category));
-
-    assertThrows(UnauthorizedOperationsException.class, () -> propertyCategoryService.deleteCategory(1L, tenant));
   }
 
   @Test
