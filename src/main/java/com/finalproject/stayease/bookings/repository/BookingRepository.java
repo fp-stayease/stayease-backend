@@ -16,8 +16,18 @@ import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
-    @Query("SELECT b FROM Booking b WHERE b.user.id = :userId AND b.status != 'EXPIRED' AND b.deletedAt IS NULL")
-    Page<Booking> findByUserIdAndStatusNotExpired(@Param("userId") Long userId, Pageable pageable);
+    @Query("""
+        SELECT b FROM Booking b\s
+            WHERE b.user.id = :userId\s
+            AND b.status <> 'EXPIRED'
+            AND b.deletedAt IS NULL
+            AND (:search IS NULL
+                OR CAST(b.id AS string) = :search
+                OR LOWER(b.property.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    """)
+    Page<Booking> findByUserIdAndStatusNotExpired(@Param("userId") Long userId,
+                                                  @Param("search") String search,
+                                                  Pageable pageable);
     List<Booking> findByTenantId(Long tenantId, Sort sort);
     @Query("SELECT b FROM Booking b WHERE b.checkInDate = :tomorrow AND b.deletedAt IS NULL")
     List<Booking> findBookingsWithCheckInTomorrow(LocalDate tomorrow);
@@ -41,7 +51,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     @Query("""
         SELECT b FROM Booking b
         WHERE b.tenant.id = :tenantId
-        AND b.status = 'PAYMENT_COMPLETE'
         AND b.payment.paymentStatus = 'SETTLEMENT'
         AND b.deletedAt IS NULL
         ORDER BY b.createdAt DESC
