@@ -33,11 +33,11 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findBookingsWithCheckInTomorrow(LocalDate tomorrow);
     @Query("""
         SELECT COUNT(b.id) FROM Booking b
-        WHERE b.status = 'PAYMENT_COMPLETE' OR b.status = 'COMPLETED'
+        WHERE b.payment.paymentStatus = 'SETTLEMENT'
         AND b.tenant.id = :tenantId
         AND b.deletedAt IS NULL
-        AND EXTRACT(YEAR FROM b.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
-        AND EXTRACT(MONTH FROM b.createdAt) = :month
+        AND EXTRACT(YEAR FROM b.payment.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)
+        AND EXTRACT(MONTH FROM b.payment.createdAt) = :month
     """)
     Double countCompletedBookingsByTenantId(@Param("tenantId") Long tenantId, @Param("month") int month);
     @Query("""
