@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,10 +16,10 @@ import com.finalproject.stayease.property.entity.Property;
 import com.finalproject.stayease.property.entity.PropertyRateSetting;
 import com.finalproject.stayease.property.entity.dto.createRequests.SetPropertyRateSettingsDTO;
 import com.finalproject.stayease.property.repository.PropertyRateSettingsRepository;
-import com.finalproject.stayease.property.service.PeakSeasonRateService;
 import com.finalproject.stayease.property.service.PropertyService;
+import com.finalproject.stayease.property.service.helpers.PropertyRateSettingsHelper;
 import java.math.BigDecimal;
-import java.util.Collections;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,10 +38,7 @@ public class PropertyRateSettingsServiceImplTest {
   private PropertyService propertyService;
 
   @Mock
-  private PeakSeasonRateService peakSeasonRateService;
-
-  @Mock
-  private HolidayService holidayService;
+  private PropertyRateSettingsHelper rateSettingsHelper;
 
   @InjectMocks
   private PropertyRateSettingsServiceImpl propertyRateSettingsService;
@@ -99,8 +96,7 @@ public class PropertyRateSettingsServiceImplTest {
   void updatePropertyRateSettings_Success() {
     when(propertyRateSettingsRepository.findByPropertyId(1L)).thenReturn(Optional.of(propertyRateSetting));
     when(propertyRateSettingsRepository.save(any(PropertyRateSetting.class))).thenReturn(propertyRateSetting);
-    when(holidayService.getHolidaysInDateRange(any(), any())).thenReturn(Collections.emptyList());
-    when(holidayService.getLongWeekendsInDateRange(any(), any())).thenReturn(Collections.emptyList());
+    doNothing().when(rateSettingsHelper).handleAutoRatesApplication(any(), any(), any(), any());
 
     PropertyRateSetting result = propertyRateSettingsService.updatePropertyRateSettings(1L, settingsDTO);
 
@@ -108,38 +104,34 @@ public class PropertyRateSettingsServiceImplTest {
     assertTrue(result.getUseAutoRates());
     assertEquals(BigDecimal.valueOf(10), result.getHolidayAdjustmentRate());
     assertEquals(PeakSeasonRate.AdjustmentType.PERCENTAGE, result.getHolidayAdjustmentType());
+    verify(rateSettingsHelper, times(1)).handleAutoRatesApplication(any(), any(), any(), any());
   }
 
   @Test
-  void applySettingForProperty_UseAutoRates() {
-    when(peakSeasonRateService.findAutomaticRatesByPropertyAndDateRange(anyLong(), any(), any()))
-        .thenReturn(Collections.emptyList());
-    when(holidayService.getHolidaysInDateRange(any(), any())).thenReturn(Collections.emptyList());
-    when(holidayService.getLongWeekendsInDateRange(any(), any())).thenReturn(Collections.emptyList());
+  void applySettingForProperty_Success() {
+    doNothing().when(rateSettingsHelper).handleAutoRatesApplication(any(), any(), any(), any());
 
     assertDoesNotThrow(() -> propertyRateSettingsService.applySettingForProperty(propertyRateSetting));
+    verify(rateSettingsHelper, times(1)).handleAutoRatesApplication(any(), any(), any(), any());
   }
 
   @Test
-  void applySettingForProperty_DoNotUseAutoRates() {
-    propertyRateSetting.setUseAutoRates(false);
-    when(peakSeasonRateService.findAutomaticRatesByPropertyAndDateRange(anyLong(), any(), any()))
-        .thenReturn(Collections.singletonList(new PeakSeasonRate()));
-    doNothing().when(peakSeasonRateService).removePeakSeasonRate(any());
+  void applySettingForProperty_WithDateRange_Success() {
+    LocalDate startDate = LocalDate.now();
+    LocalDate endDate = startDate.plusMonths(6);
+    doNothing().when(rateSettingsHelper).handleAutoRatesApplication(any(), any(), any(), any());
 
-    assertDoesNotThrow(() -> propertyRateSettingsService.applySettingForProperty(propertyRateSetting));
-    verify(peakSeasonRateService, times(1)).removePeakSeasonRate(any());
+    assertDoesNotThrow(() -> propertyRateSettingsService.applySettingForProperty(propertyRateSetting, startDate, endDate));
+    verify(rateSettingsHelper, times(1)).handleAutoRatesApplication(any(), eq(startDate), eq(endDate), any());
   }
 
   @Test
   void deactivateAutoRates_Success() {
     when(propertyRateSettingsRepository.findByPropertyId(1L)).thenReturn(Optional.of(propertyRateSetting));
     when(propertyRateSettingsRepository.save(any(PropertyRateSetting.class))).thenReturn(propertyRateSetting);
-    when(peakSeasonRateService.findAutomaticRatesByPropertyAndDateRange(anyLong(), any(), any()))
-        .thenReturn(Collections.singletonList(new PeakSeasonRate()));
-    doNothing().when(peakSeasonRateService).removePeakSeasonRate(any());
+    doNothing().when(rateSettingsHelper).handleDeactivation(any());
 
     assertDoesNotThrow(() -> propertyRateSettingsService.deactivateAutoRates(1L));
-    verify(peakSeasonRateService, times(1)).removePeakSeasonRate(any());
+    verify(rateSettingsHelper, times(1)).handleDeactivation(any());
   }
 }
