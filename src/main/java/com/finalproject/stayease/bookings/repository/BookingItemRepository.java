@@ -19,7 +19,7 @@ public interface BookingItemRepository extends JpaRepository<BookingItem, Long> 
             COUNT(bi)
         ) FROM BookingItem bi
         WHERE bi.booking.tenant.id = :tenantId
-        AND bi.booking.status = 'PAYMENT_COMPLETE'
+        AND bi.booking.payment.paymentStatus = 'SETTLEMENT'
         GROUP BY bi.room.name, bi.room.property.name, bi.room.imageUrl
         ORDER BY COUNT(bi) DESC
     """)
