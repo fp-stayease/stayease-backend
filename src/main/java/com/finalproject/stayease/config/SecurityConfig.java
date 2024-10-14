@@ -127,7 +127,8 @@ public class SecurityConfig {
         API_VERSION + "/bookings/user",
         API_VERSION + "/bookings/upcoming-bookings",
         API_VERSION + "/reports/user-stats",
-        API_VERSION + "/reviews/user"
+        API_VERSION + "/reviews/user",
+        API_VERSION + "/transactions/user/**"
     ).hasRole("USER");
 
     auth.requestMatchers(
@@ -138,7 +139,8 @@ public class SecurityConfig {
         API_VERSION + "/rates/auto/**",
         API_VERSION + "/reports/**",
         API_VERSION + "/reviews/tenant",
-        API_VERSION + "/replies/**"
+        API_VERSION + "/replies/**",
+        API_VERSION + "/transactions/tenant/**"
     ).hasRole("TENANT");
 
     // Permit all access to authentication and registration endpoints

@@ -114,42 +114,6 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
       WHERE p.deletedAt IS NULL
       AND (:city IS NULL OR LOWER(CAST(p.city AS string)) = LOWER(CAST(:city AS string)))
       AND (:categoryName IS NULL OR LOWER(CAST(pc.name AS string)) = LOWER(CAST(:categoryName AS string)))
-      AND (:minPrice IS NULL OR
-          EXISTS (
-              SELECT 1
-              FROM Room r
-              WHERE r.property = p
-              AND r.deletedAt IS NULL
-              AND r.basePrice >= :minPrice
-              AND NOT EXISTS (
-                  SELECT 1
-                  FROM RoomAvailability ra
-                  WHERE ra.room = r
-                  AND ra.startDate <= :startDate
-                  AND ra.endDate >= :startDate
-                  AND ra.isAvailable = false
-                  AND ra.deletedAt IS NULL
-              )
-          )
-      )
-      AND (:maxPrice IS NULL OR\s
-          EXISTS (
-              SELECT 1
-              FROM Room r
-              WHERE r.property = p
-              AND r.deletedAt IS NULL
-              AND r.basePrice <= :maxPrice
-              AND NOT EXISTS (
-                  SELECT 1
-                  FROM RoomAvailability ra
-                  WHERE ra.room = r
-                  AND ra.startDate <= :startDate
-                  AND ra.endDate >= :startDate
-                  AND ra.isAvailable = false
-                  AND ra.deletedAt IS NULL
-              )
-          )
-      )
       AND (:searchTerm IS NULL OR
           LOWER(CAST(p.name AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
           LOWER(CAST(pc.name AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
@@ -157,35 +121,20 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
           LOWER(CAST(p.city AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
           LOWER(CAST(p.country AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')) OR
           LOWER(CAST(ti.businessName AS string)) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')))
-      AND (:guestCount IS NULL OR
-              EXISTS (
-                  SELECT 1
-                  FROM Room r
-                  WHERE r.property = p
-                  AND r.deletedAt IS NULL
-                  AND r.capacity >= :guestCount
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM RoomAvailability ra
-                      WHERE ra.room = r
-                      AND ra.startDate <= :startDate
-                      AND ra.endDate >= :startDate
-                      AND ra.isAvailable = false
-                      AND ra.deletedAt IS NULL
-                  )
-              )
-          )
       AND EXISTS (
           SELECT 1
           FROM Room r
           WHERE r.property = p
           AND r.deletedAt IS NULL
+          AND (:minPrice IS NULL OR r.basePrice >= :minPrice)
+          AND (:maxPrice IS NULL OR r.basePrice <= :maxPrice)
+          AND (:guestCount IS NULL OR r.capacity >= :guestCount)
           AND NOT EXISTS (
               SELECT 1
               FROM RoomAvailability ra
               WHERE ra.room = r
-              AND ra.startDate <= :endDate
-              AND ra.endDate >= :startDate
+              AND ra.startDate < :endDate
+              AND ra.endDate > :startDate
               AND ra.isAvailable = false
               AND ra.deletedAt IS NULL
           )

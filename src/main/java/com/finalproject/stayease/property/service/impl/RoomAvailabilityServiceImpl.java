@@ -126,7 +126,7 @@ public class RoomAvailabilityServiceImpl implements RoomAvailabilityService {
 
   // Find room availability by room ID and date range
   private RoomAvailability findRoomAvailability(Long roomId, LocalDate startDate, LocalDate endDate) {
-    return roomAvailabilityRepository.findByRoomIdAndDates(roomId, startDate, endDate)
+    return roomAvailabilityRepository.findByRoomIdAndDates(roomId, startDate, endDate.minusDays(1))
         .orElseThrow(() -> new RoomAvailabilityNotFoundException("No availability found for this room in this date range"));
   }
 

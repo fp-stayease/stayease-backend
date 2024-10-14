@@ -43,7 +43,11 @@ public class BookingDTO {
         this.totalPrice = booking.getTotalPrice();
         this.status = booking.getStatus();
         this.bookingItems = booking.getBookingItems().stream().map(BookingItemDTO::new).toList();
-        this.bookingRequest = new BookingRequestDTO(booking.getBookingRequest());
+        {
+            if (booking.getBookingRequest() != null) {
+                this.bookingRequest = new BookingRequestDTO(booking.getBookingRequest());
+            }
+        }
         this.payment = new PaymentDTO(booking.getPayment());
         this.checkInDate = booking.getCheckInDate();
         this.checkOutDate = booking.getCheckOutDate();
