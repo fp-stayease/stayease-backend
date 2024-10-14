@@ -104,7 +104,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> findExpiredPendingPayment() {
         var now = Instant.now();
-        return paymentRepository.findByStatusAndExpirationBefore(PaymentStatus.PENDING, now);
+        return paymentRepository.findByStatusAndExpirationBefore(now);
     }
 
     @Override

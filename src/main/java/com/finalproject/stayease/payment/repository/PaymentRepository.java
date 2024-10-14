@@ -17,8 +17,13 @@ import java.util.UUID;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByBookingId(UUID bookingId);
 
-    @Query("SELECT p FROM Payment p WHERE p.paymentStatus = :status AND p.paymentExpirationAt < :currentTime")
-    List<Payment> findByStatusAndExpirationBefore(@Param("status") PaymentStatus status, @Param("currentTime") Instant currentTime);
+    @Query("""
+        SELECT p FROM Payment p
+        WHERE p.paymentStatus = 'PENDING'
+        AND p.booking.status = 'PENDING' OR p.booking.status = 'IN_PROGRESS'
+        AND p.paymentExpirationAt < :currentTime
+    """)
+    List<Payment> findByStatusAndExpirationBefore(@Param("currentTime") Instant currentTime);
 
     @Query("""
         SELECT NEW com.finalproject.stayease.reports.dto.overview.MonthlySalesDTO(
