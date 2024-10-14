@@ -47,7 +47,7 @@ public class TransactionController {
         return Response.successfulResponse("Transaction cancelled by user", response);
     }
 
-    @PutMapping("/{bookingId}")
+    @PutMapping("/tenant/{bookingId}")
     public ResponseEntity<?> tenantRejectTransaction(@PathVariable String bookingId) throws MessagingException {
         Long userId = usersService.getLoggedUser().getId();
         var response = transactionService.tenantRejectTransaction(UUID.fromString(bookingId), userId);
@@ -55,7 +55,7 @@ public class TransactionController {
         return Response.successfulResponse("Transaction cancelled by tenant", response);
     }
 
-    @PatchMapping("/{bookingId}")
+    @PatchMapping("/tenant/{bookingId}")
     public ResponseEntity<?> approveTransaction(@PathVariable String bookingId) throws MessagingException {
         var response = transactionService.approveTransaction(UUID.fromString(bookingId));
         return Response.successfulResponse("Approved transaction", response);
