@@ -21,4 +21,5 @@ public interface PaymentService {
     List<Payment> findExpiredPendingPayment();
     void tenantRejectPayment(Long paymentId);
     List<MonthlySalesDTO> getMonthlySalesByTenantId(Long tenantId);
+    void deletePaymentProof(Long paymentId);
 }
