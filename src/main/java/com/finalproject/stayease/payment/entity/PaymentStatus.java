@@ -7,6 +7,7 @@ public enum PaymentStatus {
     SETTLEMENT,
     EXPIRE,
     CANCEL,
+    DENY,
     FAILURE;
 
     @JsonCreator
