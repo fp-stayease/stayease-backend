@@ -223,6 +223,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         var rejectedBooking = bookingService.updateBooking(bookingId, BookingStatus.IN_PROGRESS);
         var rejectedPayment = paymentService.updatePaymentStatus(payment.getId(), PaymentStatus.PENDING);
+        paymentService.deletePaymentProof(payment.getId());
         paymentService.tenantRejectPayment(payment.getId());
 
         String message = """
