@@ -133,4 +133,11 @@ public class PaymentServiceImpl implements PaymentService {
         }
         return fullReport;
     }
+
+    @Override
+    public void deletePaymentProof(Long paymentId) {
+        Payment payment = findPaymentById(paymentId);
+        payment.setPaymentProof(null);
+        paymentRepository.save(payment);
+    }
 }
