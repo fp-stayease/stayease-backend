@@ -109,7 +109,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
         SELECT COUNT(b.id) FROM Booking b
         WHERE b.user.id = :userId
         AND b.status = 'PAYMENT_COMPLETE'
-        AND b.checkInDate >= CURRENT_DATE
+        AND b.checkInDate <= CURRENT_DATE
         AND b.deletedAt IS NULL
     """)
     Double countUserUpcomingBookings(@Param("userId") Long userId);
@@ -131,7 +131,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     @Query("""
         SELECT b FROM Booking b
         WHERE b.status = 'PAYMENT_COMPLETE'
-        AND b.checkInDate >= CURRENT_DATE
+        AND b.checkInDate <= CURRENT_DATE
         AND b.user.id = :userId
         AND b.deletedAt IS NULL
         ORDER BY b.checkInDate ASC
