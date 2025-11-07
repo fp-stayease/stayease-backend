@@ -8,7 +8,7 @@ RUN mvn package -DskipTests
 RUN echo "done"
 
 #run the app
-FROM openjdk:22-slim
+FROM eclipse-temurin:22-jre
 WORKDIR /app
 COPY --from=build /app/target/stayease-app.jar /app/
 EXPOSE 8080
